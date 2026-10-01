@@ -116,7 +116,7 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
       <div>
         <label class="l" for="ocr">Chữ đọc được từ ảnh (dán vào)</label>
         <textarea id="ocr" spellcheck="false"></textarea>
-        <p class="hint">Chỉ xử lý trên trang này, <b>không được lưu</b>. Chỉ lưu ngân hàng, số tiền và kết quả đúng/sai.</p>
+        <p class="hint">Chỉ xử lý trên trang này, <b>không được lưu</b>. Chỉ lưu ngân hàng, số tiền và kết quả đúng/sai, và chỉ trên máy này.</p>
       </div>
 
       <div class="read" id="readBox">
@@ -232,25 +232,27 @@ $("truth").addEventListener("input",renderRead);
 $("clear").addEventListener("click",()=>{$("ocr").value="";$("truth").value="";$("recOk").checked=false;$("noteOk").checked=false;analyse();$("ocr").focus()});
 
 // ---------- lưu trữ ----------
-let rows=[],db=null,memoryOnly=false;
+// Kết quả chỉ nằm trên máy này (localStorage), không gửi đi đâu — theo luật 6 của CLAUDE.md/AGENTS.md.
+const KEY="xu-cham-bien-lai";let rows=[],persisted=false;
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v)){rows=v;persisted=true}}catch(e){persisted=false}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(rows));persisted=true}catch(e){persisted=false}}
 async function save(){
   const truth=parseTruth($("truth").value);if(truth===null)return;
   const rec={bank:$("bank").value,trueAmount:truth,readAmount:chosen?chosen.v:null,amountOk:!!(chosen&&chosen.v===truth),
     recipientOk:$("recOk").checked,contentOk:$("noteOk").checked,candidates:cands.length,createdAt:new Date().toISOString()};
   $("save").disabled=true;$("saveStatus").textContent="Đang lưu…";
   try{
-    if(db){await db.collection("receipts").add(rec);$("saveStatus").textContent="Đã lưu "+rec.bank+" · "+(rec.amountOk?"đúng":"sai");}
-    else{rows.unshift({id:"m"+Date.now(),...rec});render();$("saveStatus").textContent="Đã chấm (chưa lưu lâu dài: tải lại trang sẽ mất).";}
+    rows.unshift({id:"m"+Date.now(),...rec});persist();render();
+    $("saveStatus").textContent=persisted?"Đã lưu trên máy này: "+rec.bank+" · "+(rec.amountOk?"đúng":"sai"):"Đã chấm (trình duyệt không cho lưu: tải lại trang sẽ mất).";
     $("ocr").value="";$("truth").value="";$("recOk").checked=false;$("noteOk").checked=false;analyse();$("ocr").focus();
   }catch(err){
-    $("saveStatus").textContent=err&&err.code==="quota_exceeded"?"Kho dữ liệu đã đầy, hãy xoá bớt kết quả cũ.":"Chưa lưu được. Thử lại sau vài giây.";
+    $("saveStatus").textContent="Chưa lưu được. Thử lại sau vài giây.";
     $("save").disabled=false;
   }
 }
 $("save").addEventListener("click",save);
 async function del(id){
-  if(db&&!id.startsWith("m")){try{await db.collection("receipts").doc(id).delete()}catch(e){$("saveStatus").textContent="Chưa xoá được, thử lại."}}
-  else{rows=rows.filter(r=>r.id!==id);render()}
+  rows=rows.filter(r=>r.id!==id);persist();render()
 }
 $("hist").addEventListener("click",e=>{const b=e.target.closest(".del");if(b)del(b.dataset.id)});
 
@@ -278,13 +280,7 @@ function render(){
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
 
 // ---------- khởi động ----------
-$("ocr").value=EXAMPLE;analyse();render();
-(async()=>{
-  try{db=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){db=null}
-  if(!db){memoryOnly=true;$("saveStatus").textContent="Không kết nối được kho lưu trữ: kết quả chỉ giữ tới khi tải lại trang.";return}
-  db.collection("receipts").orderBy("createdAt","desc").limit(1000).onSnapshot(snap=>{
-    rows=snap.docs.map(d=>({id:d.id,...d.data()}));render();
-  },err=>{$("saveStatus").textContent="Mất kết nối kho lưu trữ. Tải lại trang để thử lại.";});
-})();
+load();$("ocr").value=EXAMPLE;analyse();render();
+if(!persisted)$("saveStatus").textContent="Trình duyệt không cho lưu: kết quả chỉ giữ tới khi tải lại trang.";
 })();
 </script>

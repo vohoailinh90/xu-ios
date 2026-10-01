@@ -264,10 +264,12 @@ function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 function mask(s,ranges){let a=s.split("");for(const [i,j] of ranges)for(let k=i;k<j;k++)a[k]=" ";return a.join("")}
 
+function validDate(y,mo,d){const x=new Date(y,mo-1,d);return x.getFullYear()===y&&x.getMonth()===mo-1&&x.getDate()===d?x:null}
 function parse(text,now=new Date()){
+  text=text.normalize("NFC"); // như TextFolding.foldAligned: chuẩn hoá NFC trước khi gấp
   const f=fold(text),today=startOfDay(now),removed=[];let date=today;
   let m=DMY.exec(f);
-  if(m){let y=m[3]?+m[3]:today.getFullYear();if(y<100)y+=2000;let d=new Date(y,+m[2]-1,+m[1]);if(!m[3]&&d>today)d=new Date(y-1,+m[2]-1,+m[1]);if(!isNaN(d)){date=d;removed.push([m.index,m.index+m[0].length])}}
+  if(m){let y=m[3]?+m[3]:today.getFullYear();if(y<100)y+=2000;let d=validDate(y,+m[2],+m[1]);if(!m[3]&&(!d||d>today))d=validDate(y-1,+m[2],+m[1]);if(d){date=d;removed.push([m.index,m.index+m[0].length])}}
   else{let hit=false;for(const [re,o] of REL){const r=re.exec(f);if(r){date=addDays(today,o);removed.push([r.index,r.index+r[0].length]);hit=true;break}}
     if(!hit){const w=WD.exec(f);if(w){const n=w[1]||w[2];const target=n?(+n-1):0;const back=(today.getDay()-target+7)%7;date=addDays(today,-back);removed.push([w.index,w.index+w[0].length])}}}
   const masked=mask(f,removed),cands=[];AMT.lastIndex=0;let a;
@@ -282,8 +284,10 @@ function parse(text,now=new Date()){
   const catId=inc?(cat&&cat.inc?cat.id:"income.other"):(cat?cat.id:"other");
   return {amount,inc:!!inc,date,catId,note};
 }
-function match(note){const f=fold(note);let best=null;
-  for(const c of CATS)for(const k of c.kw){if(!k)continue;const re=new RegExp("(?<![a-z0-9])"+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![a-z0-9])");if(re.test(f)&&(!best||k.length>best.len))best={len:k.length,c}}
+// như CategoryMatcher.normalize: dấu câu → khoảng trắng, gộp khoảng trắng, rồi khớp nguyên cụm " từ khoá "
+function normalizeFolded(f){return Array.from(f).map(ch=>/[\p{L}\p{N}-]/u.test(ch)?ch:" ").join("").split(" ").filter(Boolean).join(" ")}
+function match(note){const padded=" "+normalizeFolded(fold(note.normalize("NFC")))+" ";if(!/[\p{L}\p{N}]/u.test(padded))return null;let best=null;
+  for(const c of CATS)for(const k of c.kw){if(!k)continue;if(padded.includes(" "+k+" ")&&(!best||k.length>best.len))best={len:k.length,c}}
   return best?best.c:null}
 
 // ---------- định dạng ----------
