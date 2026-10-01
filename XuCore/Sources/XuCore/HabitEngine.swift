@@ -56,7 +56,7 @@ public enum HabitTemplate: String, CaseIterable, Codable, Sendable {
     public var titles: LocalizedText {
         switch self {
         case .logDaily: LocalizedText(vi: "Ghi chép mỗi ngày", en: "Log every day", ja: "毎日記録する")
-        case .noSpendDay: LocalizedText(vi: "Ngày không tiêu vặt", en: "No-spend day", ja: "ムダ使いしない日")
+        case .noSpendDay: LocalizedText(vi: "Ngày không tiêu vặt", en: "No-spend day", ja: "小さな出費なしの日")
         case .noBubbleTea: LocalizedText(vi: "Không trà sữa", en: "No bubble tea", ja: "タピオカを控える")
         case .cookAtHome: LocalizedText(vi: "Nấu ăn ở nhà", en: "Cook at home", ja: "自炊する")
         case .saveToday: LocalizedText(vi: "Để dành hôm nay", en: "Save today", ja: "今日は貯金")
