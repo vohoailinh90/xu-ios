@@ -2,11 +2,14 @@ import Foundation
 import XuCore
 
 /// "Hôm nay", "Hôm qua" hoặc "Thứ Tư, 23 thg 9" / "9月23日 水曜日" theo ngôn ngữ đang chọn.
+/// Ngày không thuộc năm nay thì kèm năm, để "1/3/2025" không trông giống ngày 1/3 năm nay.
 enum DayLabel {
-    static func text(for date: Date, language: AppLanguage, calendar: Calendar = .current) -> String {
+    static func text(for date: Date, language: AppLanguage, calendar: Calendar = .current, now: Date = Date()) -> String {
         if calendar.isDateInToday(date) { return language.t(.today) }
         if calendar.isDateInYesterday(date) { return language.t(.yesterday) }
-        return date.formatted(.dateTime.weekday(.wide).day().month().locale(language.locale))
+        let style = Date.FormatStyle.dateTime.weekday(.wide).day().month().locale(language.locale)
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        return date.formatted(sameYear ? style : style.year())
     }
 }
 

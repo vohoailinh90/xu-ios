@@ -294,7 +294,7 @@ function match(note){const padded=" "+normalizeFolded(fold(note.normalize("NFC")
 const full=n=>new Intl.NumberFormat("vi-VN").format(n)+"đ";
 function compact(n){const s=n<0?"−":"";n=Math.abs(n);if(n>=1e6){const v=Math.round(n/1e5)/10;return s+String(v).replace(".",",")+"tr"}if(n>=1e3)return s+Math.round(n/1e3)+"k";return s+n+"đ"}
 const WDN=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"];
-function dayLabel(d){const t=startOfDay(new Date());const diff=Math.round((t-startOfDay(d))/864e5);if(diff===0)return"Hôm nay";if(diff===1)return"Hôm qua";return WDN[d.getDay()]+", "+d.getDate()+"/"+(d.getMonth()+1)}
+function dayLabel(d){const t=startOfDay(new Date());const diff=Math.round((t-startOfDay(d))/864e5);if(diff===0)return"Hôm nay";if(diff===1)return"Hôm qua";return WDN[d.getDay()]+", "+d.getDate()+"/"+(d.getMonth()+1)+(d.getFullYear()!==t.getFullYear()?"/"+d.getFullYear():"")}
 
 // ---------- dữ liệu mẫu ----------
 let tx=[],older=0,olderCat={},uid=1,lastSaved=null,overrideCat=null,times=[];
@@ -307,7 +307,7 @@ function seed(){
   add(1,0,"drinks",35000,"Cà phê");add(1,0,"shopping",129000,"Shopee");add(1,0,"food",50000,"Phở");
 }
 function flexSpent(){const t=startOfDay(new Date());let before=older,today=0;
-  for(const x of tx){if(x.inc||!FLEX.has(x.catId))continue;const d=startOfDay(x.date);if(d.getMonth()!==t.getMonth())continue;if(+d===+t)today+=x.amount;else if(d<t)before+=x.amount}
+  for(const x of tx){if(x.inc||!FLEX.has(x.catId))continue;const d=startOfDay(x.date);if(d.getMonth()!==t.getMonth()||d.getFullYear()!==t.getFullYear())continue;if(+d===+t)today+=x.amount;else if(d<t)before+=x.amount}
   return {before,today}}
 function safeToSpend(){const t=startOfDay(new Date());const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();const daysLeft=Math.max(1,last-t.getDate()+1);
   if(BUDGET<=0)return null;const {before,today}=flexSpent();const daily=Math.floor(Math.max(0,BUDGET-before)/daysLeft);
