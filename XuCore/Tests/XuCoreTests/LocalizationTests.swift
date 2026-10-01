@@ -63,8 +63,9 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(AppLanguage.preferred(from: ["ja-JP", "en-US"]), .ja)
         XCTAssertEqual(AppLanguage.preferred(from: ["vi-VN"]), .vi)
         XCTAssertEqual(AppLanguage.preferred(from: ["zh-Hans-JP", "ja-JP"]), .ja)
-        XCTAssertEqual(AppLanguage.preferred(from: ["fr-FR"]), .en)
-        XCTAssertEqual(AppLanguage.preferred(from: []), .en)
+        XCTAssertEqual(AppLanguage.preferred(from: ["en-GB", "vi-VN"]), .en)
+        XCTAssertEqual(AppLanguage.preferred(from: ["ko-KR"]), .vi, "Ngôn ngữ không hỗ trợ → tiếng Việt (Việt Nam trước)")
+        XCTAssertEqual(AppLanguage.preferred(from: []), .vi)
     }
 
     func testMarketAndCurrency() {

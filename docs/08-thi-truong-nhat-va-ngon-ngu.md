@@ -19,7 +19,7 @@
 | Tiền | VND và JPY, đều không có số lẻ nên vẫn lưu `Int64`. Mỗi giao dịch và khoản quen lưu `currencyCode` | `Market.swift`, `App/Shared/Persistence/Models.swift` |
 | Câu nhập | 円, ¥, yên, số kiểu Nhật (1万2千), chữ số toàn khổ, ngày tiếng Nhật và tiếng Anh. Đặc tả ở `docs/04` | `QuickEntryParser.swift` |
 | Danh mục | Tên 3 thứ tiếng; thêm từ khoá tiếng Nhật (コンビニ, 電車, 家賃, 仕送り…) và tiếng Anh | `CategoryCatalog.swift` |
-| Ngôn ngữ | Chọn trong Cài đặt, đổi ngay. Toàn bộ chữ trong app, widget, lời thoại Phím tắt, CSV | `Localization.swift`, `App/Shared/Settings/AppSettings.swift` |
+| Ngôn ngữ | Chọn trong Cài đặt, đổi ngay. Toàn bộ chữ trong app, widget, lời thoại Phím tắt, CSV. Lần mở đầu: theo ngôn ngữ của máy nếu là Việt/Anh/Nhật, còn lại là tiếng Việt | `Localization.swift`, `App/Shared/Settings/AppSettings.swift` |
 | Định dạng tiền | 1.250.000đ · 1,250,000₫ · ¥1,250 · 1,250円 (theo tiền và ngôn ngữ) | `MoneyFormatter.swift` |
 | Khoản quen mặc định | Theo nơi chi tiêu (🏪 コンビニ 500, 🚃 電車 200…). Đổi ngôn ngữ/nơi thì tự đổi theo, nếu người dùng chưa sửa | `App/Shared/Persistence/ChipSeeds.swift` |
 | Trang chấm hoá đơn | Chế độ hoá đơn cửa hàng ở Nhật (レシート) trong `prototypes/cham-bien-lai.html` | — |

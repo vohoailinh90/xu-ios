@@ -118,6 +118,20 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(parse("28日 家賃 65000")), "2026-08-28", "Ngày chưa tới trong tháng → tháng trước")
         XCTAssertEqual(parse("9月20日 スーパー 2480").amount, 2_480)
         XCTAssertEqual(day(parse("3日間 定期券 5000")), "2026-09-25", "\"3日間\" là số ngày, không phải ngày")
+        XCTAssertEqual(day(parse("20日のランチ 900")), "2026-09-20")
+        XCTAssertEqual(parse("20日のランチ 900").note, "ランチ")
+    }
+
+    func testDayInsideCompoundWordIsNotADate() {
+        let pass = parse("1日乗車券 500")
+        XCTAssertEqual(day(pass), "2026-09-25", "1日乗車券 là vé đi trong ngày, không phải ngày 1")
+        XCTAssertEqual(pass.amount, 500)
+        XCTAssertEqual(pass.note, "1日乗車券")
+        XCTAssertEqual(pass.categoryID, "transport")
+        let hangover = parse("2日酔い 薬 500")
+        XCTAssertEqual(day(hangover), "2026-09-25")
+        XCTAssertEqual(hangover.categoryID, "health")
+        XCTAssertEqual(day(parse("2日目 ホテル 8000")), "2026-09-25")
     }
 
     func testJapaneseWeekdays() {

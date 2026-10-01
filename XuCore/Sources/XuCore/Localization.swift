@@ -28,13 +28,14 @@ public enum AppLanguage: String, CaseIterable, Codable, Sendable, Identifiable {
     }
 
     /// Ngôn ngữ đầu tiên Xu hỗ trợ trong danh sách ngôn ngữ ưa thích của máy
-    /// (`Locale.preferredLanguages`, ví dụ "ja-JP", "vi-VN"). Không có thì dùng tiếng Anh.
+    /// (`Locale.preferredLanguages`, ví dụ "ja-JP", "vi-VN"). Không có thì dùng tiếng Việt (Việt Nam trước):
+    /// máy đặt tiếng Hàn, tiếng Pháp… của người Việt ở nước ngoài vẫn mở ra tiếng Việt.
     public static func preferred(from languageTags: [String]) -> AppLanguage {
         for tag in languageTags {
             let code = tag.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init)
             if let code, let language = AppLanguage(rawValue: code) { return language }
         }
-        return .en
+        return .vi
     }
 
     /// Chuỗi đã dịch, thay `{0}`, `{1}`… bằng `arguments` theo thứ tự.

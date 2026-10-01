@@ -264,9 +264,10 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![a-z0-9_/])(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?(?![a-z0-9_/])"#
     )
 
-    /// "9月30日", "2026年9月30日", "30日". Không khớp "3日間", "3日分" (số ngày, không phải ngày).
+    /// "9月30日", "2026年9月30日", "30日". Không khớp "3日間", "3日分", "2日目" (số ngày, không phải ngày).
+    /// "30日" thiếu tháng còn phải qua `isStandaloneDay`, vì hay nằm trong từ ghép: "1日乗車券", "2日酔い".
     static let japaneseDateRegex = try! NSRegularExpression(
-        pattern: #"(?<![0-9])(?:(\d{4})年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分])"#
+        pattern: #"(?<![0-9])(?:(\d{4})年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分目])"#
     )
 
     /// Thứ tự quan trọng: cụm dài/cụ thể trước ("一昨日" trước "昨日").
@@ -332,13 +333,16 @@ public struct QuickEntryParser: Sendable {
             }
         }
 
-        if let m = Self.japaneseDateRegex.firstMatch(in: text, range: ns),
-           let day = Self.group(m, 3, in: text).flatMap(Int.init),
-           let range = Self.characterRange(m.range, in: text),
-           let date = japaneseDate(year: Self.group(m, 1, in: text).flatMap(Int.init),
-                                   month: Self.group(m, 2, in: text).flatMap(Int.init),
-                                   day: day, today: today) {
-            return (date, range)
+        let chars = Array(text)
+        for m in Self.japaneseDateRegex.matches(in: text, range: ns) {
+            guard let day = Self.group(m, 3, in: text).flatMap(Int.init),
+                  let range = Self.characterRange(m.range, in: text) else { continue }
+            let year = Self.group(m, 1, in: text).flatMap(Int.init)
+            let month = Self.group(m, 2, in: text).flatMap(Int.init)
+            if year == nil, month == nil, !Self.isStandaloneDay(endingAt: range.upperBound, in: chars) { continue }
+            if let date = japaneseDate(year: year, month: month, day: day, today: today) {
+                return (date, range)
+            }
         }
 
         for (regex, offset) in Self.relativeDays {
@@ -371,6 +375,14 @@ public struct QuickEntryParser: Sendable {
         if let date = makeDate(year: currentYear, month: currentMonth, day: day), date <= today { return date }
         let previous = currentMonth == 1 ? (currentYear - 1, 12) : (currentYear, currentMonth - 1)
         return makeDate(year: previous.0, month: previous.1, day: day)
+    }
+
+    /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền hoặc trợ từ
+    /// ("20日の", "20日に"); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").
+    static func isStandaloneDay(endingAt end: Int, in chars: [Character]) -> Bool {
+        guard end < chars.count else { return true }
+        let next = chars[end]
+        return next.isWhitespace || next.isPunctuation || next.isCurrencySymbol || "のにはでも".contains(next)
     }
 
     private func findWeekday(in text: String, range ns: NSRange) -> (weekday: Int, range: Range<Int>)? {

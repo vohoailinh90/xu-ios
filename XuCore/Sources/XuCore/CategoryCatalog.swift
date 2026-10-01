@@ -82,7 +82,7 @@ public enum CategoryCatalog {
             // English
             "train", "subway", "uber", "parking", "flight", "fuel",
             // 日本語
-            "電車", "地下鉄", "バス", "タクシー", "新幹線", "定期券", "交通費", "切符", "ガソリン", "駐車場",
+            "電車", "地下鉄", "バス", "タクシー", "新幹線", "定期券", "乗車券", "交通費", "切符", "ガソリン", "駐車場",
             "駐輪場", "高速代", "飛行機", "航空券"
         ]),
         CategoryDefinition(id: "bills", names: LocalizedText(vi: "Hóa đơn & nhà", en: "Bills & home", ja: "住まい・光熱費"),
