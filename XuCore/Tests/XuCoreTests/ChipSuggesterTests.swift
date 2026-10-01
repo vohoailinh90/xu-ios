@@ -104,4 +104,15 @@ final class ChipSuggesterTests: XCTestCase {
         let result = suggest(entries)
         XCTAssertEqual(result.map(\.title), ["grab", "bún", "trà sữa"])
     }
+
+    func testTiesWithinTheSameDayFollowEntryOrder() {
+        // Bốn khoản cùng 3 ngày, lần gần nhất đều là hôm nay: khoản ghi sau cùng hôm nay đứng trước,
+        // không xếp theo bảng chữ cái.
+        var entries: [ChipSuggester.Entry] = []
+        for d in [2, 1] {
+            for note in ["an", "bo", "ca", "da"] { entries.append(entry(note, 10_000, daysAgo: d)) }
+        }
+        for note in ["da", "ca", "an", "bo"] { entries.append(entry(note, 10_000, daysAgo: 0)) }
+        XCTAssertEqual(suggest(entries).map(\.title), ["bo", "an", "ca"])
+    }
 }

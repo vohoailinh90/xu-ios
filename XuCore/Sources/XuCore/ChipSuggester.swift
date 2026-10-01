@@ -75,7 +75,8 @@ public enum ChipSuggester {
             groups[key] = group
         }
 
-        let suggestions = groups.compactMap { key, group -> (Suggestion, DayKey)? in
+        // Kèm (ngày, vị trí) của lần ghi sau cùng để phá hoà theo độ mới, kể cả trong cùng một ngày.
+        let suggestions = groups.compactMap { key, group -> (Suggestion, (DayKey, Int))? in
             guard group.days.count >= minimumDays, let latest = group.latest else { return nil }
             let categoryID = group.categoryCounts.max { a, b in
                 if a.value != b.value { return a.value < b.value }
@@ -83,13 +84,12 @@ public enum ChipSuggester {
             }?.key ?? CategoryCatalog.otherExpenseID
             let suggestion = Suggestion(title: latest.note, amount: key.amount, currency: key.currency,
                                         categoryID: categoryID, days: group.days.count)
-            return (suggestion, latest.day)
+            return (suggestion, (latest.day, latest.index))
         }
         return suggestions
             .sorted { a, b in
                 if a.0.days != b.0.days { return a.0.days > b.0.days }
-                if a.1 != b.1 { return a.1 > b.1 }
-                return a.0.title < b.0.title
+                return a.1 > b.1
             }
             .prefix(limit)
             .map { $0.0 }
