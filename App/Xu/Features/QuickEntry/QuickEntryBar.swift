@@ -11,6 +11,8 @@ struct QuickEntryBar: View {
     @Environment(\.modelContext) private var context
     @Query private var learned: [LearnedKeyword]
     @AppStorage("smallNumbersAreThousands") private var smallNumbersAreThousands = true
+    @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
+    @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
 
     @State private var text = ""
     @State private var categoryOverride: String?
@@ -21,7 +23,7 @@ struct QuickEntryBar: View {
 
     private var parser: QuickEntryParser {
         let map = Dictionary(learned.map { ($0.phrase, $0.categoryID) }, uniquingKeysWith: { a, _ in a })
-        return QuickEntryParser(options: .init(smallNumbersAreThousands: smallNumbersAreThousands),
+        return QuickEntryParser(options: .init(smallNumbersAreThousands: smallNumbersAreThousands, market: market),
                                 matcher: CategoryMatcher(learned: map))
     }
 
@@ -36,17 +38,17 @@ struct QuickEntryBar: View {
     var body: some View {
         VStack(spacing: 8) {
             if let toast {
-                ToastView(toast: toast) { undo(toast) }
+                ToastView(toast: toast, language: language) { undo(toast) }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             if let preview {
-                PreviewCard(result: preview) { showCategoryPicker = true }
+                PreviewCard(result: preview, language: language) { showCategoryPicker = true }
             }
             if let errorMessage {
                 Text(errorMessage).font(.footnote).foregroundStyle(.secondary)
             }
             HStack {
-                TextField("cà phê 35k, grab 52k hôm qua…", text: $text)
+                TextField(language.entryPlaceholder(for: market), text: $text)
                     .focused($focused)
                     .submitLabel(.done)
                     .autocorrectionDisabled()
@@ -56,7 +58,7 @@ struct QuickEntryBar: View {
                     Image(systemName: "arrow.up.circle.fill").font(.title2)
                 }
                 .disabled(preview?.isComplete != true)
-                .accessibilityLabel("Lưu")
+                .accessibilityLabel(language.t(.save))
             }
             .padding(12)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -98,8 +100,9 @@ struct QuickEntryBar: View {
                 try Ledger.learn(note: result.note, categoryID: result.categoryID, in: context)
             }
             let record = try Ledger.save(result, rawInput: text, source: .quickText, in: context)
-            toast = SavedToast(recordID: record.id, amount: record.amount, isIncome: record.isIncome,
-                               title: record.note.isEmpty ? record.category.name : record.note,
+            toast = SavedToast(recordID: record.id, amount: record.amount, currency: record.currency,
+                               isIncome: record.isIncome,
+                               title: record.note.isEmpty ? record.category.name(in: language) : record.note,
                                emoji: record.category.emoji)
             text = ""
             categoryOverride = nil
@@ -122,6 +125,7 @@ struct QuickEntryBar: View {
 struct SavedToast: Equatable {
     let recordID: UUID
     let amount: Int64
+    let currency: Currency
     let isIncome: Bool
     let title: String
     let emoji: String
@@ -129,14 +133,18 @@ struct SavedToast: Equatable {
 
 private struct ToastView: View {
     let toast: SavedToast
+    let language: AppLanguage
     let onUndo: () -> Void
 
     var body: some View {
         HStack {
-            Text("\(toast.emoji) Đã ghi \(toast.isIncome ? "+" : "")\(MoneyFormatter.compact(toast.amount)) · \(toast.title)")
+            Text(language.t(.savedToast, toast.emoji,
+                            MoneyFormatter.signed(toast.amount, isIncome: toast.isIncome, currency: toast.currency,
+                                                  language: language, compact: true),
+                            toast.title))
                 .lineLimit(1)
             Spacer()
-            Button("Hoàn tác", action: onUndo).bold()
+            Button(language.t(.undo), action: onUndo).bold()
         }
         .font(.subheadline)
         .padding(.horizontal, 14).padding(.vertical, 10)
@@ -146,31 +154,30 @@ private struct ToastView: View {
 
 private struct PreviewCard: View {
     let result: QuickEntryResult
+    let language: AppLanguage
     let onTapCategory: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             Button(action: onTapCategory) {
-                Text(result.category.emoji + " " + result.category.name)
+                Text(result.category.emoji + " " + result.category.name(in: language))
                     .lineLimit(1)
             }
             .buttonStyle(.bordered)
-            .accessibilityHint("Đổi danh mục")
+            .accessibilityHint(language.t(.changeCategory))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(result.amount.map { (result.isIncome ? "+" : "") + MoneyFormatter.full($0) } ?? "Chưa có số tiền")
+                Text(amountText)
                     .font(.headline)
                     .foregroundStyle(result.amount == nil ? .secondary : .primary)
-                Text(dateLabel).font(.caption).foregroundStyle(.secondary)
+                Text(DayLabel.text(for: result.date, language: language)).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
     }
 
-    private var dateLabel: String {
-        let cal = Calendar.current
-        if cal.isDateInToday(result.date) { return "Hôm nay" }
-        if cal.isDateInYesterday(result.date) { return "Hôm qua" }
-        return result.date.formatted(.dateTime.weekday(.wide).day().month())
+    private var amountText: String {
+        guard let amount = result.amount else { return language.t(.noAmountYet) }
+        return MoneyFormatter.signed(amount, isIncome: result.isIncome, currency: result.currency, language: language)
     }
 }

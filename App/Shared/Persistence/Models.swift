@@ -25,9 +25,10 @@ final class TransactionRecord {
     /// Câu gốc người dùng gõ. Chỉ lưu trên máy để cải thiện parser — không bao giờ gửi đi.
     var rawInput: String = ""
 
-    init(amount: Int64, isIncome: Bool, categoryID: String, note: String,
+    init(amount: Int64, currency: Currency = .vnd, isIncome: Bool, categoryID: String, note: String,
          occurredAt: Date, source: EntrySource, rawInput: String = "") {
         self.amount = amount
+        self.currencyCode = currency.code
         self.isIncome = isIncome
         self.categoryID = categoryID
         self.note = note
@@ -38,6 +39,7 @@ final class TransactionRecord {
 
     var source: EntrySource { EntrySource(rawValue: sourceRaw) ?? .manual }
     var category: CategoryDefinition { CategoryCatalog.resolve(id: categoryID) }
+    var currency: Currency { Currency(code: currencyCode) }
 }
 
 /// Khoản quen, hiển thị thành nút trên widget.
@@ -47,16 +49,21 @@ final class QuickChip {
     var title: String = ""
     var emoji: String = "💸"
     var amount: Int64 = 0
+    /// Thêm sau bản đầu; giá trị mặc định giúp SwiftData tự chuyển dữ liệu cũ (khoản quen cũ đều là VND).
+    var currencyCode: String = "VND"
     var categoryID: String = CategoryCatalog.otherExpenseID
     var sortOrder: Int = 0
 
-    init(title: String, emoji: String, amount: Int64, categoryID: String, sortOrder: Int) {
+    init(title: String, emoji: String, amount: Int64, currency: Currency = .vnd, categoryID: String, sortOrder: Int) {
         self.title = title
         self.emoji = emoji
         self.amount = amount
+        self.currencyCode = currency.code
         self.categoryID = categoryID
         self.sortOrder = sortOrder
     }
+
+    var currency: Currency { Currency(code: currencyCode) }
 }
 
 /// Từ khóa học được khi người dùng sửa danh mục.

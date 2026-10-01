@@ -41,7 +41,7 @@ enum Ledger {
     static func save(_ result: QuickEntryResult, rawInput: String, source: EntrySource,
                      in context: ModelContext) throws -> TransactionRecord {
         guard let amount = result.amount else { throw LedgerError.missingAmount }
-        let record = TransactionRecord(amount: amount, isIncome: result.isIncome,
+        let record = TransactionRecord(amount: amount, currency: result.currency, isIncome: result.isIncome,
                                        categoryID: result.categoryID, note: result.note,
                                        occurredAt: occurredAt(for: result.date),
                                        source: source, rawInput: rawInput)
@@ -52,8 +52,9 @@ enum Ledger {
     }
 
     static func save(chip: QuickChip, in context: ModelContext) throws {
-        let record = TransactionRecord(amount: chip.amount, isIncome: false, categoryID: chip.categoryID,
-                                       note: chip.title, occurredAt: Date(), source: .widgetChip)
+        let record = TransactionRecord(amount: chip.amount, currency: chip.currency, isIncome: false,
+                                       categoryID: chip.categoryID, note: chip.title,
+                                       occurredAt: Date(), source: .widgetChip)
         context.insert(record)
         try context.save()
         reloadWidgets()
@@ -81,12 +82,12 @@ enum Ledger {
         try context.save()
     }
 
-    /// Parser có kèm từ khóa người dùng đã dạy.
+    /// Parser có kèm từ khóa người dùng đã dạy và nơi chi tiêu đang chọn.
     static func parser(in context: ModelContext) -> QuickEntryParser {
         let learned = (try? context.fetch(FetchDescriptor<LearnedKeyword>())) ?? []
         let map = Dictionary(learned.map { ($0.phrase, $0.categoryID) }, uniquingKeysWith: { first, _ in first })
         let thousands = UserDefaults.standard.object(forKey: "smallNumbersAreThousands") as? Bool ?? true
-        return QuickEntryParser(options: .init(smallNumbersAreThousands: thousands),
+        return QuickEntryParser(options: .init(smallNumbersAreThousands: thousands, market: AppSettings.market),
                                 matcher: CategoryMatcher(learned: map))
     }
 
@@ -109,7 +110,9 @@ enum LedgerError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingAmount: "Mình chưa thấy số tiền. Thử lại, ví dụ: phở 45k"
+        case .missingAmount:
+            let language = AppSettings.language
+            return language.t(.missingAmount, language.exampleEntry(for: AppSettings.market))
         }
     }
 }

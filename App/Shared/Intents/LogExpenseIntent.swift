@@ -18,13 +18,17 @@ struct LogExpenseIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let context = ModelContext(SharedStore.container)
+        let language = AppSettings.language
         let result = Ledger.parser(in: context).parse(text)
         guard result.isComplete else {
-            throw $text.needsValueError("Mình chưa thấy số tiền. Thử lại, ví dụ: phở 45k")
+            let message = language.t(.missingAmount, language.exampleEntry(for: AppSettings.market))
+            throw $text.needsValueError("\(message)")
         }
         let record = try Ledger.save(result, rawInput: text, source: .shortcut, in: context)
-        let sign = record.isIncome ? "+" : ""
-        return .result(dialog: "Đã ghi \(sign)\(MoneyFormatter.compact(record.amount)) · \(record.category.emoji) \(record.category.name)")
+        let amount = MoneyFormatter.signed(record.amount, isIncome: record.isIncome, currency: record.currency,
+                                           language: language, compact: true)
+        let message = language.t(.intentSaved, amount, record.category.emoji + " " + record.category.name(in: language))
+        return .result(dialog: "\(message)")
     }
 }
 
@@ -43,13 +47,16 @@ struct LogPaymentIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let context = ModelContext(SharedStore.container)
+        let language = AppSettings.language
         let value = Int64(amount.rounded())
-        guard value > 0 else { return .result(dialog: "Bỏ qua giao dịch 0đ") }
+        guard value > 0 else { return .result(dialog: "\(language.t(.skippedZero))") }
         let matched = Ledger.parser(in: context).matcher.match(note: merchant)
         let categoryID = (matched?.kind == .expense ? matched?.id : nil) ?? CategoryCatalog.otherExpenseID
-        let result = QuickEntryResult(amount: value, isIncome: false, date: Date(),
-                                      categoryID: categoryID, note: merchant)
+        // Thẻ trong Ví thường thanh toán bằng tiền của nơi đang sống, nên lấy tiền của nơi chi tiêu.
+        let result = QuickEntryResult(amount: value, currency: AppSettings.market.currency, isIncome: false,
+                                      date: Date(), categoryID: categoryID, note: merchant)
         let record = try Ledger.save(result, rawInput: merchant, source: .applePay, in: context)
-        return .result(dialog: "Đã ghi \(MoneyFormatter.compact(record.amount)) · \(record.category.emoji) \(merchant)")
+        let amountText = MoneyFormatter.compact(record.amount, currency: record.currency, language: language)
+        return .result(dialog: "\(language.t(.intentSaved, amountText, record.category.emoji + " " + merchant))")
     }
 }

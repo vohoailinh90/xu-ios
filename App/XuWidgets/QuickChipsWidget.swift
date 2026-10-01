@@ -10,8 +10,8 @@ struct QuickChipsWidget: Widget {
             QuickChipsView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Khoản quen")
-        .description("Chạm để ghi ngay, không cần mở app.")
+        .configurationDisplayName(AppSettings.language.t(.quickChips))
+        .description(AppSettings.language.t(.widgetChipsDescription))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -27,14 +27,14 @@ struct QuickChipsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Hôm nay \(MoneyFormatter.compact(entry.spentToday))")
+                Text(entry.language.t(.widgetTodayLine, money(entry.spentToday, entry.currency)))
                     .font(.caption.bold())
                     .contentTransition(.numericText())
                 Spacer()
                 Link(destination: URL(string: "xu://new")!) {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel("Ghi khoản khác")
+                .accessibilityLabel(entry.language.t(.logSomethingElse))
             }
             let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: family == .systemSmall ? 1 : 2)
             LazyVGrid(columns: columns, spacing: 6) {
@@ -44,7 +44,7 @@ struct QuickChipsView: View {
                             Text(chip.emoji)
                             Text(chip.title).lineLimit(1)
                             Spacer(minLength: 0)
-                            Text(MoneyFormatter.compact(chip.amount)).foregroundStyle(.secondary)
+                            Text(money(chip.amount, chip.currency)).foregroundStyle(.secondary)
                         }
                         .font(.caption)
                         .frame(maxWidth: .infinity)
@@ -53,5 +53,9 @@ struct QuickChipsView: View {
                 }
             }
         }
+    }
+
+    private func money(_ amount: Int64, _ currency: Currency) -> String {
+        MoneyFormatter.compact(amount, currency: currency, language: entry.language)
     }
 }

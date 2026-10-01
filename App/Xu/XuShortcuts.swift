@@ -9,7 +9,8 @@ struct XuShortcuts: AppShortcutsProvider {
             intent: LogExpenseIntent(),
             phrases: [
                 "Ghi chi tiêu với \(.applicationName)",
-                "Log an expense in \(.applicationName)"
+                "Log an expense in \(.applicationName)",
+                "\(.applicationName)で支出を記録"
             ],
             shortTitle: "Ghi chi tiêu",
             systemImageName: "plus.circle.fill"

@@ -1,27 +1,29 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import XuCore
 
 /// Xuất CSV — "dữ liệu là của bạn" là một điểm bán hàng, không phải tính năng phụ.
+/// Tiêu đề cột, loại thu/chi và tên danh mục theo ngôn ngữ đang chọn; số tiền là số nguyên kèm mã tiền (VND, JPY).
 struct CSVFile: Transferable {
     let text: String
 
     @MainActor
-    init(records: [TransactionRecord]) {
+    init(records: [TransactionRecord], language: AppLanguage) {
         let iso = ISO8601DateFormatter()
-        var lines = ["ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon"]
+        var lines = [language.t(.csvHeader)]
         for r in records {
             let fields = [
                 iso.string(from: r.occurredAt),
-                r.isIncome ? "thu" : "chi",
+                language.t(r.isIncome ? .csvIncome : .csvExpense),
                 String(r.amount),
                 r.currencyCode,
-                r.category.name,
+                r.category.name(in: language),
                 r.note,
                 r.sourceRaw
             ].map(Self.escape)
             lines.append(fields.joined(separator: ","))
         }
-        // BOM để Excel mở đúng tiếng Việt
+        // BOM để Excel (cả bản tiếng Việt lẫn tiếng Nhật) mở đúng chữ có dấu và chữ Nhật
         text = "\u{FEFF}" + lines.joined(separator: "\n")
     }
 

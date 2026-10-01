@@ -19,3 +19,23 @@ jobs:
       - name: Run tests
         working-directory: XuCore
         run: swift test --parallel
+
+  app-build:
+    name: App build (iOS Simulator)
+    if: github.event_name == 'push' || !startsWith(github.head_ref, 'claude/')
+    runs-on: macos-15
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build app + widget (không ký, chỉ để biết code biên dịch được)
+        run: |
+          xcodebuild build -quiet \
+            -project Xu.xcodeproj -scheme Xu \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
