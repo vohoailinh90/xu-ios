@@ -25,11 +25,12 @@ struct XuApp: App {
     }
 }
 
-/// Khoản quen mặc định để widget có nội dung ngay lần đầu.
-/// TODO (M2): thay bằng đề xuất tự động từ các khoản lặp lại + màn hình ghim/bỏ ghim.
+/// Khoản quen mặc định để widget có nội dung ngay lần đầu. Sau đó người dùng tự quản lý
+/// (`QuickChipsManager`, có gợi ý từ khoản lặp lại); đã tự quản lý thì không bao giờ seed lại.
 @MainActor
 enum SampleData {
     static func seedQuickChipsIfNeeded() {
+        guard !AppSettings.chipsCustomized else { return }
         let context = SharedStore.container.mainContext
         let count = (try? context.fetchCount(FetchDescriptor<QuickChip>())) ?? 0
         guard count == 0 else { return }
@@ -46,8 +47,9 @@ enum SampleData {
     }
 
     /// Đổi ngôn ngữ hoặc nơi chi tiêu: thay khoản quen mặc định cho hợp (tên, loại tiền),
-    /// nhưng chỉ khi người dùng chưa đụng tới chúng — khoản quen người dùng tự sửa (M2) không bao giờ bị ghi đè.
+    /// nhưng chỉ khi người dùng chưa đụng tới chúng — khoản quen người dùng tự sửa không bao giờ bị ghi đè.
     static func refreshSeedsIfUntouched() {
+        guard !AppSettings.chipsCustomized else { return }
         let context = SharedStore.container.mainContext
         let chips = (try? context.fetch(FetchDescriptor<QuickChip>(sortBy: [SortDescriptor(\.sortOrder)]))) ?? []
         guard isUntouchedSeed(chips) else { return }

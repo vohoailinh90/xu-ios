@@ -26,7 +26,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 ## M2 — Kênh nhập nhanh (tuần 4)
 - [x] #widget Widget màn hình chính với nút khoản quen tương tác (LogChipIntent)
 - [x] #widget Widget màn hình khóa: "hôm nay đã tiêu", chạm mở app
-- [ ] #app Quản lý khoản quen: tự đề xuất từ khoản lặp lại, ghim/bỏ ghim, sắp xếp
+- [x] #app Quản lý khoản quen: tự đề xuất từ khoản lặp lại, ghim/bỏ ghim, sắp xếp (tối đa 8; giới hạn Free 2 nút widget làm cùng paywall ở M4)
 - [x] #intent App Shortcut "Ghi chi tiêu" + hướng dẫn gán vào Action Button
 - [ ] #intent Intent nhận số tiền + tên cửa hàng cho automation Apple Pay; màn hình hướng dẫn cài đặt
 

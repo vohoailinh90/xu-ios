@@ -54,6 +54,11 @@ struct SettingsView: View {
                     Text(language.t(reminderDenied ? .reminderDenied : .reminderFooter))
                 }
                 Section(language.t(.fasterEntry)) {
+                    NavigationLink {
+                        QuickChipsManager()
+                    } label: {
+                        Label(language.t(.quickChips), systemImage: "pin")
+                    }
                     Label(language.t(.tipWidget), systemImage: "square.grid.2x2")
                     Label(language.t(.tipActionButton), systemImage: "button.horizontal.top.press")
                     Label(language.t(.tipApplePay), systemImage: "creditcard")

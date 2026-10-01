@@ -101,6 +101,9 @@ public enum L10n: String, CaseIterable, Sendable {
     case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
     // Sửa giao dịch
     case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
+    // Khoản quen
+    case editChips, chipsFooter, noChipsYet, addChip, newChip, chipTitleField, chipEmojiField
+    case chipSuggestions, chipSuggestionDays, pinChip, chipLimitReached, unpinChip
     // Thói quen & chốt ngày
     case habitsTitle, closeDay, dayClosed, closeDayFooter, strength, streakDays, streakRestart, streakNone
     case markDone, doneToday, restToday, restingToday, addHabit, automaticHabitHint
@@ -235,6 +238,38 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Huỷ", en: "Cancel", ja: "キャンセル")
         case .deleteEntry:
             LocalizedText(vi: "Xoá khoản này", en: "Delete entry", ja: "この記録を削除")
+
+        case .editChips:
+            LocalizedText(vi: "Sửa", en: "Edit", ja: "編集")
+        case .chipsFooter:
+            LocalizedText(
+                vi: "Kéo để sắp xếp. Widget vừa hiện 4 khoản đầu, widget nhỏ hiện 2 khoản đầu. Ghim tối đa {0} khoản.",
+                en: "Drag to reorder. The medium widget shows the first 4, the small one the first 2. Pin up to {0}.",
+                ja: "ドラッグで並べ替え。ウィジェット(中)は上から4つ、(小)は2つを表示します。最大{0}件。")
+        case .noChipsYet:
+            LocalizedText(vi: "Chưa có khoản quen. Ghi cùng một khoản vài ngày, Xu sẽ gợi ý ở đây.",
+                          en: "No quick picks yet. Log the same thing on a few days and Xu will suggest it here.",
+                          ja: "まだありません。同じものを何日か記録すると、ここに候補が出ます。")
+        case .addChip:
+            LocalizedText(vi: "Thêm khoản quen", en: "Add a quick pick", ja: "いつものを追加")
+        case .newChip:
+            LocalizedText(vi: "Khoản quen mới", en: "New quick pick", ja: "新しいいつもの")
+        case .chipTitleField:
+            LocalizedText(vi: "Tên", en: "Name", ja: "名前")
+        case .chipEmojiField:
+            LocalizedText(vi: "Emoji", en: "Emoji", ja: "絵文字")
+        case .chipSuggestions:
+            LocalizedText(vi: "Bạn hay ghi", en: "You often log", ja: "よく記録するもの")
+        case .chipSuggestionDays:
+            LocalizedText(vi: "{0} ngày trong 30 ngày qua", en: "{0} days in the last 30", ja: "過去30日で{0}日")
+        case .pinChip:
+            LocalizedText(vi: "Ghim", en: "Pin", ja: "追加")
+        case .chipLimitReached:
+            LocalizedText(vi: "Đã đủ {0} khoản quen. Bỏ ghim một khoản để thêm khoản khác.",
+                          en: "You have {0} quick picks. Unpin one to add another.",
+                          ja: "いつものは{0}件までです。どれかを外すと追加できます。")
+        case .unpinChip:
+            LocalizedText(vi: "Bỏ ghim", en: "Unpin", ja: "外す")
 
         case .habitsTitle:
             LocalizedText(vi: "Thói quen", en: "Habits", ja: "習慣")
