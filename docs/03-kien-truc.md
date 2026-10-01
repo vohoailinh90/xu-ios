@@ -8,6 +8,7 @@
 │              │                                                  │
 │              ▼                                                  │
 │  App/Shared: Ledger (lưu), SharedStore (SwiftData, App Group),  │
+│              AppSettings (ngôn ngữ, nơi chi tiêu — App Group),  │
 │              App Intents (LogExpense, LogChip)                  │
 └──────────────┬──────────────────────────────┬───────────────────┘
                │                              │
@@ -19,6 +20,10 @@
      │  - Thói quen     │          └──────────────────────┘
      │  - Còn được tiêu │
      │  - Định dạng tiền│
+     │  - Tiền tệ, nơi  │
+     │    chi tiêu      │
+     │  - Bảng chuỗi    │
+     │    vi / en / ja  │
      └──────────────────┘
      Thuần Swift + Foundation, không SwiftUI/SwiftData,
      test bằng `swift test` và chạy CI trên GitHub Actions.
@@ -34,7 +39,8 @@
 | Đồng bộ | CloudKit (v1.1) | Miễn phí, riêng tư. **Ngay từ đầu** mọi thuộc tính @Model phải có giá trị mặc định, không dùng `@Attribute(.unique)`, quan hệ phải optional — đó là yêu cầu của CloudKit, tránh phải migrate đau đớn sau này. |
 | Logic nghiệp vụ | Swift Package `XuCore` | Tách khỏi UI để test nhanh, dùng lại cho widget, Watch, và có thể cả app macOS sau này. |
 | Parser | Luật (regex) là chính, AI là phụ | Luật: tức thì, offline, chạy trên mọi iPhone, dự đoán được, test được. AI trên máy (Apple Foundation Models) chỉ dùng làm phương án dự phòng cho câu khó, và chỉ trên máy hỗ trợ Apple Intelligence. |
-| Tiền | `Int64` theo đơn vị nhỏ nhất + mã tiền tệ | VND không có số lẻ; không dùng `Double` cho tiền. Chuẩn bị sẵn cho đa tiền tệ (v1.2). |
+| Tiền | `Int64` theo đơn vị nhỏ nhất + mã tiền tệ | VND không có số lẻ; không dùng `Double` cho tiền. Đã có VND và JPY (2026-10-01, `docs/08`); không quy đổi tỷ giá. |
+| Ngôn ngữ giao diện | Bảng chuỗi `L10n` trong `XuCore` (vi/en/ja), chọn trong app | Đổi ngay không cần mở lại app; widget/Phím tắt đọc cùng lựa chọn qua App Group; test được bằng `swift test`. Xem `docs/08`. |
 | Mua hàng | StoreKit 2, non-consumable "Xu Pro" | Mua một lần, không cần server. |
 | Phân tích | TelemetryDeck hoặc tự đếm cục bộ | Ưu tiên công cụ tôn trọng quyền riêng tư; không gửi nội dung giao dịch. |
 
@@ -44,7 +50,7 @@
 TransactionRecord
   id: UUID
   amount: Int64            // luôn dương; chiều thu/chi nằm ở isIncome
-  currencyCode: String     // "VND"
+  currencyCode: String     // "VND" | "JPY" — loại tiền lúc ghi, không đổi khi đổi nơi chi tiêu
   isIncome: Bool
   categoryID: String       // khớp CategoryCatalog trong XuCore, vd "drinks"
   note: String             // phần chữ còn lại, giữ nguyên dấu: "cà phê"
@@ -54,7 +60,7 @@ TransactionRecord
   rawInput: String         // câu gốc người dùng gõ — chỉ lưu trên máy, dùng để cải thiện parser
 
 QuickChip                  // khoản quen trên widget
-  id, title, emoji, amount, categoryID, sortOrder
+  id, title, emoji, amount, currencyCode, categoryID, sortOrder
 
 LearnedKeyword             // từ khóa học được khi người dùng sửa danh mục
   phrase: String           // đã bỏ dấu, chữ thường
@@ -100,5 +106,9 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
 
 - Logic không cần UI → đặt trong `XuCore`, có test.
 - View không gọi thẳng `modelContext.insert` cho giao dịch; luôn đi qua `Ledger` để mọi kênh nhập (app, widget, intent) xử lý giống nhau.
-- Chuỗi hiển thị dùng String Catalog (`Localizable.xcstrings`), tiếng Việt là ngôn ngữ phát triển chính, tiếng Anh là bản dịch.
+- Chuỗi hiển thị lấy từ bảng `L10n` trong `XuCore` (`AppLanguage.t(.key)`), đủ 3 thứ tiếng; tiếng Việt là ngôn ngữ phát triển chính.
+  Không viết chữ cứng trong View. String Catalog (`App/Shared/Localizable.xcstrings`) chỉ cho chuỗi hệ thống tự đọc theo ngôn ngữ máy
+  (tiêu đề App Intents). Lý do: `docs/08`.
+- Cài đặt mà widget/Phím tắt cũng cần (ngôn ngữ, nơi chi tiêu) nằm trong `AppSettings` (UserDefaults của App Group), không ở `UserDefaults.standard`.
+- Tiền luôn đi kèm loại tiền: `MoneyFormatter.full/compact(amount, currency:, language:)`; tổng chi cộng riêng từng loại tiền.
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.

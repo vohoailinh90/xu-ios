@@ -37,10 +37,12 @@ Xu đứng ở giao điểm: **tốc độ của Streaks + sự nhẹ nhàng c�
 - Không có thời gian ngồi nhập. Chỉ cần tổng quan theo tuần.
 - Thành công với Xu = ghi được bằng widget và ảnh chụp chuyển khoản, xem tổng kết tuần mỗi Chủ nhật.
 
-### C. Người Việt ở nước ngoài (giai đoạn sau, v1.2)
+### C. Người Việt ở nước ngoài (giai đoạn sau, v1.2 — phần Nhật làm sớm từ 2026-10-01)
 - Du học sinh, thực tập sinh, người lao động ở Nhật, Hàn, Đài Loan, Úc.
 - Thu nhập bằng ngoại tệ, gửi tiền về nhà định kỳ.
 - Cần: nhiều loại tiền, mục tiêu gửi về nhà, danh mục đặc thù (tiền nhà, bảo hiểm, phí chuyển tiền).
+- Đã làm sớm cho Nhật: tiền yên, câu nhập tiếng Nhật ("コーヒー 350円", "lương 25 man"), giao diện Việt/Anh/Nhật — xem `08-thi-truong-nhat-va-ngon-ngu.md`.
+  Hàn, Đài Loan, Úc và mục tiêu gửi về nhà vẫn để v1.2.
 
 ## Không làm (ít nhất trong năm đầu)
 

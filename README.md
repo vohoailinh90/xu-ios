@@ -9,7 +9,15 @@ Gõ:  "cà phê 35k"            →  35.000đ · ☕ Cà phê & đồ uống · 
 Gõ:  "grab 52k hôm qua"      →  52.000đ · 🛵 Di chuyển · Hôm qua
 Gõ:  "1tr2 tiền nhà"         →  1.200.000đ · 🧾 Hóa đơn · Hôm nay
 Gõ:  "lương +15tr"           →  +15.000.000đ · 💰 Lương · Hôm nay
+
+Ở Nhật (chọn "Nhật Bản" trong Cài đặt):
+Gõ:  "コーヒー 350円"          →  ¥350 · ☕ Cà phê & đồ uống · Hôm nay
+Gõ:  "昨日 電車 220"           →  ¥220 · 🛵 Di chuyển · Hôm qua
+Gõ:  "家賃 6万5千円"           →  ¥65.000 · 🧾 Hóa đơn & nhà · Hôm nay
+Gõ:  "lương 25 man"          →  +¥250.000 · 💰 Lương · Hôm nay
 ```
+
+Giao diện có 3 ngôn ngữ: **Tiếng Việt · English · 日本語** (chọn trong Cài đặt, đổi ngay).
 
 ## Nguyên tắc sản phẩm
 
@@ -17,6 +25,7 @@ Gõ:  "lương +15tr"           →  +15.000.000đ · 💰 Lương · Hôm nay
 2. **Không tội lỗi** — không dùng màu đỏ trừng phạt, không reset chuỗi về 0 vì lỡ một ngày.
 3. **Riêng tư, offline** — dữ liệu nằm trên máy (và iCloud của người dùng), không cần tài khoản, không cần mạng.
 4. **Việt Nam trước** — hiểu "35k", "1tr2", "1,5 củ", "hôm qua", "thứ 2", chuyển khoản QR, ví điện tử.
+   Từ 2026-10-01 có thêm thị trường Nhật và giao diện Anh/Nhật (`docs/08`), nhưng tiếng Việt vẫn là mặc định và đi trước.
 
 ## Cấu trúc repo
 
@@ -76,18 +85,20 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | `docs/05-thoi-quen-tai-chinh.md` | Thiết kế thói quen, công thức điểm, giọng văn |
 | `docs/06-lo-trinh.md` | Lộ trình 6 tuần và danh sách issue |
 | `docs/07-kinh-doanh-aso.md` | Giá, ASO, ra mắt, chỉ số đo lường |
+| `docs/08-thi-truong-nhat-va-ngon-ngu.md` | Thị trường Nhật (yên, câu tiếng Nhật), chọn ngôn ngữ Việt/Anh/Nhật |
 
 ## Đã có sẵn trong khung
 
 | Phần | File chính | Trạng thái |
 |---|---|---|
-| Parser câu nhập tiếng Việt | `XuCore/Sources/XuCore/QuickEntryParser.swift` | Có test |
+| Parser câu nhập tiếng Việt (+ tiếng Nhật, tiếng Anh, yên) | `XuCore/Sources/XuCore/QuickEntryParser.swift` | Có test |
+| Tiền tệ (VND/JPY), nơi chi tiêu, ngôn ngữ vi/en/ja | `XuCore/Sources/XuCore/Market.swift`, `Localization.swift` | Có test |
 | Danh mục + học từ khóa | `XuCore/Sources/XuCore/CategoryCatalog.swift` | Có test |
 | Thói quen (điểm sức mạnh, chuỗi mềm) | `XuCore/Sources/XuCore/HabitEngine.swift` | Có test |
 | "Còn được tiêu hôm nay" | `XuCore/Sources/XuCore/SafeToSpend.swift` | Có test |
 | Dữ liệu SwiftData dùng chung app + widget | `App/Shared/Persistence/` | Khung |
 | Thanh nhập nhanh, xem trước, hoàn tác | `App/Xu/Features/QuickEntry/` | Khung |
-| Home, xuất CSV, cài đặt ngân sách | `App/Xu/Features/Home/`, `Settings/` | Khung |
+| Home, xuất CSV, cài đặt ngân sách, ngôn ngữ, nơi chi tiêu | `App/Xu/Features/Home/`, `Settings/` | Khung |
 | Shortcuts / Action Button / Apple Pay | `App/Shared/Intents/` | Khung |
 | Widget khoản quen + màn hình khóa | `App/XuWidgets/` | Khung |
 
@@ -103,4 +114,7 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 Đang ở giai đoạn **validate** (kế hoạch 7 ngày, 2026-09-26 → 2026-10-03, ở repo ý tưởng).
 Chỉ build tiếp khi đạt ngưỡng trong kế hoạch đó.
 
-Khung dự án ban đầu, **chưa được build thử bằng Xcode** (được viết ngoài môi trường macOS). Lần build đầu tiên có thể cần sửa vài lỗi nhỏ — hãy chạy `swift test` trong `XuCore` trước, rồi mới build app.
+2026-10-01: chủ dự án quyết định làm sớm thị trường Nhật và chọn ngôn ngữ giao diện (`docs/08`), dù đang trong tuần validate.
+
+Code được viết ngoài macOS. CI (GitHub Actions, macOS) chạy `swift test` cho `XuCore` và build app + widget cho iOS Simulator
+(không ký) mỗi lần push lên `main` hoặc nhánh `claude/**`. **Chưa chạy thử trên máy thật** — lần chạy đầu có thể cần sửa vài chỗ.

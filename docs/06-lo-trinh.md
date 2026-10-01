@@ -47,6 +47,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 
 ## v1.2
 - Đa tiền tệ cho người Việt ở nước ngoài · Mục tiêu gửi tiền về nhà · Apple Watch · Thử thách + Live Activity
+- Đã làm sớm (2026-10-01, `docs/08`): tiền yên + thị trường Nhật, câu nhập tiếng Nhật/Anh, chọn ngôn ngữ giao diện Việt/Anh/Nhật.
+  Còn lại cho Nhật: đọc ảnh hoá đơn Nhật (chấm độ chính xác trước bằng `prototypes/cham-bien-lai.html`), Siri tiếng Nhật, App Store tiếng Nhật.
 
 ## Quy trình làm việc đề xuất
 

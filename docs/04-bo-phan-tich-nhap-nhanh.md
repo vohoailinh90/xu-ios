@@ -60,6 +60,50 @@ Mẹo: trong lịch Gregorian của Foundation, `weekday` 1 = Chủ nhật, 2 = 
 - Tránh từ khóa một âm tiết dễ trùng nghĩa sau khi bỏ dấu: `bé/be` (app Be), `cho/chợ`, `bạn/bán`, `trả/trà`. Dùng cụm dài hơn: `di cho`, `tra sua`.
 - Thu nhập: dấu `+` hoặc danh mục thu nhập (`luong`, `thuong`, `hoan tien`, `nhan tien`…). Có dấu `+` mà danh mục đoán được là khoản chi → chuyển thành "Thu nhập khác".
 
+## Thị trường Nhật, tiếng Nhật và tiếng Anh (từ 2026-10-01)
+
+Quyết định và phạm vi: `docs/08-thi-truong-nhat-va-ngon-ngu.md`. Test: `XuCore/Tests/XuCoreTests/JapanMarketTests.swift`.
+Parser nhận `Options.market` (Việt Nam / Nhật) và trả thêm `currency` (VND / JPY).
+
+**Chuẩn hoá:** bản gấp đưa chữ/số toàn khổ của bàn phím Nhật về nửa khổ (`３５０円` → `350円`, `￥` → `¥`) và **chỉ bỏ dấu cho chữ Latin**:
+bỏ dấu ゛゜ của kana sẽ làm `バス` (xe buýt) trùng `パス`, và `パスタ` bị hiểu là đi lại.
+Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát số vẫn tách được: `コーヒー350円`.
+
+### Số tiền
+
+| Người dùng gõ | Kết quả | Luật |
+|---|---|---|
+| `350円`, `¥350`, `￥３５０`, `350 yên` | 350 yên | 円, ¥, yên luôn là yên, ở cả hai thị trường |
+| `ラーメン 980` (thị trường Nhật) | 980 yên | Số trần là tiền của nơi chi tiêu; `smallNumbersAreThousands` chỉ áp cho tiền đồng |
+| `1万`, `1.5万`, `1万2千円`, `1万2000`, `1万500`, `2千5百円` | 10.000 / 15.000 / 12.000 / 12.000 / 10.500 / 2.500 | Số kiểu Nhật, luôn là yên |
+| `1万2`, `2千5` | 12.000 / 2.500 | Một chữ số đứng sau 万/千 là cách nói tắt; từ hai chữ số trở lên thì cộng nguyên (`1万25` = 10.025) |
+| `千円`, `百円` | 1.000 / 100 | 千/百 không kèm chữ số chỉ là tiền khi ngay sau là 円: `千葉`, `百貨店` không phải số tiền |
+| `25 man`, `1man2`, `3 sen` (thị trường Nhật) | 250.000 / 12.000 / 3.000 yên | Từ lóng của người Việt ở Nhật (vạn, nghìn yên). **Tắt** ở thị trường Việt Nam để không nhầm "mận", "sen" |
+| `35k`, `35 nghìn` (thị trường Nhật) | 35.000 yên | k / nghìn / ngàn nhân 1.000 với tiền của nơi chi tiêu |
+| `gửi về nhà 5tr`, `50.000đ` (thị trường Nhật) | tiền đồng | tr, triệu, củ, đ, đồng, vnd chỉ thuộc về tiền đồng |
+| `100均 330`, `100円ショップ 550円` | 330 / 550 | Tên cửa hàng có số được che trước khi tìm số tiền |
+
+### Ngày
+
+| Người dùng gõ | Kết quả (hôm nay là thứ Sáu 25/09/2026) |
+|---|---|
+| `今日`, `今朝`, `今夜`, `today`, `tonight`, `this morning` | 25/09 |
+| `昨日`, `きのう`, `昨夜`, `昨晩`, `yesterday`, `last night` | 24/09 |
+| `一昨日`, `おととい`, `day before yesterday` | 23/09 |
+| `9/20` | Thị trường Nhật: 20/09 (tháng trước, ngày sau). Thị trường Việt Nam vẫn là ngày/tháng |
+| `2026/9/1`, `2026-09-01` | 01/09/2026 (năm trước) |
+| `9月20日`, `2026年9月1日`, `20日` | 20/09 · 01/09 · 20/09. `28日` chưa tới trong tháng → 28/08. `3日間`, `3日分` không phải ngày |
+| `月曜`, `月曜日`, `monday` | 21/09 (thứ Hai gần nhất, tính cả hôm nay) |
+
+- Tiếng Anh chỉ hiểu tên thứ đầy đủ: viết tắt `mon`, `sat` trùng `món`, `sát` sau khi bỏ dấu.
+- `昨日のランチ` → ghi chú `ランチ`: bỏ trợ từ `の` ngay sau ngày, trừ khi sau `の` là hiragana (`昨日のり弁` → `のり弁`).
+
+### Danh mục
+
+- Từ khoá có chữ Nhật được so khớp **chuỗi con** (tiếng Nhật không có khoảng trắng giữa từ); cụm dài nhất vẫn thắng: `セブンでコーヒー` → đồ uống.
+- Tránh từ khoá một chữ Hán nằm trong từ khác: `本` có trong `日本`, `パン` có trong `パンツ`. Dùng `本屋`, `パン屋`.
+- Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục.
+
 ## Việc tiếp theo cho parser
 
 - [ ] Số bằng chữ từ giọng nói: "ba mươi lăm nghìn", "một triệu hai" (issue E9).
@@ -68,3 +112,4 @@ Mẹo: trong lịch Gregorian của Foundation, `weekday` 1 = Chủ nhật, 2 = 
 - [ ] Giờ: "7h sáng" → gán giờ cho `occurredAt`.
 - [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ.
 - [ ] Bộ dữ liệu thật: cho phép người dùng (tự nguyện) gửi các câu parser hiểu sai để bổ sung test.
+- [ ] Tiếng Nhật: số viết bằng chữ Hán (`千五百円`), năm theo niên hiệu (`令和8年`), thứ viết tắt trong ngoặc (`(月)`).
