@@ -377,12 +377,17 @@ public struct QuickEntryParser: Sendable {
         return makeDate(year: previous.0, month: previous.1, day: day)
     }
 
-    /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền hoặc trợ từ
-    /// ("20日の", "20日に"); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").
+    /// Chữ hay đi ngay sau ngày: buổi trong ngày và trợ từ ("20日朝", "20日午後", "20日から", "20日の").
+    static let dayFollowers = ["午前", "午後", "から", "まで", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の", "に", "は", "で", "も"]
+
+    /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền, buổi trong ngày
+    /// hoặc trợ từ (`dayFollowers`); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").
     static func isStandaloneDay(endingAt end: Int, in chars: [Character]) -> Bool {
         guard end < chars.count else { return true }
         let next = chars[end]
-        return next.isWhitespace || next.isPunctuation || next.isCurrencySymbol || "のにはでも".contains(next)
+        if next.isWhitespace || next.isPunctuation || next.isCurrencySymbol { return true }
+        let rest = String(chars[end...].prefix(2))
+        return dayFollowers.contains { rest.hasPrefix($0) }
     }
 
     private func findWeekday(in text: String, range ns: NSRange) -> (weekday: Int, range: Range<Int>)? {
@@ -443,16 +448,21 @@ public struct QuickEntryParser: Sendable {
             .compactMap { characterRange($0.range, in: text) }
     }
 
-    /// "昨日のランチ" → bỏ cả trợ từ "の" sau ngày để ghi chú là "ランチ".
-    /// Giữ lại nếu sau "の" là hiragana, vì có thể là đầu một từ: "昨日のり弁" → "のり弁".
+    /// Trợ từ ngay sau ngày cũng bỏ khỏi ghi chú: "昨日のランチ" → "ランチ", "20日から旅行" → "旅行".
+    static let dateParticles = ["から", "まで", "の", "に", "は", "で"]
+
+    /// Giữ trợ từ nếu sau nó là hiragana, vì có thể là đầu một từ: "昨日のり弁" → "のり弁".
     static func includingParticle(_ range: Range<Int>, in chars: [Character]) -> Range<Int> {
         let end = range.upperBound
-        guard end < chars.count, chars[end] == "の" else { return range }
-        if end + 1 < chars.count, let scalar = chars[end + 1].unicodeScalars.first,
+        guard end < chars.count else { return range }
+        let rest = String(chars[end...].prefix(2))
+        guard let particle = dateParticles.first(where: { rest.hasPrefix($0) }) else { return range }
+        let after = end + particle.count
+        if after < chars.count, let scalar = chars[after].unicodeScalars.first,
            (0x3041...0x309F).contains(scalar.value) {
             return range
         }
-        return range.lowerBound..<(end + 1)
+        return range.lowerBound..<after
     }
 
     static func mask(_ chars: [Character], ranges: [Range<Int>]) -> String {

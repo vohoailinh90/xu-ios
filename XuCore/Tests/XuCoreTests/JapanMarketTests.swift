@@ -134,6 +134,18 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(parse("2日目 ホテル 8000")), "2026-09-25")
     }
 
+    func testDayFollowedByTimeOfDayOrParticle() {
+        let morning = parse("20日朝 コンビニ 500円")
+        XCTAssertEqual(day(morning), "2026-09-20")
+        XCTAssertEqual(morning.amount, 500)
+        XCTAssertEqual(day(parse("20日午後 ランチ 900円")), "2026-09-20")
+        XCTAssertEqual(day(parse("20日夜 居酒屋 3000")), "2026-09-20")
+        let trip = parse("20日から旅行 5000円")
+        XCTAssertEqual(day(trip), "2026-09-20")
+        XCTAssertEqual(trip.note, "旅行", "Trợ từ から sau ngày bỏ khỏi ghi chú")
+        XCTAssertEqual(trip.categoryID, "entertainment")
+    }
+
     func testJapaneseWeekdays() {
         XCTAssertEqual(day(parse("月曜 ランチ 900")), "2026-09-21")
         let r = parse("月曜日 ランチ 900")
