@@ -61,7 +61,11 @@ struct SettingsView: View {
                     }
                     Label(language.t(.tipWidget), systemImage: "square.grid.2x2")
                     Label(language.t(.tipActionButton), systemImage: "button.horizontal.top.press")
-                    Label(language.t(.tipApplePay), systemImage: "creditcard")
+                    NavigationLink {
+                        ApplePayGuideView()
+                    } label: {
+                        Label(language.t(.tipApplePay), systemImage: "creditcard")
+                    }
                 }
             }
             .navigationTitle(language.t(.settings))
