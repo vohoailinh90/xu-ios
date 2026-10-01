@@ -339,7 +339,7 @@ public struct QuickEntryParser: Sendable {
                   let range = Self.characterRange(m.range, in: text) else { continue }
             let year = Self.group(m, 1, in: text).flatMap(Int.init)
             let month = Self.group(m, 2, in: text).flatMap(Int.init)
-            if year == nil, month == nil, !Self.isStandaloneDay(endingAt: range.upperBound, in: chars) { continue }
+            if year == nil, month == nil, !Self.isStandaloneDay(range, in: chars) { continue }
             if let date = japaneseDate(year: year, month: month, day: day, today: today) {
                 return (date, range)
             }
@@ -382,9 +382,16 @@ public struct QuickEntryParser: Sendable {
     /// "最長3日まで" (tối đa 3 ngày), "3日で5000円" (3 ngày giá 5000), "1日につき500円" (mỗi ngày), "3日は無料".
     static let dayFollowers = ["午前", "午後", "から", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の"]
 
-    /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền, buổi trong ngày
-    /// hoặc trợ từ (`dayFollowers`); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").
-    static func isStandaloneDay(endingAt end: Int, in chars: [Character]) -> Bool {
+    /// "20日" thiếu tháng chỉ là ngày khi đứng riêng cả hai bên:
+    /// - bên trái là đầu câu, khoảng trắng hoặc dấu câu — "3泊4日" (3 đêm 4 ngày), "最長3日", "レンタカー3日" là thời lượng;
+    /// - bên phải là hết câu, khoảng trắng, dấu câu, ký hiệu tiền hoặc `dayFollowers` — "1日乗車券", "2日酔い" là từ ghép.
+    /// Thà bỏ sót ngày (thấy ngay trên thẻ xem trước) còn hơn ghi nhầm khoản chi sang ngày khác.
+    static func isStandaloneDay(_ range: Range<Int>, in chars: [Character]) -> Bool {
+        if range.lowerBound > 0 {
+            let previous = chars[range.lowerBound - 1]
+            guard previous.isWhitespace || previous.isPunctuation else { return false }
+        }
+        let end = range.upperBound
         guard end < chars.count else { return true }
         let next = chars[end]
         if next.isWhitespace || next.isPunctuation || next.isCurrencySymbol { return true }
