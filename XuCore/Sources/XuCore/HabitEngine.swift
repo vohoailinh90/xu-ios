@@ -1,13 +1,22 @@
 import Foundation
 
 /// Một ngày lịch (không có giờ), dùng làm khóa cho check-in và chốt ngày.
-public struct DayKey: Hashable, Comparable, Codable, Sendable, CustomStringConvertible {
+public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringConvertible {
     public let year: Int
     public let month: Int
     public let day: Int
 
     public init(year: Int, month: Int, day: Int) {
         self.year = year; self.month = month; self.day = day
+    }
+
+    /// Đọc lại từ `description` ("2026-09-25"), ví dụ ngày gắn trong thông báo nhắc chốt ngày.
+    public init?(_ description: String) {
+        let parts = description.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2,
+              let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+              (1...12).contains(month), (1...31).contains(day) else { return nil }
+        self.init(year: year, month: month, day: day)
     }
 
     public init(_ date: Date, calendar: Calendar) {
@@ -197,6 +206,8 @@ public struct HabitProgress: Equatable, Sendable {
         } else {
             completed = manualDays.filter { $0 >= start && $0 <= today }
         }
+        // Ngày nghỉ là "không tính": không xong, cũng không lỡ — kể cả khi hôm đó có ghi chép hay đã chốt.
+        completed.subtract(restDays)
 
         let isDoneToday = completed.contains(today)
         let through = isDoneToday ? today : today.adding(days: -1, calendar: calendar)

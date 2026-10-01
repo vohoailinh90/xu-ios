@@ -19,6 +19,7 @@ struct OnboardingView: View {
     @State private var sample = ""
     @State private var savedFirst = false
     @State private var habit: HabitTemplate?
+    @FocusState private var sampleFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -46,6 +47,8 @@ struct OnboardingView: View {
             }
             .onChange(of: language) { PreferenceChanges.apply() }
             .onChange(of: market) { PreferenceChanges.apply() }
+            .onChange(of: step) { sampleFocused = step == 0 && !savedFirst }
+            .onAppear { sampleFocused = true }
         }
     }
 
@@ -72,9 +75,15 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(language.t(.onboardingTry)).font(.subheadline.bold())
+                    // Giống ô nhập chính: tự bật bàn phím, Enter là lưu (quy tắc 2 giây).
                     TextField(language.entryPlaceholder(for: market), text: $sample)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
+                        .focused($sampleFocused)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            if !savedFirst, let preview, preview.isComplete { saveFirst(preview) }
+                        }
                         .padding(12)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                     if let preview {
@@ -172,11 +181,9 @@ struct OnboardingView: View {
             }
         }
         if reminderEnabled {
-            let minutes = AppSettings.reminderMinutes
-            let chosenLanguage = self.language
             Task {
                 // Không cho phép thông báo thì tắt lại công tắc, Cài đặt sẽ hiện hướng dẫn.
-                if !(await ReminderScheduler.enable(minutes: minutes, language: chosenLanguage)) {
+                if !(await ReminderScheduler.enable()) {
                     AppSettings.defaults.set(false, forKey: AppSettings.Key.reminderEnabled)
                 }
             }

@@ -92,9 +92,10 @@ struct HomeView: View {
             if url.host == "new" { focusTrigger += 1 }
         }
         .onChange(of: focusRequest) {
-            // "Ghi thêm" trên thông báo chốt ngày: đóng các sheet và focus ô nhập.
+            // "Ghi thêm" trên thông báo chốt ngày: đóng mọi sheet đang che ô nhập rồi focus.
             showSettings = false
             showHabits = false
+            editing = nil
             focusTrigger += 1
         }
     }

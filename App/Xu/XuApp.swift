@@ -5,6 +5,7 @@ import XuCore
 @main
 struct XuApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         AppSettings.registerDefaults()
@@ -15,6 +16,10 @@ struct XuApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .onChange(of: scenePhase) {
+                    // Mỗi lần quay lại app: nạp thêm lịch nhắc chốt ngày cho các ngày tới.
+                    if scenePhase == .active { ReminderScheduler.refresh() }
+                }
         }
         .modelContainer(SharedStore.container)
     }

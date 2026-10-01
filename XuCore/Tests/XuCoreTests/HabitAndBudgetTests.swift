@@ -15,6 +15,15 @@ final class HabitAndBudgetTests: XCTestCase {
 
     // MARK: DayKey
 
+    func testDayKeyRoundTripsThroughText() {
+        let key = DayKey(year: 2026, month: 9, day: 5)
+        XCTAssertEqual(key.description, "2026-09-05")
+        XCTAssertEqual(DayKey("2026-09-05"), key)
+        XCTAssertNil(DayKey("2026-9-5"))
+        XCTAssertNil(DayKey("2026-13-01"))
+        XCTAssertNil(DayKey("hôm nay"))
+    }
+
     func testDayKeyArithmeticAcrossMonths() {
         XCTAssertEqual(DayKey(year: 2026, month: 9, day: 30).adding(days: 1, calendar: calendar).description, "2026-10-01")
         XCTAssertEqual(DayKey(year: 2026, month: 3, day: 1).adding(days: -1, calendar: calendar).description, "2026-02-28")
@@ -185,6 +194,19 @@ final class HabitProgressTests: XCTestCase {
         XCTAssertEqual(p.streak, 2)
         let perfect = HabitEngine.strength(completed: [ago(1), ago(2)], from: ago(2), through: ago(1), calendar: calendar)
         XCTAssertEqual(p.strength, perfect, accuracy: 1e-9, "Hôm nay chưa xong thì chưa trừ điểm")
+    }
+
+    func testRestDayIsNeverCountedAsDone() {
+        // Hôm nay có ghi chép nhưng người dùng chọn "Hôm nay nghỉ": không tính xong, chuỗi không cộng thêm.
+        let p = HabitProgress.compute(template: .logDaily, entries: [entry(0), entry(1), entry(2)], closedDays: [],
+                                      restDays: [today], from: ago(2), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(1), ago(2)])
+        XCTAssertFalse(p.isDoneToday)
+        XCTAssertEqual(p.streak, 2)
+        let manual = HabitProgress.compute(template: .cookAtHome, entries: [], closedDays: [],
+                                           manualDays: [ago(1)], restDays: [ago(1)],
+                                           from: ago(2), today: today, calendar: calendar)
+        XCTAssertTrue(manual.completedDays.isEmpty)
     }
 
     func testHabitStartedTodayNotDoneHasZeroStrength() {

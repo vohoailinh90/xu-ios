@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
         ReminderScheduler.registerCategories(language: AppSettings.language)
+        // Nạp thêm lịch nhắc cho các ngày tới — kể cả khi iOS chỉ mở app chạy nền để xử lý nút "Đã ghi đủ".
+        ReminderScheduler.refresh()
         return true
     }
 
@@ -19,8 +21,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        // Chốt đúng ngày của thông báo, kể cả khi người dùng bấm sau nửa đêm.
-        let day = DayKey(response.notification.date, calendar: .current)
+        // Chốt đúng ngày ghi trong thông báo, kể cả khi người dùng bấm sau nửa đêm hay ở múi giờ khác.
+        // Thông báo lặp lại của bản cũ không mang ngày: suy từ lúc giao theo múi giờ hiện tại.
+        let tagged = (response.notification.request.content.userInfo[ReminderScheduler.dayInfoKey] as? String)
+            .flatMap { DayKey($0) }
+        let day = tagged ?? DayKey(response.notification.date, calendar: .current)
         let action = response.actionIdentifier
         Task { @MainActor in
             if action == ReminderScheduler.closeDayActionID {

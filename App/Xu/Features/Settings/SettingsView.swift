@@ -64,9 +64,9 @@ struct SettingsView: View {
             .onChange(of: language) { PreferenceChanges.apply() }
             .onChange(of: market) { PreferenceChanges.apply() }
             .onChange(of: reminderEnabled) {
-                guard reminderEnabled else { ReminderScheduler.disable(); return }
+                guard reminderEnabled else { ReminderScheduler.refresh(); return }
                 Task {
-                    let granted = await ReminderScheduler.enable(minutes: reminderMinutes, language: language)
+                    let granted = await ReminderScheduler.enable()
                     reminderDenied = !granted
                     if !granted { reminderEnabled = false }
                 }
