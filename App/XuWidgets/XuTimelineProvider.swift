@@ -38,9 +38,12 @@ struct XuTimelineProvider: TimelineProvider {
 
     private func loadEntry() -> XuEntry {
         let context = ModelContext(SharedStore.container)
-        let start = Calendar.current.startOfDay(for: .now)
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: .now)
+        // Cận trên: khoản ghi cho ngày tương lai (ví dụ "1/1/2030") không tính vào hôm nay, giống TodayCard.
+        let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
         let todayDescriptor = FetchDescriptor<TransactionRecord>(
-            predicate: #Predicate { $0.occurredAt >= start && $0.isIncome == false })
+            predicate: #Predicate { $0.occurredAt >= start && $0.occurredAt < end && $0.isIncome == false })
         let spent = ((try? context.fetch(todayDescriptor)) ?? []).reduce(0) { $0 + $1.amount }
 
         var chipDescriptor = FetchDescriptor<QuickChip>(sortBy: [SortDescriptor(\.sortOrder)])

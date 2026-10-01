@@ -66,7 +66,11 @@ struct QuickEntryBar: View {
         .animation(.snappy, value: toast)
         .onAppear { focused = true }
         .onChange(of: focusTrigger) { focused = true }
-        .onChange(of: text) { errorMessage = nil }
+        .onChange(of: text) {
+            errorMessage = nil
+            // Xoá hết ô nhập là bỏ câu đó: danh mục đã chọn tay không được dính sang câu sau (và không được học sai).
+            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { categoryOverride = nil }
+        }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryPicker(kind: preview?.isIncome == true ? .income : .expense) { id in
                 categoryOverride = id

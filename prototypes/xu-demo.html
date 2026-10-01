@@ -3,9 +3,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Xu Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap">
 <style>
 :root{
   --bg:#EEF1EC; --surface:#FFFFFF; --surface-2:#F4F6F2; --ink:#16211C; --muted:#667570;
@@ -268,9 +265,12 @@ function validDate(y,mo,d){const x=new Date(y,mo-1,d);return x.getFullYear()===y
 function parse(text,now=new Date()){
   text=text.normalize("NFC"); // như TextFolding.foldAligned: chuẩn hoá NFC trước khi gấp
   const f=fold(text),today=startOfDay(now),removed=[];let date=today;
-  let m=DMY.exec(f);
-  if(m){let y=m[3]?+m[3]:today.getFullYear();if(y<100)y+=2000;let d=validDate(y,+m[2],+m[1]);if(!m[3]&&(!d||d>today))d=validDate(y-1,+m[2],+m[1]);if(d){date=d;removed.push([m.index,m.index+m[0].length])}}
-  else{let hit=false;for(const [re,o] of REL){const r=re.exec(f);if(r){date=addDays(today,o);removed.push([r.index,r.index+r[0].length]);hit=true;break}}
+  // như QuickEntryParser.findDate: ngày phải tồn tại trong năm đã chọn; chỉ lùi một năm khi ngày đó ở tương lai
+  // và năm trước cũng có ngày đó. Ngày không tồn tại thì bỏ qua, thử tiếp "hôm qua"/thứ.
+  let m=DMY.exec(f),found=false;
+  if(m){let y=m[3]?+m[3]:today.getFullYear();if(y<100)y+=2000;let d=validDate(y,+m[2],+m[1]);
+    if(d){if(!m[3]&&d>today){const ly=validDate(y-1,+m[2],+m[1]);if(ly)d=ly}date=d;removed.push([m.index,m.index+m[0].length]);found=true}}
+  if(!found){let hit=false;for(const [re,o] of REL){const r=re.exec(f);if(r){date=addDays(today,o);removed.push([r.index,r.index+r[0].length]);hit=true;break}}
     if(!hit){const w=WD.exec(f);if(w){const n=w[1]||w[2];const target=n?(+n-1):0;const back=(today.getDay()-target+7)%7;date=addDays(today,-back);removed.push([w.index,w.index+w[0].length])}}}
   const masked=mask(f,removed),cands=[];AMT.lastIndex=0;let a;
   while((a=AMT.exec(masked))){let v=parseNumber(a[2]);if(isNaN(v))continue;const u=a[3];
