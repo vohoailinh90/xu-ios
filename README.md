@@ -31,6 +31,7 @@ xu-ios/
 │   ├── Shared/             Code dùng chung app + widget (SwiftData, App Intents)
 │   └── XuWidgets/          Widget extension (widget tương tác, màn hình khóa)
 ├── project.yml             Cấu hình XcodeGen để sinh file .xcodeproj
+├── prototypes/             Bản mô phỏng HTML (bấm thử luồng ghi, chấm độ chính xác biên lai)
 ├── scripts/                Script tạo label/milestone/issue trên GitHub
 └── .github/                CI chạy test XuCore, mẫu issue & PR
 ```
@@ -59,6 +60,10 @@ gh auth login
 ```
 
 Script sẽ tạo label, milestone M0–M4 và toàn bộ issue của MVP theo `docs/06-lo-trinh.md`.
+
+## Bản mô phỏng HTML
+
+Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/README.md).
 
 ## Tài liệu
 
