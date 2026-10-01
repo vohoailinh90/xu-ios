@@ -21,6 +21,7 @@ public struct WeeklySummary: Equatable, Sendable {
     public static func compute(entries: [LedgerEntry], closedDays: Set<DayKey>, today: DayKey,
                                primary: Currency, calendar: Calendar,
                                catalog: [CategoryDefinition] = CategoryCatalog.defaults) -> WeeklySummary {
+        let calendar = calendar.gregorianSameTimeZone
         // Gregorian: 1 = Chủ nhật, 2 = thứ Hai… → lùi về thứ Hai.
         let weekday = calendar.component(.weekday, from: today.date(in: calendar))
         let start = today.adding(days: -((weekday + 5) % 7), calendar: calendar)

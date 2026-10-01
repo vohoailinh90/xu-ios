@@ -43,14 +43,17 @@ public struct QuickEntryParser: Sendable {
     }
 
     public var options: Options
-    public var calendar: Calendar
+    /// Luôn là Gregorian (giữ múi giờ): "9/12", "2026年" là ngày Gregorian dù máy đặt lịch Nhật.
+    public var calendar: Calendar {
+        didSet { calendar = calendar.gregorianSameTimeZone }
+    }
     public var matcher: CategoryMatcher
 
     public init(options: Options = Options(),
                 calendar: Calendar = .current,
                 matcher: CategoryMatcher = CategoryMatcher()) {
         self.options = options
-        self.calendar = calendar
+        self.calendar = calendar.gregorianSameTimeZone
         self.matcher = matcher
     }
 

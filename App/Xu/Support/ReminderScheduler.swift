@@ -18,9 +18,11 @@ enum ReminderScheduler {
     /// Bản đầu dùng một thông báo lặp lại với mã này; dọn đi khi đặt lịch mới.
     static let legacyRequestID = "xu.eveningReminder"
     static let daysAhead = 14
-    /// Ngày → thời điểm nhắc đã đặt (giây từ 1970). Lần nào đã tới giờ là đã gửi: đổi giờ nhắc
-    /// trong cùng ngày không được nhắc lần nữa (thông báo đã gửi không còn trong danh sách chờ).
-    private static let firedKey = "reminderFireTimes"
+    /// Các ngày Xu đã đặt thông báo và chưa tự huỷ. Ngày nào trong đây mà không còn trong danh sách chờ
+    /// của iOS là đã gửi — đúng ở mọi múi giờ, khác với so giờ tuyệt đối (trigger chạy theo giờ địa phương).
+    private static let scheduledKey = "reminderScheduledDays"
+    /// Các ngày đã nhắc rồi: đổi giờ nhắc hay tắt/bật lại trong ngày cũng không nhắc lần nữa.
+    private static let remindedKey = "reminderRemindedDays"
 
     /// Đăng ký hai nút với chữ theo ngôn ngữ hiện tại. Gọi lúc mở app và khi đổi ngôn ngữ.
     static func registerCategories(language: AppLanguage) {
@@ -63,27 +65,36 @@ enum ReminderScheduler {
         registerCategories(language: language)
         let ours = await center.pendingNotificationRequests().map(\.identifier)
             .filter { $0 == legacyRequestID || $0.hasPrefix(requestPrefix) }
+        let pending = Set(ours)
 
-        // Chỉ giữ các lần nhắc đã tới giờ từ hôm nay trở đi; lần chưa tới giờ sẽ được đặt lại bên dưới.
-        let stored = defaults.dictionary(forKey: firedKey) as? [String: Double] ?? [:]
-        var fired = stored.filter { key, time in
-            time <= now.timeIntervalSince1970 && (DayKey(key).map { $0 >= today } ?? false)
+        let previouslyScheduled = defaults.stringArray(forKey: scheduledKey) ?? []
+        var reminded = Set(defaults.stringArray(forKey: remindedKey) ?? [])
+        // Thông báo của hôm nay (hay trước đó) không còn chờ là iOS đã gửi. Ngày mai trở đi thì chưa thể gửi —
+        // nếu mất (ví dụ khôi phục sang máy mới) thì cứ đặt lại.
+        for day in previouslyScheduled where !pending.contains(requestPrefix + day)
+            && (DayKey(day).map { $0 <= today } ?? false) {
+            reminded.insert(day)
         }
-        defer { defaults.set(fired, forKey: firedKey) }
+        reminded = reminded.filter { DayKey($0).map { $0 >= today } ?? false }
+        var scheduled: [String] = []
+        defer {
+            defaults.set(scheduled, forKey: scheduledKey)
+            defaults.set(Array(reminded), forKey: remindedKey)
+        }
 
         guard defaults.bool(forKey: AppSettings.Key.reminderEnabled) else {
             center.removePendingNotificationRequests(withIdentifiers: ours)
             return
         }
-        let reminded = Set(fired.keys.compactMap { DayKey($0) })
         let planned = upcoming(minutes: AppSettings.reminderMinutes, language: language, now: now, today: today,
-                               skipping: reminded, calendar: calendar)
+                               skipping: Set(reminded.compactMap { DayKey($0) }), calendar: calendar)
         let keep = Set(planned.map { $0.request.identifier })
         center.removePendingNotificationRequests(withIdentifiers: ours.filter { !keep.contains($0) })
         // Cùng mã thì lịch mới thay lịch cũ (giờ hoặc chữ đã đổi).
         for item in planned {
-            try? await center.add(item.request)
-            fired[item.day.description] = item.fire.timeIntervalSince1970
+            // Chỉ ghi nhận ngày đặt được thật, để lần sau không tưởng nhầm là đã gửi.
+            guard (try? await center.add(item.request)) != nil else { continue }
+            scheduled.append(item.day.description)
         }
     }
 
@@ -91,8 +102,8 @@ enum ReminderScheduler {
     /// 21:00 là 21:00 ở nơi người dùng đang ở. Thành phần ngày lấy theo lịch của máy, kèm niên hiệu,
     /// để máy đặt lịch Nhật vẫn hiểu đúng năm.
     private static func upcoming(minutes: Int, language: AppLanguage, now: Date, today: DayKey, skipping reminded: Set<DayKey>,
-                                 calendar: Calendar) -> [(day: DayKey, fire: Date, request: UNNotificationRequest)] {
-        (0..<daysAhead).compactMap { offset -> (day: DayKey, fire: Date, request: UNNotificationRequest)? in
+                                 calendar: Calendar) -> [(day: DayKey, request: UNNotificationRequest)] {
+        (0..<daysAhead).compactMap { offset -> (day: DayKey, request: UNNotificationRequest)? in
             let day = today.adding(days: offset, calendar: calendar)
             guard !reminded.contains(day),
                   let fire = calendar.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0,
@@ -107,7 +118,7 @@ enum ReminderScheduler {
             content.userInfo = [dayInfoKey: day.description]
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             let request = UNNotificationRequest(identifier: requestPrefix + day.description, content: content, trigger: trigger)
-            return (day, fire, request)
+            return (day, request)
         }
     }
 }

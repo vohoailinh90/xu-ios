@@ -125,6 +125,16 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(parse("2026/9/1 家賃 65000")), "2026-09-01")
     }
 
+    func testDatesWithJapaneseSystemCalendar() {
+        // Máy đặt lịch Nhật (năm Reiwa): câu nhập vẫn là ngày Gregorian.
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        let jp = QuickEntryParser(options: .init(market: .japan), calendar: japanese)
+        XCTAssertEqual(day(jp.parse("2026/9/1 家賃 65000", now: now)), "2026-09-01")
+        XCTAssertEqual(day(jp.parse("9月20日 スーパー 2480", now: now)), "2026-09-20")
+        XCTAssertEqual(day(jp.parse("令和8年9月1日 家賃 65000", now: now)), "2026-09-01")
+    }
+
     func testKanjiDates() {
         XCTAssertEqual(day(parse("9月20日 スーパー 2480")), "2026-09-20")
         XCTAssertEqual(day(parse("20日 スーパー 2480")), "2026-09-20")

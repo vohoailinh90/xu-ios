@@ -128,6 +128,22 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertFalse(s.isOverToday)
     }
 
+    func testBudgetMonthIsGregorianWhateverTheSystemCalendar() {
+        // Lịch Hồi giáo: 01/10/2026 nằm trong một tháng 29 ngày — kỳ ngân sách vẫn phải tới 31/10.
+        var islamic = Calendar(identifier: .islamicUmmAlQura)
+        islamic.timeZone = calendar.timeZone
+        let october = DayKey(year: 2026, month: 10, day: 1)
+        XCTAssertEqual(SafeToSpend.endOfMonth(containing: october, calendar: islamic).description, "2026-10-31")
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        XCTAssertEqual(SafeToSpend.endOfMonth(containing: today, calendar: japanese).description, "2026-09-30")
+        let s = SafeToSpend.compute(flexibleBudget: 3_100_000, spentBeforeToday: 0, spentToday: 0, today: october,
+                                    periodEnd: SafeToSpend.endOfMonth(containing: october, calendar: islamic),
+                                    calendar: islamic)
+        XCTAssertEqual(s.daysLeft, 31)
+        XCTAssertEqual(s.dailyAllowance, 100_000)
+    }
+
     func testOverspendingTodayGivesGentleAdjustment() {
         let end = SafeToSpend.endOfMonth(containing: today, calendar: calendar)
         let s = SafeToSpend.compute(flexibleBudget: 6_000_000, spentBeforeToday: 3_000_000,
@@ -269,6 +285,14 @@ final class WeeklySummaryTests: XCTestCase {
                                       primary: .jpy, calendar: calendar)
         XCTAssertEqual(s.noSpendDays, 2, "21 và 23 đã chốt, không tiêu vặt; 22 có cà phê")
         XCTAssertEqual(s.loggedDays, 3)
+    }
+
+    func testWeekIsTheSameWithJapaneseSystemCalendar() {
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        let s = WeeklySummary.compute(entries: [], closedDays: [], today: today, primary: .jpy, calendar: japanese)
+        XCTAssertEqual(s.weekStart.description, "2026-09-21")
+        XCTAssertEqual(s.weekEnd.description, "2026-09-27")
     }
 
     func testSundayBelongsToTheWeekStartingMonday() {

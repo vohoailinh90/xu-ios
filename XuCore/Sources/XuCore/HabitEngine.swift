@@ -1,8 +1,7 @@
 import Foundation
 
 /// Một ngày lịch (không có giờ), dùng làm khóa cho check-in và chốt ngày.
-/// Năm/tháng/ngày luôn theo lịch Gregorian (giữ múi giờ của `calendar` truyền vào): máy đặt lịch Nhật thì
-/// `Calendar.current` trả năm theo niên hiệu (Reiwa 8), không so sánh hay ghi thành chuỗi ổn định được.
+/// Năm/tháng/ngày luôn theo lịch Gregorian, giữ múi giờ của `calendar` truyền vào (`gregorianSameTimeZone`).
 public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringConvertible {
     public let year: Int
     public let month: Int
@@ -22,28 +21,21 @@ public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringCon
     }
 
     public init(_ date: Date, calendar: Calendar) {
-        let c = DayKey.gregorian(calendar).dateComponents([.year, .month, .day], from: date)
+        let c = calendar.gregorianSameTimeZone.dateComponents([.year, .month, .day], from: date)
         self.init(year: c.year ?? 1970, month: c.month ?? 1, day: c.day ?? 1)
     }
 
     /// Nửa đêm đầu ngày, theo múi giờ của `calendar`.
     public func date(in calendar: Calendar) -> Date {
-        DayKey.gregorian(calendar).date(from: DateComponents(year: year, month: month, day: day))
+        calendar.gregorianSameTimeZone.date(from: DateComponents(year: year, month: month, day: day))
             ?? Date(timeIntervalSince1970: 0)
     }
 
     public func adding(days: Int, calendar: Calendar) -> DayKey {
-        let gregorian = DayKey.gregorian(calendar)
+        let gregorian = calendar.gregorianSameTimeZone
         let start = date(in: gregorian)
         let shifted = gregorian.date(byAdding: .day, value: days, to: start) ?? start
         return DayKey(shifted, calendar: gregorian)
-    }
-
-    private static func gregorian(_ calendar: Calendar) -> Calendar {
-        guard calendar.identifier != .gregorian else { return calendar }
-        var gregorian = Calendar(identifier: .gregorian)
-        gregorian.timeZone = calendar.timeZone
-        return gregorian
     }
 
     public static func < (a: DayKey, b: DayKey) -> Bool {

@@ -31,6 +31,7 @@ public struct SafeToSpend: Equatable, Sendable {
                                today: DayKey,
                                periodEnd: DayKey,
                                calendar: Calendar) -> SafeToSpend {
+        let calendar = calendar.gregorianSameTimeZone
         let from = today.date(in: calendar)
         let to = periodEnd.date(in: calendar)
         let diff = calendar.dateComponents([.day], from: from, to: to).day ?? 0
@@ -44,8 +45,9 @@ public struct SafeToSpend: Equatable, Sendable {
                            daysLeft: daysLeft)
     }
 
-    /// Ngày cuối của tháng chứa `day`.
+    /// Ngày cuối của tháng (Gregorian) chứa `day`, kể cả khi máy đặt lịch khác.
     public static func endOfMonth(containing day: DayKey, calendar: Calendar) -> DayKey {
+        let calendar = calendar.gregorianSameTimeZone
         let date = day.date(in: calendar)
         guard let range = calendar.range(of: .day, in: .month, for: date) else { return day }
         return DayKey(year: day.year, month: day.month, day: range.upperBound - 1)
