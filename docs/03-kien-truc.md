@@ -111,4 +111,6 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
   (tiêu đề App Intents). Lý do: `docs/08`.
 - Cài đặt mà widget/Phím tắt cũng cần (ngôn ngữ, nơi chi tiêu) nằm trong `AppSettings` (UserDefaults của App Group), không ở `UserDefaults.standard`.
 - Tiền luôn đi kèm loại tiền: `MoneyFormatter.full/compact(amount, currency:, language:)`; tổng chi cộng riêng từng loại tiền.
+- Sửa giao dịch và chốt ngày cũng đi qua `Ledger` (`update`, `setDayClosed`), như khi ghi mới.
+- Thông báo chỉ đặt lịch cục bộ (`ReminderScheduler`, không máy chủ); nút trên thông báo xử lý ở `AppDelegate`.
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.

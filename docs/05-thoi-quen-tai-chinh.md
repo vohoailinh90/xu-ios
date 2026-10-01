@@ -1,6 +1,7 @@
 # 05 — Thói quen tài chính
 
-Code: `XuCore/Sources/XuCore/HabitEngine.swift`, `SafeToSpend.swift`
+Code: `XuCore/Sources/XuCore/HabitEngine.swift` (`HabitProgress`), `SafeToSpend.swift`, `WeeklySummary.swift` ·
+App: `App/Xu/Features/Habits/HabitsView.swift`, nhắc buổi tối `App/Xu/Support/ReminderScheduler.swift`
 
 ## Vì sao thói quen là lõi, không phải phụ kiện
 
