@@ -115,11 +115,12 @@ public enum L10n: String, CaseIterable, Sendable {
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
     case fasterEntry, tipWidget, tipActionButton, tipApplePay
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
-    case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayNotes, openShortcuts
+    case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
+    case applePayNotes, openShortcuts
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
-    case intentSaved, skippedZero
+    case intentSaved, skippedZero, unsupportedCurrency
     // Widget
     case widgetChipsDescription, widgetTodayLine, logSomethingElse, widgetTodayDescription, widgetInline, tapToLog
 
@@ -375,9 +376,9 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Tự ghi khi trả Apple Pay", en: "Auto-log Apple Pay", ja: "Apple Payを自動記録")
         case .applePayGuideIntro:
             LocalizedText(
-                vi: "Mỗi lần trả bằng thẻ trong Ví, app Phím tắt gọi Xu để ghi số tiền và tên cửa hàng — không cần mở app. Mọi thứ chạy trên máy; Xu không kết nối ngân hàng.",
-                en: "Every time you pay with a card in Wallet, the Shortcuts app asks Xu to log the amount and merchant — no need to open the app. It all runs on your phone; Xu never connects to your bank.",
-                ja: "ウォレットのカードで払うたびに、ショートカットAppがXuに金額と支払先を記録させます。アプリを開く必要はありません。すべて端末内で動き、Xuは銀行に接続しません。")
+                vi: "Bạn có thể cài một tự động hóa trong app Phím tắt để khi trả bằng thẻ trong Ví, Phím tắt gửi số tiền và tên cửa hàng cho Xu ghi lại. Mọi thứ chạy trên máy; Xu không kết nối ngân hàng.",
+                en: "You can set up an automation in the Shortcuts app so that when you pay with a card in Wallet, Shortcuts sends the amount and merchant to Xu to log. It all runs on your phone; Xu never connects to your bank.",
+                ja: "ショートカットAppでオートメーションを作ると、ウォレットのカードで払ったときに金額と支払先がXuに送られ、記録されます。すべて端末内で動き、Xuは銀行に接続しません。")
         case .applePayStep1:
             LocalizedText(vi: "Mở app Phím tắt › Tự động hóa › nút +.",
                           en: "Open the Shortcuts app › Automation › the + button.",
@@ -394,12 +395,16 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Ở ô Số tiền chọn biến số tiền của giao dịch, ở ô Người bán chọn biến tên cửa hàng.",
                           en: "Set Amount to the transaction's amount and Merchant to the transaction's merchant.",
                           ja: "「金額」に取引の金額、「支払先」に取引の店舗名を入れます。")
+        case .applePayStep5:
+            LocalizedText(vi: "Quẹt thử một lần rồi mở Xu xem khoản đó đã có trong danh sách chưa. Chưa thấy thì kiểm tra lại tự động hóa.",
+                          en: "Make one test payment, then open Xu and check that it appears in the list. If not, check the automation again.",
+                          ja: "一度試しに払ってから、Xuの一覧に記録されたか確認しましょう。なければオートメーションを見直してください。")
         case .applePayNotes:
             // {0} tên loại tiền của nơi chi tiêu
             LocalizedText(
-                vi: "Chỉ chạy với thẻ đã thêm vào Ví. Tên các mục trong app Phím tắt có thể khác một chút tuỳ phiên bản iOS. Số tiền được ghi bằng {0}; sửa được trong danh sách như mọi khoản khác.",
-                en: "Only works with cards added to Wallet. Labels in the Shortcuts app may differ slightly between iOS versions. Amounts are logged in {0}; you can edit them in the list like any entry.",
-                ja: "ウォレットに追加したカードのみ対象です。ショートカットAppの項目名はiOSのバージョンによって少し異なる場合があります。金額は{0}で記録され、一覧からいつでも修正できます。")
+                vi: "Chỉ chạy với thẻ đã thêm vào Ví. Tên các mục trong app Phím tắt có thể khác một chút tuỳ phiên bản iOS. Số tiền được ghi theo loại tiền của giao dịch (đồng hoặc yên); nếu Phím tắt không gửi loại tiền thì ghi bằng {0}. Sửa được trong danh sách như mọi khoản khác.",
+                en: "Only works with cards added to Wallet. Labels in the Shortcuts app may differ slightly between iOS versions. Amounts are logged in the transaction's currency (dong or yen); if Shortcuts doesn't pass a currency, they're logged in {0}. You can edit them in the list like any entry.",
+                ja: "ウォレットに追加したカードのみ対象です。ショートカットAppの項目名はiOSのバージョンによって少し異なる場合があります。金額は取引の通貨(ドンまたは円)で記録し、通貨が渡されない場合は{0}で記録します。一覧からいつでも修正できます。")
         case .openShortcuts:
             LocalizedText(vi: "Mở app Phím tắt", en: "Open Shortcuts", ja: "ショートカットAppを開く")
 
@@ -418,6 +423,11 @@ public enum L10n: String, CaseIterable, Sendable {
         case .skippedZero:
             LocalizedText(vi: "Bỏ qua giao dịch 0 đồng", en: "Skipped a zero-amount transaction",
                           ja: "金額0の取引はスキップしました")
+        case .unsupportedCurrency:
+            // {0} mã tiền tệ, ví dụ "USD"
+            LocalizedText(vi: "Xu chưa ghi được tiền {0}, khoản này chưa được ghi. Bạn ghi tay giúp nhé.",
+                          en: "Xu can't log {0} yet, so this payment wasn't logged. Please add it by hand.",
+                          ja: "Xuは{0}にまだ対応していないため、記録していません。手入力で追加してください。")
 
         case .widgetChipsDescription:
             LocalizedText(vi: "Chạm để ghi ngay, không cần mở app.", en: "Tap to log instantly, no need to open the app.",

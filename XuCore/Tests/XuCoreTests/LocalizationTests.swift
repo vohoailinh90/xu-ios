@@ -68,6 +68,17 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(AppLanguage.preferred(from: []), .vi)
     }
 
+    func testCurrencyFromOutside() {
+        XCTAssertEqual(Currency(exactCode: "JPY"), .jpy)
+        XCTAssertEqual(Currency(exactCode: " vnd "), .vnd)
+        XCTAssertNil(Currency(exactCode: "USD"), "Tiền chưa hỗ trợ không được ghi nhầm thành đồng")
+        XCTAssertNil(Currency(exactCode: ""))
+        XCTAssertEqual(Currency.wholeUnits(Decimal(string: "1000")!), 1_000)
+        XCTAssertEqual(Currency.wholeUnits(Decimal(string: "1000.4")!), 1_000)
+        XCTAssertEqual(Currency.wholeUnits(Decimal(string: "1000.5")!), 1_001)
+        XCTAssertEqual(Currency.wholeUnits(Decimal(string: "45000")!), 45_000)
+    }
+
     func testMarketAndCurrency() {
         XCTAssertEqual(Market.guess(regionCode: "JP"), .japan)
         XCTAssertEqual(Market.guess(regionCode: "VN"), .vietnam)

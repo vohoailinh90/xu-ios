@@ -15,6 +15,23 @@ public enum Currency: String, CaseIterable, Codable, Sendable, Identifiable {
         self = Currency(rawValue: code.uppercased()) ?? .vnd
     }
 
+    /// Mã từ bên ngoài (ví dụ giao dịch thẻ do Phím tắt gửi): chỉ nhận đúng VND/JPY, mã lạ → `nil`
+    /// để nơi gọi từ chối rõ ràng thay vì ghi nhầm sang tiền khác.
+    public init?(exactCode: String) {
+        guard let currency = Currency(rawValue: exactCode.trimmingCharacters(in: .whitespaces).uppercased()) else {
+            return nil
+        }
+        self = currency
+    }
+
+    /// Làm tròn về đơn vị nguyên (đồng và yên không có số lẻ), nửa đơn vị làm tròn ra xa số 0.
+    public static func wholeUnits(_ value: Decimal) -> Int64 {
+        var input = value
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &input, 0, .plain)
+        return NSDecimalNumber(decimal: rounded).int64Value
+    }
+
     public var names: LocalizedText {
         switch self {
         case .vnd: LocalizedText(vi: "Đồng (VND)", en: "Vietnamese dong (VND)", ja: "ベトナムドン(VND)")

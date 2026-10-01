@@ -7,7 +7,7 @@ struct ApplePayGuideView: View {
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
 
-    private var steps: [L10n] { [.applePayStep1, .applePayStep2, .applePayStep3, .applePayStep4] }
+    private var steps: [L10n] { [.applePayStep1, .applePayStep2, .applePayStep3, .applePayStep4, .applePayStep5] }
 
     var body: some View {
         List {
