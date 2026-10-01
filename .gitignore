@@ -1,12 +1,25 @@
-# Xcode / Swift
-.DS_Store
-build/
-DerivedData/
-*.xcuserstate
+# Xcode (Xu.xcodeproj sinh bằng XcodeGen từ project.yml)
+*.xcodeproj/
+*.xcworkspace/
+!XuCore/.swiftpm/xcode/package.xcworkspace
 xcuserdata/
-*.xcworkspace/xcuserdata/
-.swiftpm/
-.build/
+*.xcuserstate
+DerivedData/
+build/
+*.xcresult
 *.ipa
-*.dSYM.zip
 *.dSYM
+*.dSYM.zip
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# macOS
+.DS_Store
+
+# Secrets
+*.p8
+*.mobileprovision
+Secrets.xcconfig
