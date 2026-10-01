@@ -109,7 +109,9 @@ private struct TodayCard: View {
             if flexibleBudget > 0 {
                 let safe = safeToSpend(expenses: expenses, today: today, calendar: cal)
                 // Không dùng màu đỏ trừng phạt — xem docs/05-thoi-quen-tai-chinh.md
-                if safe.isOverToday, let adjusted = safe.adjustedAllowanceForComingDays {
+                if safe.isBudgetUsedUp {
+                    Text(language.t(.budgetUsedUp)).font(.callout)
+                } else if safe.isOverToday, let adjusted = safe.adjustedAllowanceForComingDays {
                     Text(language.t(.overToday, MoneyFormatter.compact(adjusted, currency: currency, language: language)))
                         .font(.callout)
                 } else {

@@ -390,6 +390,10 @@ public struct QuickEntryParser: Sendable {
         if range.lowerBound > 0 {
             let previous = chars[range.lowerBound - 1]
             guard previous.isWhitespace || previous.isPunctuation else { return false }
+            // "3泊 4日", "3泊・4日": số ngày đi sau số đêm là thời lượng, dù có cách bằng khoảng trắng.
+            var k = range.lowerBound - 1
+            while k >= 0, chars[k].isWhitespace || chars[k].isPunctuation { k -= 1 }
+            if k >= 0, chars[k] == "泊" { return false }
         }
         let end = range.upperBound
         guard end < chars.count else { return true }

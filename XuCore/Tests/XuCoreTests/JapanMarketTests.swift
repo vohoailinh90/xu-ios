@@ -176,6 +176,9 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(hotel.amount, 20_000)
         XCTAssertEqual(hotel.note, "ホテル3泊4日")
         XCTAssertEqual(hotel.categoryID, "entertainment")
+        let spaced = parse("ホテル 3泊 4日 20000円")
+        XCTAssertEqual(day(spaced), "2026-09-25", "3泊 4日 có khoảng trắng vẫn là thời lượng")
+        XCTAssertEqual(spaced.note, "ホテル 3泊 4日")
         XCTAssertEqual(day(parse("ランチ (20日) 900")), "2026-09-20", "Ngày trong ngoặc vẫn đứng riêng")
     }
 

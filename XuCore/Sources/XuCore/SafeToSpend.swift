@@ -19,6 +19,12 @@ public struct SafeToSpend: Equatable, Sendable {
 
     public var isOverToday: Bool { remainingToday < 0 }
 
+    /// Kỳ này không còn gì để chia cho những ngày tới (hết hẳn, hoặc chỉ còn lẻ chia ra 0 mỗi ngày).
+    /// Khi đó đừng hứa "mỗi ngày khoảng 0 là cân lại được" — nói nhẹ nhàng là đã dùng hết.
+    public var isBudgetUsedUp: Bool {
+        remainingInPeriod <= 0 || (isOverToday && (adjustedAllowanceForComingDays ?? 0) == 0)
+    }
+
     public static func compute(flexibleBudget: Int64,
                                spentBeforeToday: Int64,
                                spentToday: Int64,

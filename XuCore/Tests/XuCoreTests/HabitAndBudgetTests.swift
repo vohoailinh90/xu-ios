@@ -110,6 +110,20 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertTrue(s.isOverToday)
         XCTAssertEqual(s.remainingToday, -100_000)
         XCTAssertEqual(s.adjustedAllowanceForComingDays, 480_000) // 2,4tr / 5 ngày
+        XCTAssertFalse(s.isBudgetUsedUp)
+    }
+
+    func testBudgetUsedUpDoesNotPromiseZeroPerDay() {
+        let end = SafeToSpend.endOfMonth(containing: today, calendar: calendar)
+        // Ngân sách 6tr, đã tiêu 5,9tr, hôm nay thêm 200k → tháng âm 100k
+        let over = SafeToSpend.compute(flexibleBudget: 6_000_000, spentBeforeToday: 5_900_000,
+                                       spentToday: 200_000, today: today, periodEnd: end, calendar: calendar)
+        XCTAssertEqual(over.adjustedAllowanceForComingDays, 0)
+        XCTAssertTrue(over.isBudgetUsedUp)
+        // Tiêu vừa đúng hết ngân sách trước hôm nay
+        let exact = SafeToSpend.compute(flexibleBudget: 6_000_000, spentBeforeToday: 6_000_000,
+                                        spentToday: 0, today: today, periodEnd: end, calendar: calendar)
+        XCTAssertTrue(exact.isBudgetUsedUp)
     }
 
     // MARK: Định dạng tiền

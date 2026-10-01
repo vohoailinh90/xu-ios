@@ -89,7 +89,7 @@ public struct LocalizedText: Hashable, Sendable {
 /// Thêm chuỗi mới: thêm case + đủ 3 thứ tiếng; test kiểm tra các bản dịch có cùng chỗ trống `{n}`.
 public enum L10n: String, CaseIterable, Sendable {
     // Home
-    case today, yesterday, quickChips, spentToday, remainingToday, overToday, otherCurrencies
+    case today, yesterday, quickChips, spentToday, remainingToday, overToday, budgetUsedUp, otherCurrencies
     case exportCSV, csvPreviewTitle, settings, done
     // Ô nhập nhanh
     case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
@@ -122,6 +122,11 @@ public enum L10n: String, CaseIterable, Sendable {
                 vi: "Hôm nay hơi quá tay một chút. Những ngày tới mỗi ngày khoảng {0} là cân lại được 🌱",
                 en: "A little over today. About {0} a day from here and you're back in balance 🌱",
                 ja: "今日はちょっと使いすぎたかも。これから1日{0}くらいにすれば大丈夫 🌱")
+        case .budgetUsedUp:
+            LocalizedText(
+                vi: "Ngân sách tiêu vặt tháng này đã dùng hết. Không sao cả, tháng sau mình bắt đầu lại nhé 🌱",
+                en: "This month's flexible budget is used up. That's okay, next month is a fresh start 🌱",
+                ja: "今月の自由に使える予算は使い切りました。大丈夫、来月またリセットされます 🌱")
         case .otherCurrencies:
             LocalizedText(vi: "Tiền khác: {0}", en: "Other currencies: {0}", ja: "ほかの通貨: {0}")
         case .exportCSV:
