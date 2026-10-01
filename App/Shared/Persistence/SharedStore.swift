@@ -60,6 +60,23 @@ enum Ledger {
         reloadWidgets()
     }
 
+    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ);
+    /// giữ nguyên ngày thì giữ nguyên giờ lúc ghi.
+    static func update(_ record: TransactionRecord, amount: Int64, currency: Currency, isIncome: Bool,
+                       categoryID: String, note: String, day: Date, in context: ModelContext) throws {
+        guard amount > 0 else { throw LedgerError.missingAmount }
+        if !Calendar.current.isDate(day, inSameDayAs: record.occurredAt) {
+            record.occurredAt = occurredAt(for: day)
+        }
+        record.amount = amount
+        record.currencyCode = currency.code
+        record.isIncome = isIncome
+        record.categoryID = categoryID
+        record.note = note
+        try context.save()
+        reloadWidgets()
+    }
+
     static func delete(_ record: TransactionRecord, in context: ModelContext) throws {
         context.delete(record)
         try context.save()

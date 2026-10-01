@@ -14,6 +14,7 @@ struct HomeView: View {
 
     @State private var focusTrigger = 0
     @State private var showSettings = false
+    @State private var editing: TransactionRecord?
 
     var body: some View {
         NavigationStack {
@@ -28,7 +29,12 @@ struct HomeView: View {
                 }
                 ForEach(groupedByDay, id: \.day) { group in
                     Section {
-                        ForEach(group.items) { TransactionRow(record: $0, language: language) }
+                        ForEach(group.items) { record in
+                            Button { editing = record } label: {
+                                TransactionRow(record: record, language: language)
+                            }
+                            .buttonStyle(.plain)
+                        }
                             .onDelete { offsets in
                                 for i in offsets { try? Ledger.delete(group.items[i], in: context) }
                             }
@@ -59,6 +65,7 @@ struct HomeView: View {
                 QuickEntryBar(focusTrigger: focusTrigger)
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
         .onOpenURL { url in
             if url.host == "new" { focusTrigger += 1 }
@@ -184,5 +191,6 @@ private struct TransactionRow: View {
                 .monospacedDigit()
                 .foregroundStyle(record.isIncome ? .green : .primary)
         }
+        .contentShape(Rectangle())
     }
 }

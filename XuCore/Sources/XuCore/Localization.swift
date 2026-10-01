@@ -94,6 +94,8 @@ public enum L10n: String, CaseIterable, Sendable {
     // Ô nhập nhanh
     case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
+    // Sửa giao dịch
+    case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
     // Cài đặt
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
@@ -164,6 +166,25 @@ public enum L10n: String, CaseIterable, Sendable {
         case .placeholderJapan:
             LocalizedText(vi: "konbini 500, cơm 980 yên hôm qua…", en: "coffee 350, train 220 yesterday…",
                           ja: "コーヒー 350円、昨日 電車 220…")
+
+        case .editEntry:
+            LocalizedText(vi: "Sửa khoản", en: "Edit entry", ja: "記録を編集")
+        case .noteField:
+            LocalizedText(vi: "Ghi chú", en: "Note", ja: "メモ")
+        case .amountField:
+            LocalizedText(vi: "Số tiền", en: "Amount", ja: "金額")
+        case .currencyField:
+            LocalizedText(vi: "Loại tiền", en: "Currency", ja: "通貨")
+        case .incomeToggle:
+            LocalizedText(vi: "Đây là khoản thu", en: "This is income", ja: "収入として記録")
+        case .categoryField:
+            LocalizedText(vi: "Danh mục", en: "Category", ja: "カテゴリ")
+        case .dateField:
+            LocalizedText(vi: "Ngày", en: "Date", ja: "日付")
+        case .cancel:
+            LocalizedText(vi: "Huỷ", en: "Cancel", ja: "キャンセル")
+        case .deleteEntry:
+            LocalizedText(vi: "Xoá khoản này", en: "Delete entry", ja: "この記録を削除")
 
         case .language:
             LocalizedText(vi: "Ngôn ngữ", en: "Language", ja: "言語")
