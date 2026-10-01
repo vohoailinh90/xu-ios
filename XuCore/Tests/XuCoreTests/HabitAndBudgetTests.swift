@@ -22,6 +22,22 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertNil(DayKey("2026-9-5"))
         XCTAssertNil(DayKey("2026-13-01"))
         XCTAssertNil(DayKey("hôm nay"))
+        XCTAssertEqual(DayKey("812-01-02"), DayKey(year: 812, month: 1, day: 2), "Đọc được mọi chuỗi description tạo ra")
+    }
+
+    func testDayKeyIsGregorianEvenWithJapaneseCalendar() {
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = japanese.timeZone
+        let date = gregorian.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 21))!
+        let key = DayKey(date, calendar: japanese)
+        XCTAssertEqual(key.description, "2026-10-01", "Không phải năm Reiwa 8")
+        XCTAssertEqual(DayKey(key.description), key)
+        XCTAssertEqual(key.date(in: japanese), gregorian.startOfDay(for: date))
+        XCTAssertEqual(key.adding(days: 31, calendar: japanese).description, "2026-11-01")
+        XCTAssertEqual(DayKey(year: 2019, month: 4, day: 30).adding(days: 1, calendar: japanese).description,
+                       "2019-05-01", "Qua lúc đổi niên hiệu Heisei → Reiwa vẫn đúng")
     }
 
     func testDayKeyArithmeticAcrossMonths() {

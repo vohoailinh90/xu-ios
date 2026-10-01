@@ -114,5 +114,6 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
 - Sửa giao dịch và chốt ngày cũng đi qua `Ledger` (`update`, `setDayClosed`), như khi ghi mới.
 - Thông báo chỉ đặt lịch cục bộ (`ReminderScheduler`, không máy chủ); nút trên thông báo xử lý ở `AppDelegate`.
   Mỗi ngày một thông báo riêng, đặt trước 14 ngày và nạp thêm mỗi lần mở app; ngày cần chốt nằm trong `userInfo`,
-  nên bấm sau nửa đêm hay ở múi giờ khác vẫn chốt đúng ngày.
+  nên bấm sau nửa đêm hay ở múi giờ khác vẫn chốt đúng ngày. Ngày đã nhắc rồi thì đổi giờ nhắc cũng không nhắc lại.
+- `DayKey` luôn theo lịch Gregorian (giữ múi giờ), kể cả khi máy đặt lịch Nhật (năm Reiwa), để so sánh và ghi chuỗi ổn định.
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.

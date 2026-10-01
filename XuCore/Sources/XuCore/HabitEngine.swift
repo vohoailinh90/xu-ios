@@ -1,6 +1,8 @@
 import Foundation
 
 /// Một ngày lịch (không có giờ), dùng làm khóa cho check-in và chốt ngày.
+/// Năm/tháng/ngày luôn theo lịch Gregorian (giữ múi giờ của `calendar` truyền vào): máy đặt lịch Nhật thì
+/// `Calendar.current` trả năm theo niên hiệu (Reiwa 8), không so sánh hay ghi thành chuỗi ổn định được.
 public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringConvertible {
     public let year: Int
     public let month: Int
@@ -13,24 +15,35 @@ public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringCon
     /// Đọc lại từ `description` ("2026-09-25"), ví dụ ngày gắn trong thông báo nhắc chốt ngày.
     public init?(_ description: String) {
         let parts = description.split(separator: "-", omittingEmptySubsequences: false)
-        guard parts.count == 3, parts[0].count == 4, parts[1].count == 2, parts[2].count == 2,
+        guard parts.count == 3, !parts[0].isEmpty, parts[1].count == 2, parts[2].count == 2,
               let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
               (1...12).contains(month), (1...31).contains(day) else { return nil }
         self.init(year: year, month: month, day: day)
     }
 
     public init(_ date: Date, calendar: Calendar) {
-        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        let c = DayKey.gregorian(calendar).dateComponents([.year, .month, .day], from: date)
         self.init(year: c.year ?? 1970, month: c.month ?? 1, day: c.day ?? 1)
     }
 
+    /// Nửa đêm đầu ngày, theo múi giờ của `calendar`.
     public func date(in calendar: Calendar) -> Date {
-        calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? Date(timeIntervalSince1970: 0)
+        DayKey.gregorian(calendar).date(from: DateComponents(year: year, month: month, day: day))
+            ?? Date(timeIntervalSince1970: 0)
     }
 
     public func adding(days: Int, calendar: Calendar) -> DayKey {
-        let shifted = calendar.date(byAdding: .day, value: days, to: date(in: calendar)) ?? date(in: calendar)
-        return DayKey(shifted, calendar: calendar)
+        let gregorian = DayKey.gregorian(calendar)
+        let start = date(in: gregorian)
+        let shifted = gregorian.date(byAdding: .day, value: days, to: start) ?? start
+        return DayKey(shifted, calendar: gregorian)
+    }
+
+    private static func gregorian(_ calendar: Calendar) -> Calendar {
+        guard calendar.identifier != .gregorian else { return calendar }
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = calendar.timeZone
+        return gregorian
     }
 
     public static func < (a: DayKey, b: DayKey) -> Bool {
