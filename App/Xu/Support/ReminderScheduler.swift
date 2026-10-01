@@ -67,14 +67,18 @@ enum ReminderScheduler {
             .filter { $0 == legacyRequestID || $0.hasPrefix(requestPrefix) }
         let pending = Set(ours)
 
+        let delivered = Set(await center.deliveredNotifications().map(\.request.identifier))
+
         let previouslyScheduled = defaults.stringArray(forKey: scheduledKey) ?? []
         var reminded = Set(defaults.stringArray(forKey: remindedKey) ?? [])
-        // Thông báo của hôm nay (hay trước đó) không còn chờ là iOS đã gửi. Ngày mai trở đi thì chưa thể gửi —
-        // nếu mất (ví dụ khôi phục sang máy mới) thì cứ đặt lại.
-        for day in previouslyScheduled where !pending.contains(requestPrefix + day)
-            && (DayKey(day).map { $0 <= today } ?? false) {
-            reminded.insert(day)
+        // Đã đặt mà không còn chờ: ngày hôm nay trở về trước là iOS đã gửi. Ngày sau hôm nay chỉ tính là đã gửi
+        // khi còn nằm trong Trung tâm thông báo (vừa đi qua đường đổi ngày về phía tây); ngoài ra là bị mất
+        // (ví dụ khôi phục sang máy mới) thì cứ đặt lại.
+        for day in previouslyScheduled where !pending.contains(requestPrefix + day) {
+            let past = DayKey(day).map { $0 <= today } ?? false
+            if past || delivered.contains(requestPrefix + day) { reminded.insert(day) }
         }
+        // Chỉ giữ hôm nay trở đi (tính cả ngày "tương lai" đã gửi ở trên).
         reminded = reminded.filter { DayKey($0).map { $0 >= today } ?? false }
         var scheduled: [String] = []
         defer {
