@@ -59,8 +59,10 @@ TransactionRecord
   sourceRaw: String        // quickText | voice | widgetChip | shortcut | applePay | screenshot | manual
   rawInput: String         // câu gốc người dùng gõ — chỉ lưu trên máy, dùng để cải thiện parser
 
-QuickChip                  // khoản quen trên widget
+QuickChip                  // khoản quen trên widget, tối đa 8; widget hiện theo sortOrder (vừa 4, nhỏ 2)
   id, title, emoji, amount, currencyCode, categoryID, sortOrder
+  // thêm/sửa/bỏ ghim/sắp xếp qua QuickChipStore; gợi ý từ ChipSuggester (XuCore): cùng ghi chú + số tiền
+  // + loại tiền, ít nhất 3 ngày khác nhau trong 30 ngày. Người dùng đã tự sửa thì không seed lại mặc định.
 
 LearnedKeyword             // từ khóa học được khi người dùng sửa danh mục
   phrase: String           // đã bỏ dấu, chữ thường

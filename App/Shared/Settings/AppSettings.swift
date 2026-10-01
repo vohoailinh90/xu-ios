@@ -14,12 +14,19 @@ enum AppSettings {
         static let reminderMinutes = "reminderMinutes"
         /// Đổi giá trị này (thời điểm) để Home focus ô nhập, ví dụ khi chạm "Ghi thêm" trên thông báo.
         static let focusRequest = "focusRequest"
+        /// Người dùng đã tự thêm/sửa/xoá/sắp xếp khoản quen: không bao giờ tự đặt lại khoản quen mặc định nữa.
+        static let chipsCustomized = "chipsCustomized"
     }
 
     static let defaultReminderMinutes = 21 * 60
 
     static var reminderMinutes: Int {
         defaults.object(forKey: Key.reminderMinutes) as? Int ?? defaultReminderMinutes
+    }
+
+    static var chipsCustomized: Bool {
+        get { defaults.bool(forKey: Key.chipsCustomized) }
+        set { defaults.set(newValue, forKey: Key.chipsCustomized) }
     }
 
     static func requestFocus() {

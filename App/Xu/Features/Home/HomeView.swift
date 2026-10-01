@@ -18,6 +18,7 @@ struct HomeView: View {
     @State private var focusTrigger = 0
     @State private var showSettings = false
     @State private var showHabits = false
+    @State private var showChips = false
     @State private var editing: TransactionRecord?
 
     var body: some View {
@@ -29,7 +30,17 @@ struct HomeView: View {
                               currency: market.currency, language: language)
                 }
                 if !chips.isEmpty {
-                    Section(language.t(.quickChips)) { ChipRow(chips: chips, language: language) }
+                    Section {
+                        ChipRow(chips: chips, language: language)
+                    } header: {
+                        HStack {
+                            Text(language.t(.quickChips))
+                            Spacer()
+                            Button(language.t(.editChips)) { showChips = true }
+                                .font(.footnote)
+                                .textCase(nil)
+                        }
+                    }
                 }
                 let week = weeklySummary
                 if !week.isEmpty {
@@ -80,6 +91,16 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showHabits) { HabitsView() }
+            .sheet(isPresented: $showChips) {
+                NavigationStack {
+                    QuickChipsManager()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(language.t(.done)) { showChips = false }
+                            }
+                        }
+                }
+            }
             .fullScreenCover(isPresented: showOnboarding) {
                 OnboardingView {
                     hasOnboarded = true
@@ -96,6 +117,7 @@ struct HomeView: View {
             showSettings = false
             showHabits = false
             editing = nil
+            showChips = false
             focusTrigger += 1
         }
     }
