@@ -31,7 +31,7 @@ header .tag{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:u
 header h1{margin:4px 0 6px;font-size:32px;line-height:1.15;letter-spacing:-.02em;font-weight:800;text-wrap:balance}
 header p{margin:0;color:var(--muted);max-width:68ch}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:22px;align-items:start}
-@media (max-width:860px){.grid{grid-template-columns:1fr}}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--surface);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px}
 .panel h2{margin:0;font-size:16px}
 label.l{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -93,16 +93,21 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
 
 <div class="wrap">
   <header>
-    <div class="tag">Xu · thử nghiệm đọc biên lai chuyển khoản</div>
+    <div class="tag">Xu · thử nghiệm đọc biên lai &amp; hoá đơn</div>
     <h1>Chấm độ chính xác đọc biên lai</h1>
-    <p>Dán phần chữ mà iPhone đọc được từ ảnh biên lai (qua phím tắt “Thử biên lai” hoặc Văn bản trực tiếp), nhập số tiền thật, rồi lưu. Trang lấy số tiền theo quy tắc dự kiến của Xu và tự tính tỷ lệ đúng theo từng ngân hàng. Mục tiêu: 50 ảnh, 5 ngân hàng.</p>
+    <p>Dán phần chữ mà iPhone đọc được từ ảnh (qua phím tắt “Thử biên lai” hoặc Văn bản trực tiếp), nhập số tiền thật, rồi lưu. Trang lấy số tiền theo quy tắc dự kiến của Xu và tự tính tỷ lệ đúng theo từng <span id="groupWord">ngân hàng</span>. Có hai loại: biên lai chuyển khoản ở Việt Nam và hoá đơn cửa hàng ở Nhật (レシート). Mục tiêu mỗi loại: 50 ảnh, 5 <span id="groupWord2">ngân hàng</span>.</p>
   </header>
 
   <div class="grid">
     <section class="panel" aria-labelledby="h-add">
       <h2 id="h-add">Chấm một biên lai</h2>
+      <div><label class="l" for="mode">Loại giấy tờ</label>
+        <select id="mode">
+          <option value="vn">Biên lai chuyển khoản (Việt Nam)</option>
+          <option value="jp">Hoá đơn cửa hàng ở Nhật (レシート)</option>
+        </select></div>
       <div class="row2">
-        <div><label class="l" for="bank">Ngân hàng / ví</label>
+        <div><label class="l" for="bank" id="bankLabel">Ngân hàng / ví</label>
           <select id="bank">
             <option>Vietcombank</option><option>Techcombank</option><option>MB Bank</option><option>BIDV</option><option>VietinBank</option>
             <option>ACB</option><option>TPBank</option><option>VPBank</option><option>Sacombank</option><option>MoMo</option><option>ZaloPay</option><option>Khác</option>
@@ -113,7 +118,7 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
       <div>
         <label class="l" for="ocr">Chữ đọc được từ ảnh (dán vào)</label>
         <textarea id="ocr" spellcheck="false"></textarea>
-        <p class="hint">Chỉ xử lý trên trang này, <b>không được lưu</b>. Chỉ lưu ngân hàng, số tiền và kết quả đúng/sai, và chỉ trên máy này.</p>
+        <p class="hint">Chỉ xử lý trên trang này, <b>không được lưu</b>. Chỉ lưu nơi phát hành (ngân hàng/cửa hàng), số tiền và kết quả đúng/sai, và chỉ trên máy này.</p>
       </div>
 
       <div class="read" id="readBox">
@@ -123,8 +128,8 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
       </div>
 
       <div class="checks">
-        <label><input type="checkbox" id="recOk"> Tên người nhận đọc đúng (đúng dấu tiếng Việt)</label>
-        <label><input type="checkbox" id="noteOk"> Nội dung chuyển khoản đọc đúng</label>
+        <label><input type="checkbox" id="recOk"> <span id="recLabel">Tên người nhận đọc đúng (đúng dấu tiếng Việt)</span></label>
+        <label><input type="checkbox" id="noteOk"> <span id="noteLabel">Nội dung chuyển khoản đọc đúng</span></label>
       </div>
       <div class="actions">
         <button class="btn" id="save" type="button" disabled>Lưu kết quả</button>
@@ -137,22 +142,22 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
       <h2 id="h-sum">Kết quả</h2>
       <div class="big num">
         <div><b id="kAmt">—</b><small>số tiền đọc đúng</small></div>
-        <div><b id="kRec">—</b><small>tên người nhận đúng</small></div>
+        <div><b id="kRec">—</b><small id="kRecLabel">tên người nhận đúng</small></div>
         <div><b id="kN">0<span style="font-size:15px;color:var(--muted)">/50</span></b><small>biên lai đã chấm</small></div>
       </div>
       <div class="progress" aria-hidden="true"><i id="prog" style="width:0%"></i></div>
       <div class="verdict idle" id="verdict"></div>
       <div>
-        <label class="l">Theo ngân hàng · vạch dọc = ngưỡng 95%</label>
+        <label class="l"><span id="byLabel">Theo ngân hàng</span> · vạch dọc = ngưỡng 95%</label>
         <div class="tablewrap"><table class="num">
-          <thead><tr><th>Ngân hàng</th><th class="r">Ảnh</th><th>Số tiền đúng</th><th class="r">Tên đúng</th><th class="r">Nội dung</th></tr></thead>
+          <thead><tr><th class="srcHead">Ngân hàng</th><th class="r">Ảnh</th><th>Số tiền đúng</th><th class="r">Tên đúng</th><th class="r" id="col2Head">Nội dung</th></tr></thead>
           <tbody id="byBank"></tbody>
         </table></div>
       </div>
       <div>
         <label class="l">Đã chấm gần đây</label>
         <div class="tablewrap"><table class="num">
-          <thead><tr><th>Ngân hàng</th><th class="r">Thật</th><th class="r">Xu đọc</th><th>Kết quả</th><th></th></tr></thead>
+          <thead><tr><th class="srcHead">Ngân hàng</th><th class="r">Thật</th><th class="r">Xu đọc</th><th>Kết quả</th><th></th></tr></thead>
           <tbody id="hist"></tbody>
         </table></div>
       </div>
@@ -166,9 +171,10 @@ code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border
       <li>Thêm hành động <b>Trích xuất văn bản từ ảnh</b> (dùng bộ đọc chữ trên máy của Apple, giống app Xu sẽ dùng).</li>
       <li>Thêm <b>Sao chép vào bảng tạm</b> rồi <b>Hiển thị kết quả</b>.</li>
       <li>Mở ảnh biên lai › Chia sẻ › Thử biên lai, rồi dán vào ô “Chữ đọc được” ở trang này.</li>
-      <li>Kiểm tra máy có hỗ trợ tiếng Việt cho Văn bản trực tiếp: Cài đặt › Chung › Ngôn ngữ &amp; Vùng.</li>
+      <li>Kiểm tra máy có hỗ trợ tiếng Việt (hoặc tiếng Nhật, với hoá đơn Nhật) cho Văn bản trực tiếp: Cài đặt › Chung › Ngôn ngữ &amp; Vùng.</li>
     </ol>
-    <p class="hint">Ngưỡng quyết định lấy từ file tính năng “Ghi từ ảnh chụp chuyển khoản”: số tiền đúng ≥ 95% thì đáng làm; dưới 90% trên 50 ảnh thật thì hoãn. Dùng ảnh của chính bạn; ảnh của người khác cần xin phép.</p>
+    <p class="hint">Ngưỡng quyết định lấy từ file tính năng “Ghi từ ảnh chụp chuyển khoản”: số tiền đúng ≥ 95% thì đáng làm; dưới 90% trên 50 ảnh thật thì hoãn. Hoá đơn Nhật đang <b>mượn tạm</b> ngưỡng này; muốn làm tính năng đọc hoá đơn Nhật thì cần file tính năng riêng ở App-idea-lab. Dùng ảnh của chính bạn; ảnh của người khác cần xin phép.</p>
+    <p class="hint">Hoá đơn Nhật: Xu chọn số ở dòng 合計 / お会計 / お買上 (tổng tiền), bỏ qua 小計 (tạm tính), お預り (tiền đưa), お釣り (tiền thối), dòng thuế (消費税, 8%対象) và số món (点). Số không có ¥, 円 hay dấu phẩy chỉ được tính khi nằm trên dòng tổng.</p>
   </details>
 </div>
 
@@ -202,25 +208,91 @@ function parseTruth(s){const f=fold(s).replace(/\s/g,"");if(!f)return null;
   m=f.match(/^(\d+(?:[.,]\d+)?)(k|nghin|ngan)$/);if(m)return Math.round(parseFloat(m[1].replace(",","."))*1e3);
   const d=f.replace(/(vnd|d)$/,"").replace(/[.,]/g,"");return /^\d+$/.test(d)?+d:null}
 const full=n=>new Intl.NumberFormat("vi-VN").format(n)+"đ";
+
+// ---------- hoá đơn cửa hàng ở Nhật (レシート) ----------
+// Tên cửa hàng trong ví dụ là giả.
+const EXAMPLE_JP="サンプル商店\n2026年9月30日(水) 12:34\nおにぎり ¥150\nお茶 ¥140\nサンドイッチ ¥398\n小計 ¥688\n(内消費税等 8% ¥50)\n合計 ¥688\nお預り ¥1,000\nお釣り ¥312\nお買上点数 3点";
+// NFKC đưa số/chữ toàn khổ (１２３, ￥) về nửa khổ. Một số máy in hoá đơn in ¥ thành "\".
+const normJP=s=>s.normalize("NFKC").replace(/\\(?=\s?\d)/g,"¥");
+const TOTAL_JP=/合\s*計|お\s*会\s*計|お買\s*上|ご請求|総\s*額|お支払|total/i;
+function findAmountsJP(text){
+  const lines=normJP(text).split("\n"),out=[];
+  lines.forEach((line,li)=>{
+    const re=/(?<![\d,.])(¥\s?)?(\d{1,3}(?:,\d{3})+|\d+)(?![\d,])(\s?円)?/g;let m;
+    // Số đứng một mình trên dòng thì nhãn nằm ở dòng trên ("合計" xuống dòng rồi mới tới "¥688").
+    const label=line.replace(/[¥\d,.\s円]/g,"")?line:(lines[li-1]||"")+" "+line;
+    while((m=re.exec(line))){
+      const raw=m[2],v=+raw.replace(/,/g,""),marked=!!(m[1]||m[3])||raw.includes(",");
+      const isTotal=TOTAL_JP.test(label)&&!/小\s*計|点/.test(label);
+      if(!marked&&!isTotal)continue;                 // số trần: mã hoá đơn, số điện thoại, năm, giờ
+      if(!isFinite(v)||v<=0)continue;
+      let score=0;if(m[1]||m[3])score+=2;if(isTotal)score+=6;
+      if(/小\s*計/.test(label))score-=3;
+      if(/預|釣/.test(label))score-=8;                // お預り (tiền đưa), お釣り (tiền thối)
+      if(!isTotal&&/税|対象|%/.test(label))score-=6;   // dòng thuế
+      if(/点|ポイント|pt|値引|割引/i.test(label))score-=8;
+      out.push({v,score,idx:li*1000+m.index});
+    }
+  });
+  return out;
+}
+function parseTruthJP(s){const d=normJP(s).replace(/[¥円,\s]/g,"");return /^\d+$/.test(d)?+d:null}
+const fullJP=n=>"¥"+new Intl.NumberFormat("ja-JP").format(n);
+
+const MODES={
+  vn:{sources:["Vietcombank","Techcombank","MB Bank","BIDV","VietinBank","ACB","TPBank","VPBank","Sacombank","MoMo","ZaloPay","Khác"],
+      sourceLabel:"Ngân hàng / ví",group:"ngân hàng",byLabel:"Theo ngân hàng",srcHead:"Ngân hàng",truthPh:"ví dụ 1.356.780 hoặc 52k",
+      rec:"Tên người nhận đọc đúng (đúng dấu tiếng Việt)",note:"Nội dung chuyển khoản đọc đúng",kRec:"tên người nhận đúng",col2:"Nội dung",
+      example:EXAMPLE,exampleTruth:"1.356.780",exampleNote:"tên và số tài khoản là giả",find:findAmounts,parseTruth:parseTruth,fmt:full,
+      pass:"Đủ tốt để làm tính năng ghi từ ảnh chuyển khoản. Xem bảng bên dưới để biết ngân hàng nào cần xử lý riêng.",
+      fail:"Theo kill criteria: hoãn tính năng, chuyển sang hướng dán nội dung thông báo ngân hàng."},
+  jp:{sources:["セブン-イレブン","ファミリーマート","ローソン","イオン","業務スーパー","ドラッグストア","飲食店 (quán ăn)","ユニクロ・GU","ダイソー・100均","Khác"],
+      sourceLabel:"Cửa hàng",group:"cửa hàng",byLabel:"Theo cửa hàng",srcHead:"Cửa hàng",truthPh:"ví dụ 688 hoặc ¥1,234",
+      rec:"Tên cửa hàng đọc đúng",note:"Ngày mua đọc đúng",kRec:"tên cửa hàng đúng",col2:"Ngày",
+      example:EXAMPLE_JP,exampleTruth:"688",exampleNote:"tên cửa hàng là giả",find:findAmountsJP,parseTruth:parseTruthJP,fmt:fullJP,
+      pass:"Số tiền trên hoá đơn Nhật đọc đủ tốt. Ghi kết quả vào App-idea-lab trước khi quyết định làm tính năng.",
+      fail:"Dưới ngưỡng mượn tạm: chưa nên làm tính năng đọc hoá đơn Nhật; xem bảng để biết cửa hàng nào hay sai."}
+};
+let modeKey="vn";const M=()=>MODES[modeKey];
+const MODE_KEY="xu-cham-bien-lai-mode";
+function modeRows(){return rows.filter(r=>(r.mode||"vn")===modeKey)}
+function applyMode(fill){
+  const md=M();$("mode").value=modeKey;
+  $("bank").innerHTML=md.sources.map(x=>"<option>"+esc(x)+"</option>").join("");
+  $("bankLabel").textContent=md.sourceLabel;$("truth").placeholder=md.truthPh;
+  $("recLabel").textContent=md.rec;$("noteLabel").textContent=md.note;$("kRecLabel").textContent=md.kRec;
+  $("byLabel").textContent=md.byLabel;$("col2Head").textContent=md.col2;
+  $("groupWord").textContent=md.group;$("groupWord2").textContent=md.group;
+  document.querySelectorAll(".srcHead").forEach(th=>th.textContent=md.srcHead);
+  if(fill){$("ocr").value=md.example;$("truth").value=""}
+  analyse();render();
+}
+$("mode").addEventListener("change",()=>{
+  // Chỉ thay chữ ví dụ; chữ người dùng đã dán thì giữ nguyên.
+  const wasExample=!$("ocr").value.trim()||Object.values(MODES).some(md=>md.example===$("ocr").value);
+  modeKey=$("mode").value==="jp"?"jp":"vn";
+  try{localStorage.setItem(MODE_KEY,modeKey)}catch(e){}
+  applyMode(wasExample);
+});
 const pct=(a,b)=>b?Math.round(a/b*1000)/10:null;
 const fmtPct=p=>p===null?"—":String(p).replace(".",",")+"%";
 
 // ---------- trạng thái nhập ----------
 let cands=[],chosen=null,view=null;
 function analyse(){
-  const txt=$("ocr").value;cands=findAmounts(txt);chosen=pick(cands);view=null;
+  const txt=$("ocr").value;cands=M().find(txt);chosen=pick(cands);view=null;
   renderRead();
 }
 function renderRead(){
-  const truth=parseTruth($("truth").value);
+  const truth=M().parseTruth($("truth").value);
   const shown=view||chosen;
-  $("readAmt").textContent=chosen?full(chosen.v):($("ocr").value.trim()?"Không tìm thấy":"—");
+  $("readAmt").textContent=chosen?M().fmt(chosen.v):($("ocr").value.trim()?"Không tìm thấy":"—");
   const pill=$("matchPill");
   if(!$("ocr").value.trim()){pill.className="pill idle";pill.textContent="Chưa dán chữ";}
   else if(truth===null){pill.className="pill idle";pill.textContent="Nhập số tiền thật để chấm";}
   else if(chosen&&chosen.v===truth){pill.className="pill good";pill.textContent="✓ Đúng";}
   else{pill.className="pill bad";pill.textContent="✗ Sai";}
-  $("cands").innerHTML=cands.map((c,i)=>'<button type="button" class="cand'+(c===shown?" on":"")+'" data-i="'+i+'">'+full(c.v)+'</button>').join("")||'<span class="hint" style="margin:0">Không có số nào có dạng số tiền.</span>';
+  $("cands").innerHTML=cands.map((c,i)=>'<button type="button" class="cand'+(c===shown?" on":"")+'" data-i="'+i+'">'+M().fmt(c.v)+'</button>').join("")||'<span class="hint" style="margin:0">Không có số nào có dạng số tiền.</span>';
   $("save").disabled=!($("ocr").value.trim()&&truth!==null);
 }
 $("cands").addEventListener("click",e=>{const b=e.target.closest(".cand");if(!b)return;view=cands[+b.dataset.i];renderRead()});
@@ -234,8 +306,8 @@ const KEY="xu-cham-bien-lai";let rows=[],persisted=false;
 function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(v)){rows=v;persisted=true}}catch(e){persisted=false}}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(rows));persisted=true}catch(e){persisted=false}}
 async function save(){
-  const truth=parseTruth($("truth").value);if(truth===null)return;
-  const rec={bank:$("bank").value,trueAmount:truth,readAmount:chosen?chosen.v:null,amountOk:!!(chosen&&chosen.v===truth),
+  const truth=M().parseTruth($("truth").value);if(truth===null)return;
+  const rec={mode:modeKey,bank:$("bank").value,trueAmount:truth,readAmount:chosen?chosen.v:null,amountOk:!!(chosen&&chosen.v===truth),
     recipientOk:$("recOk").checked,contentOk:$("noteOk").checked,candidates:cands.length,createdAt:new Date().toISOString()};
   $("save").disabled=true;$("saveStatus").textContent="Đang lưu…";
   try{
@@ -258,26 +330,29 @@ function bar(p){if(p===null)return'<div class="barcell"><span>—</span></div>';
   const color=p>=95?"var(--good)":p>=90?"var(--warn)":"var(--bad)";
   return '<div class="barcell"><div class="track"><div class="fill" style="width:'+p+'%;background:'+color+'"></div><div class="mark95"></div></div><span>'+fmtPct(p)+'</span></div>'}
 function render(){
+  const rows=modeRows(),fmt=M().fmt;   // mỗi loại giấy tờ chấm riêng
   const n=rows.length,ok=rows.filter(r=>r.amountOk).length,rec=rows.filter(r=>r.recipientOk).length;
   const pa=pct(ok,n);
   $("kAmt").textContent=fmtPct(pa);$("kRec").textContent=fmtPct(pct(rec,n));
   $("kN").innerHTML=n+'<span style="font-size:15px;color:var(--muted)">/50</span>';
   $("prog").style.width=Math.min(100,n/50*100)+"%";
   const v=$("verdict");
-  if(!n){v.className="verdict idle";v.innerHTML="<strong>Chưa có biên lai nào</strong>Ô bên trái có sẵn một đoạn chữ ví dụ (tên và số tài khoản là giả). Nhập số tiền thật 1.356.780 để thử, hoặc xoá đi và dán biên lai của bạn.";}
-  else if(n<50){const t=pa>=95?"good":pa>=90?"warn":"bad";v.className="verdict "+t;v.innerHTML="<strong>Chưa đủ mẫu: "+n+"/50 ảnh</strong>Tạm thời số tiền đọc đúng "+fmtPct(pa)+". Chấm đủ 50 ảnh từ 5 ngân hàng rồi mới kết luận.";}
-  else if(pa>=95){v.className="verdict good";v.innerHTML="<strong>✓ Đạt ngưỡng: "+fmtPct(pa)+" ≥ 95%</strong>Đủ tốt để làm tính năng ghi từ ảnh chuyển khoản. Xem bảng bên dưới để biết ngân hàng nào cần xử lý riêng.";}
-  else if(pa>=90){v.className="verdict warn";v.innerHTML="<strong>△ Vùng cân nhắc: "+fmtPct(pa)+"</strong>Từ 90% đến dưới 95%: chỉ làm nếu các lỗi dồn vào 1–2 ngân hàng có thể xử lý riêng.";}
-  else{v.className="verdict bad";v.innerHTML="<strong>✗ Dưới 90%: "+fmtPct(pa)+"</strong>Theo kill criteria: hoãn tính năng, chuyển sang hướng dán nội dung thông báo ngân hàng.";}
+  if(!n){v.className="verdict idle";v.innerHTML="<strong>Chưa có biên lai nào</strong>Ô bên trái có sẵn một đoạn chữ ví dụ ("+M().exampleNote+"). Nhập số tiền thật "+M().exampleTruth+" để thử, hoặc xoá đi và dán biên lai của bạn.";}
+  else if(n<50){const t=pa>=95?"good":pa>=90?"warn":"bad";v.className="verdict "+t;v.innerHTML="<strong>Chưa đủ mẫu: "+n+"/50 ảnh</strong>Tạm thời số tiền đọc đúng "+fmtPct(pa)+". Chấm đủ 50 ảnh từ 5 "+M().group+" rồi mới kết luận.";}
+  else if(pa>=95){v.className="verdict good";v.innerHTML="<strong>✓ Đạt ngưỡng: "+fmtPct(pa)+" ≥ 95%</strong>"+M().pass;}
+  else if(pa>=90){v.className="verdict warn";v.innerHTML="<strong>△ Vùng cân nhắc: "+fmtPct(pa)+"</strong>Từ 90% đến dưới 95%: chỉ làm nếu các lỗi dồn vào 1–2 "+M().group+" có thể xử lý riêng.";}
+  else{v.className="verdict bad";v.innerHTML="<strong>✗ Dưới 90%: "+fmtPct(pa)+"</strong>"+M().fail;}
   const banks={};for(const r of rows){(banks[r.bank]=banks[r.bank]||[]).push(r)}
   const list=Object.entries(banks).sort((a,b)=>b[1].length-a[1].length);
   $("byBank").innerHTML=list.map(([b,rs])=>{const k=rs.length;return "<tr><td>"+esc(b)+"</td><td class=\"r\">"+k+"</td><td>"+bar(pct(rs.filter(r=>r.amountOk).length,k))+"</td><td class=\"r\">"+fmtPct(pct(rs.filter(r=>r.recipientOk).length,k))+"</td><td class=\"r\">"+fmtPct(pct(rs.filter(r=>r.contentOk).length,k))+"</td></tr>"}).join("")||'<tr><td colspan="5" class="empty">Chưa có dữ liệu.</td></tr>';
-  $("hist").innerHTML=rows.slice(0,15).map(r=>"<tr><td>"+esc(r.bank)+"</td><td class=\"r\">"+full(r.trueAmount)+"</td><td class=\"r\">"+(r.readAmount==null?"—":full(r.readAmount))+"</td><td>"+(r.amountOk?'<span class="pill good">✓ Đúng</span>':'<span class="pill bad">✗ Sai</span>')+"</td><td class=\"r\"><button class=\"del\" type=\"button\" data-id=\""+esc(r.id)+"\" aria-label=\"Xoá kết quả này\">Xoá</button></td></tr>").join("")||'<tr><td colspan="5" class="empty">Chưa có dữ liệu.</td></tr>';
+  $("hist").innerHTML=rows.slice(0,15).map(r=>"<tr><td>"+esc(r.bank)+"</td><td class=\"r\">"+fmt(r.trueAmount)+"</td><td class=\"r\">"+(r.readAmount==null?"—":fmt(r.readAmount))+"</td><td>"+(r.amountOk?'<span class="pill good">✓ Đúng</span>':'<span class="pill bad">✗ Sai</span>')+"</td><td class=\"r\"><button class=\"del\" type=\"button\" data-id=\""+esc(r.id)+"\" aria-label=\"Xoá kết quả này\">Xoá</button></td></tr>").join("")||'<tr><td colspan="5" class="empty">Chưa có dữ liệu.</td></tr>';
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
 
 // ---------- khởi động ----------
-load();$("ocr").value=EXAMPLE;analyse();render();
+load();
+try{if(localStorage.getItem(MODE_KEY)==="jp")modeKey="jp"}catch(e){}
+applyMode(true);
 if(!persisted)$("saveStatus").textContent="Trình duyệt không cho lưu: kết quả chỉ giữ tới khi tải lại trang.";
 })();
 </script>
