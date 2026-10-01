@@ -377,9 +377,10 @@ public struct QuickEntryParser: Sendable {
         return makeDate(year: previous.0, month: previous.1, day: day)
     }
 
-    /// Chữ hay đi ngay sau ngày: buổi trong ngày và trợ từ ("20日朝", "20日午後", "20日から", "20日の").
-    /// Không có "まで": "最長3日まで" (tối đa 3 ngày) là thời lượng, không phải ngày 3.
-    static let dayFollowers = ["午前", "午後", "から", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の", "に", "は", "で", "も"]
+    /// Chữ đi sau "N日" cho biết chắc đó là ngày lịch: buổi trong ngày, "から", "ごろ/頃", "の"
+    /// ("20日朝", "20日午後", "20日から", "20日の"). Cố ý không có trợ từ hay dùng cho thời lượng hoặc đơn giá:
+    /// "最長3日まで" (tối đa 3 ngày), "3日で5000円" (3 ngày giá 5000), "1日につき500円" (mỗi ngày), "3日は無料".
+    static let dayFollowers = ["午前", "午後", "から", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の"]
 
     /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền, buổi trong ngày
     /// hoặc trợ từ (`dayFollowers`); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").

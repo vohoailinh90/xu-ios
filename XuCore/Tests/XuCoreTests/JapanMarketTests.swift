@@ -160,6 +160,16 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(rental.amount, 5_000)
         XCTAssertEqual(rental.note, "レンタカー最長3日まで")
         XCTAssertEqual(rental.categoryID, "transport")
+
+        let threeDays = parse("レンタカー3日で5000円")
+        XCTAssertEqual(day(threeDays), "2026-09-25", "3日で là 3 ngày, không phải ngày 3")
+        XCTAssertEqual(threeDays.amount, 5_000)
+        XCTAssertEqual(threeDays.note, "レンタカー3日で")
+        let perDay = parse("駐車場1日につき500円")
+        XCTAssertEqual(day(perDay), "2026-09-25", "1日につき là mỗi ngày")
+        XCTAssertEqual(perDay.amount, 500)
+        XCTAssertEqual(perDay.note, "駐車場1日につき")
+        XCTAssertEqual(perDay.categoryID, "transport")
     }
 
     func testJapaneseWeekdays() {

@@ -92,14 +92,15 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 | `一昨日`, `おととい`, `day before yesterday` | 23/09 |
 | `9/20` | Thị trường Nhật: 20/09 (tháng trước, ngày sau). Thị trường Việt Nam vẫn là ngày/tháng |
 | `2026/9/1`, `2026-09-01` | 01/09/2026 (năm trước) |
-| `9月20日`, `2026年9月1日`, `20日` | 20/09 · 01/09 · 20/09. `28日` chưa tới trong tháng → 28/08. `3日間`, `3日分`, `2日目` không phải ngày. `N日` thiếu tháng chỉ là ngày khi theo sau là hết câu, khoảng trắng, dấu câu, buổi trong ngày hoặc trợ từ (`20日朝`, `20日午後`, `20日から`, `20日の`): `1日乗車券`, `2日酔い` không phải ngày |
+| `9月20日`, `2026年9月1日`, `20日` | 20/09 · 01/09 · 20/09. `28日` chưa tới trong tháng → 28/08. `3日間`, `3日分`, `2日目` không phải ngày. `N日` thiếu tháng chỉ là ngày khi theo sau là hết câu, khoảng trắng, dấu câu, buổi trong ngày, `から`, `ごろ`/`頃` hoặc `の` (`20日朝`, `20日午後`, `20日から`, `20日の`): `1日乗車券`, `2日酔い`, `3日で5000円`, `1日につき500円`, `最長3日まで` không phải ngày |
 | `月曜`, `月曜日`, `monday` | 21/09 (thứ Hai gần nhất, tính cả hôm nay) |
 
 - Tiếng Anh chỉ hiểu tên thứ đầy đủ: viết tắt `mon`, `sat` trùng `món`, `sát` sau khi bỏ dấu.
 - `昨日のランチ` → ghi chú `ランチ`, `20日から 旅行` → `旅行`: bỏ trợ từ ngay sau ngày, nhưng thà để sót trợ từ còn hơn cắt mất chữ:
   `の`, `に`, `は`, `で` giữ lại nếu sau nó là hiragana (`昨日のり弁` → `のり弁`); `から` chỉ bỏ khi đứng riêng
   (`昨日から揚げ` → `から揚げ`, `20日から旅行` → `から旅行`).
-- `まで` không làm "N日" thành ngày: `最長3日まで` là tối đa 3 ngày.
+- Trợ từ hay dùng cho thời lượng/đơn giá (`まで`, `で`, `に`, `は`, `も`) không làm "N日" thành ngày: `最長3日まで`, `3日で`, `1日につき`, `3日は無料`.
+  Nhầm ngày thì khoản chi bị ghi sang ngày khác mà người dùng không thấy; bỏ sót ngày thì vẫn thấy ngay trên thẻ xem trước.
 
 ### Danh mục
 
