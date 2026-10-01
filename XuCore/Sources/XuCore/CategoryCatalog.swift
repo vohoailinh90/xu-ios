@@ -209,10 +209,11 @@ public struct CategoryMatcher: Sendable {
         let accentedPadded = " " + Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased()) + " "
         let folded = longest(in: padded, candidates: defaults)
         let exact = longest(in: accentedPadded, candidates: accented)
-        // Cụm dài hơn thắng ("cà phê" thắng "cá"); dài bằng nhau thì bản có dấu thắng vì chắc nghĩa hơn.
+        // Cụm dài hơn thắng ("cà phê" thắng "cá"). Dài bằng nhau thì từ khoá đã gấp thắng, giữ thứ tự danh mục
+        // như trước: "ăn cá" là ăn uống chứ không phải đi chợ. Từ có dấu chỉ để câu ngắn như "cá 50k" có danh mục.
         let best: (length: Int, id: String)?
         switch (folded, exact) {
-        case let (f?, e?): best = e.length >= f.length ? e : f
+        case let (f?, e?): best = e.length > f.length ? e : f
         case let (f, e): best = e ?? f
         }
         guard let hit = best?.id else { return nil }
