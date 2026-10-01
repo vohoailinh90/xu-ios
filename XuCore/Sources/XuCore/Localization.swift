@@ -96,6 +96,12 @@ public enum L10n: String, CaseIterable, Sendable {
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
     // Sửa giao dịch
     case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
+    // Thói quen & chốt ngày
+    case habitsTitle, closeDay, dayClosed, closeDayFooter, strength, streakDays, streakRestart, streakNone
+    case markDone, doneToday, restToday, restingToday, addHabit, automaticHabitHint
+    // Nhắc buổi tối
+    case reminderToggle, reminderTime, reminderFooter, reminderDenied, reminderTitle, reminderBody
+    case actionAllLogged, actionLogMore
     // Cài đặt
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
@@ -185,6 +191,64 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Huỷ", en: "Cancel", ja: "キャンセル")
         case .deleteEntry:
             LocalizedText(vi: "Xoá khoản này", en: "Delete entry", ja: "この記録を削除")
+
+        case .habitsTitle:
+            LocalizedText(vi: "Thói quen", en: "Habits", ja: "習慣")
+        case .closeDay:
+            LocalizedText(vi: "Hôm nay mình đã ghi đủ", en: "I've logged everything today", ja: "今日の記録はこれで全部")
+        case .dayClosed:
+            LocalizedText(vi: "Đã chốt hôm nay ✓", en: "Today is closed ✓", ja: "今日は締めました ✓")
+        case .closeDayFooter:
+            LocalizedText(
+                vi: "Chốt ngày giúp Xu biết hôm nay bạn không tiêu gì thêm, chứ không phải quên ghi. Chạm lần nữa để mở lại.",
+                en: "Closing the day tells Xu you didn't spend anything else, rather than forgot to log it. Tap again to reopen.",
+                ja: "締めると、記録し忘れではなく本当に使わなかった日だと分かります。もう一度タップで取り消せます。")
+        case .strength:
+            LocalizedText(vi: "Sức mạnh {0}", en: "Strength {0}", ja: "定着度 {0}")
+        case .streakDays:
+            LocalizedText(vi: "Chuỗi {0} ngày", en: "{0}-day streak", ja: "{0}日連続")
+        case .streakRestart:
+            LocalizedText(vi: "Chuỗi mới bắt đầu. Sức mạnh thói quen vẫn còn {0}.",
+                          en: "A new streak starts. Your habit strength is still {0}.",
+                          ja: "新しい連続記録のスタート。定着度は{0}のままです。")
+        case .streakNone:
+            LocalizedText(vi: "Bắt đầu từ hôm nay", en: "Starting today", ja: "今日から始めよう")
+        case .markDone:
+            LocalizedText(vi: "Hôm nay xong", en: "Done today", ja: "今日はできた")
+        case .doneToday:
+            LocalizedText(vi: "Đã xong ✓", en: "Done ✓", ja: "できた ✓")
+        case .restToday:
+            LocalizedText(vi: "Hôm nay nghỉ", en: "Rest today", ja: "今日は休み")
+        case .restingToday:
+            LocalizedText(vi: "Hôm nay nghỉ — không tính", en: "Resting today — doesn't count", ja: "今日は休み — 数えません")
+        case .addHabit:
+            LocalizedText(vi: "Thêm thói quen", en: "Add a habit", ja: "習慣を追加")
+        case .automaticHabitHint:
+            LocalizedText(vi: "Tự tính từ khoản đã ghi và chốt ngày", en: "Counted from your entries and day close",
+                          ja: "記録と締めから自動で判定")
+
+        case .reminderToggle:
+            LocalizedText(vi: "Nhắc chốt ngày buổi tối", en: "Evening reminder to close the day", ja: "夜の締めリマインダー")
+        case .reminderTime:
+            LocalizedText(vi: "Giờ nhắc", en: "Time", ja: "時刻")
+        case .reminderFooter:
+            LocalizedText(
+                vi: "Mỗi tối một thông báo: \"Đã ghi đủ\" để chốt ngày, \"Ghi thêm\" để mở ô nhập. Chỉ đặt lịch trên máy.",
+                en: "One notification each evening: \"All logged\" closes the day, \"Log more\" opens the input. Scheduled on this device only.",
+                ja: "毎晩1回通知します。「全部記録した」で締め、「もっと記録」で入力欄を開きます。通知はこの端末内だけで設定されます。")
+        case .reminderDenied:
+            LocalizedText(vi: "Thông báo của Xu đang tắt. Bật lại trong Cài đặt của iPhone › Xu › Thông báo.",
+                          en: "Notifications for Xu are off. Turn them on in iPhone Settings › Xu › Notifications.",
+                          ja: "Xuの通知がオフになっています。iPhoneの設定 › Xu › 通知 でオンにできます。")
+        case .reminderTitle:
+            LocalizedText(vi: "Chốt ngày", en: "Close the day", ja: "今日の締め")
+        case .reminderBody:
+            LocalizedText(vi: "Hôm nay có khoản nào chưa ghi không?", en: "Anything left to log today?",
+                          ja: "今日、まだ記録していない出費はありますか?")
+        case .actionAllLogged:
+            LocalizedText(vi: "Đã ghi đủ", en: "All logged", ja: "全部記録した")
+        case .actionLogMore:
+            LocalizedText(vi: "Ghi thêm", en: "Log more", ja: "もっと記録")
 
         case .language:
             LocalizedText(vi: "Ngôn ngữ", en: "Language", ja: "言語")

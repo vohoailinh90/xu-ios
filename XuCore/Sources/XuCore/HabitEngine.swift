@@ -156,3 +156,51 @@ public enum HabitEngine {
         return streak
     }
 }
+
+/// Tình hình một thói quen tới hôm nay: các ngày đã xong, sức mạnh, chuỗi mềm.
+public struct HabitProgress: Equatable, Sendable {
+    public let completedDays: Set<DayKey>
+    /// 0…1. Hôm nay chưa xong thì tính tới hôm qua, để không "trừ điểm" khi ngày chưa hết.
+    public let strength: Double
+    public let streak: Int
+    public let isDoneToday: Bool
+
+    /// Tính cho một thói quen bắt đầu từ `start`.
+    /// - Thói quen tự động: đánh giá từng ngày bằng `HabitTemplate.evaluate` (cần giao dịch và ngày đã chốt).
+    /// - Thói quen thủ công: ngày xong là ngày người dùng tự đánh dấu (`manualDays`).
+    public static func compute(template: HabitTemplate,
+                               entries: [LedgerEntry],
+                               closedDays: Set<DayKey>,
+                               manualDays: Set<DayKey> = [],
+                               restDays: Set<DayKey> = [],
+                               from start: DayKey,
+                               today: DayKey,
+                               calendar: Calendar,
+                               catalog: [CategoryDefinition] = CategoryCatalog.defaults) -> HabitProgress {
+        guard start <= today else {
+            return HabitProgress(completedDays: [], strength: 0, streak: 0, isDoneToday: false)
+        }
+        var completed: Set<DayKey> = []
+        if template.isAutomatic {
+            let byDay = Dictionary(grouping: entries.filter { $0.day >= start && $0.day <= today }, by: \.day)
+            var day = start
+            var guardCounter = 0
+            while day <= today && guardCounter < 3660 {
+                if template.evaluate(entries: byDay[day] ?? [], dayClosed: closedDays.contains(day), catalog: catalog) == true {
+                    completed.insert(day)
+                }
+                day = day.adding(days: 1, calendar: calendar)
+                guardCounter += 1
+            }
+        } else {
+            completed = manualDays.filter { $0 >= start && $0 <= today }
+        }
+
+        let isDoneToday = completed.contains(today)
+        let through = isDoneToday ? today : today.adding(days: -1, calendar: calendar)
+        let strength = through < start ? 0
+            : HabitEngine.strength(completed: completed, restDays: restDays, from: start, through: through, calendar: calendar)
+        let streak = HabitEngine.softStreak(completed: completed, restDays: restDays, today: today, calendar: calendar)
+        return HabitProgress(completedDays: completed, strength: strength, streak: streak, isDoneToday: isDoneToday)
+    }
+}

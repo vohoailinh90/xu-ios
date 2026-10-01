@@ -11,9 +11,11 @@ struct HomeView: View {
     @AppStorage("flexibleMonthlyBudget.japan") private var budgetJapan: Int = 0
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
+    @AppStorage(AppSettings.Key.focusRequest, store: AppSettings.defaults) private var focusRequest: Double = 0
 
     @State private var focusTrigger = 0
     @State private var showSettings = false
+    @State private var showHabits = false
     @State private var editing: TransactionRecord?
 
     var body: some View {
@@ -56,6 +58,10 @@ struct HomeView: View {
                     }
                     .accessibilityLabel(language.t(.exportCSV))
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showHabits = true } label: { Image(systemName: "leaf") }
+                        .accessibilityLabel(language.t(.habitsTitle))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel(language.t(.settings))
@@ -65,10 +71,17 @@ struct HomeView: View {
                 QuickEntryBar(focusTrigger: focusTrigger)
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $showHabits) { HabitsView() }
             .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
         .onOpenURL { url in
             if url.host == "new" { focusTrigger += 1 }
+        }
+        .onChange(of: focusRequest) {
+            // "Ghi thêm" trên thông báo chốt ngày: đóng các sheet và focus ô nhập.
+            showSettings = false
+            showHabits = false
+            focusTrigger += 1
         }
     }
 

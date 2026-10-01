@@ -145,3 +145,52 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertEqual(MoneyFormatter.full(500), "500đ")
     }
 }
+
+final class HabitProgressTests: XCTestCase {
+    var calendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")!
+        return cal
+    }()
+    let today = DayKey(year: 2026, month: 9, day: 25)
+
+    private func ago(_ n: Int) -> DayKey { today.adding(days: -n, calendar: calendar) }
+    private func entry(_ daysAgo: Int, _ categoryID: String = "food") -> LedgerEntry {
+        LedgerEntry(amount: 10_000, isIncome: false, categoryID: categoryID, day: ago(daysAgo))
+    }
+
+    func testLogDailyCountsEntriesOrClosedDays() {
+        let p = HabitProgress.compute(template: .logDaily, entries: [entry(0), entry(2)], closedDays: [ago(1)],
+                                      from: ago(3), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(0), ago(1), ago(2)])
+        XCTAssertTrue(p.isDoneToday)
+        XCTAssertEqual(p.streak, 3)
+        XCTAssertGreaterThan(p.strength, 0)
+    }
+
+    func testNoSpendDayNeedsClosureAndNoDiscretionarySpending() {
+        let entries = [entry(1, "drinks"), entry(2, "food")]
+        let p = HabitProgress.compute(template: .noSpendDay, entries: entries, closedDays: [ago(1), ago(2)],
+                                      from: ago(3), today: today, calendar: calendar)
+        // ago(1): đã chốt nhưng có cà phê → không tính; ago(2): chỉ ăn uống → tính; ago(3): chưa chốt → không tính
+        XCTAssertEqual(p.completedDays, [ago(2)])
+    }
+
+    func testManualHabitUsesCheckInsAndTodayNotDoneDoesNotHurt() {
+        let manual: Set<DayKey> = [ago(1), ago(2), ago(10)]
+        let p = HabitProgress.compute(template: .cookAtHome, entries: [], closedDays: [],
+                                      manualDays: manual, from: ago(2), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(1), ago(2)], "Ngày trước khi bắt đầu thói quen không tính")
+        XCTAssertFalse(p.isDoneToday)
+        XCTAssertEqual(p.streak, 2)
+        let perfect = HabitEngine.strength(completed: [ago(1), ago(2)], from: ago(2), through: ago(1), calendar: calendar)
+        XCTAssertEqual(p.strength, perfect, accuracy: 1e-9, "Hôm nay chưa xong thì chưa trừ điểm")
+    }
+
+    func testHabitStartedTodayNotDoneHasZeroStrength() {
+        let p = HabitProgress.compute(template: .saveToday, entries: [], closedDays: [],
+                                      from: today, today: today, calendar: calendar)
+        XCTAssertEqual(p.strength, 0)
+        XCTAssertEqual(p.streak, 0)
+    }
+}

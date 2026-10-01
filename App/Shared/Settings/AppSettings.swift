@@ -9,6 +9,21 @@ enum AppSettings {
     enum Key {
         static let language = "appLanguage"
         static let market = "market"
+        static let reminderEnabled = "reminderEnabled"
+        /// Phút trong ngày, mặc định 21:00 (docs/05).
+        static let reminderMinutes = "reminderMinutes"
+        /// Đổi giá trị này (thời điểm) để Home focus ô nhập, ví dụ khi chạm "Ghi thêm" trên thông báo.
+        static let focusRequest = "focusRequest"
+    }
+
+    static let defaultReminderMinutes = 21 * 60
+
+    static var reminderMinutes: Int {
+        defaults.object(forKey: Key.reminderMinutes) as? Int ?? defaultReminderMinutes
+    }
+
+    static func requestFocus() {
+        defaults.set(Date().timeIntervalSince1970, forKey: Key.focusRequest)
     }
 
     static var language: AppLanguage {

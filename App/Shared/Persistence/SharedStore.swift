@@ -83,6 +83,20 @@ enum Ledger {
         reloadWidgets()
     }
 
+    /// "Chốt ngày": người dùng xác nhận đã ghi đủ (hoặc mở lại). Thói quen "không tiêu…" chỉ tính ngày đã chốt.
+    static func setDayClosed(_ day: DayKey, closed: Bool, in context: ModelContext) throws {
+        let (year, month, dayOfMonth) = (day.year, day.month, day.day)
+        let existing = try context.fetch(FetchDescriptor<DayClosure>(
+            predicate: #Predicate { $0.year == year && $0.month == month && $0.day == dayOfMonth }
+        ))
+        if closed, existing.isEmpty {
+            context.insert(DayClosure(day: day))
+        } else if !closed {
+            for closure in existing { context.delete(closure) }
+        }
+        try context.save()
+    }
+
     /// Người dùng sửa danh mục → lưu từ khóa để lần sau đoán đúng.
     static func learn(note: String, categoryID: String, in context: ModelContext) throws {
         let phrase = CategoryMatcher.learningKey(for: note)
