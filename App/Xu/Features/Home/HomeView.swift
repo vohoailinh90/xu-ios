@@ -6,6 +6,7 @@ struct HomeView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TransactionRecord.occurredAt, order: .reverse) private var records: [TransactionRecord]
     @Query(sort: \QuickChip.sortOrder) private var chips: [QuickChip]
+    @Query private var closures: [DayClosure]
     // Ngân sách tính bằng tiền của nơi chi tiêu, nên mỗi nơi một con số (khóa cũ giữ cho Việt Nam).
     @AppStorage("flexibleMonthlyBudget") private var budgetVietnam: Int = 0
     @AppStorage("flexibleMonthlyBudget.japan") private var budgetJapan: Int = 0
@@ -28,6 +29,12 @@ struct HomeView: View {
                 }
                 if !chips.isEmpty {
                     Section(language.t(.quickChips)) { ChipRow(chips: chips, language: language) }
+                }
+                let week = weeklySummary
+                if !week.isEmpty {
+                    Section(language.t(.weekTitle)) {
+                        WeekCard(summary: week, primary: market.currency, language: language)
+                    }
                 }
                 ForEach(groupedByDay, id: \.day) { group in
                     Section {
@@ -83,6 +90,16 @@ struct HomeView: View {
             showHabits = false
             focusTrigger += 1
         }
+    }
+
+    private var weeklySummary: WeeklySummary {
+        let cal = Calendar.current
+        let entries = records.map {
+            LedgerEntry(amount: $0.amount, isIncome: $0.isIncome, categoryID: $0.categoryID,
+                        day: DayKey($0.occurredAt, calendar: cal), currency: $0.currency)
+        }
+        return WeeklySummary.compute(entries: entries, closedDays: Set(closures.map(\.dayKey)),
+                                     today: DayKey(Date(), calendar: cal), primary: market.currency, calendar: cal)
     }
 
     private struct DayGroup { let day: DayKey; let title: String; let items: [TransactionRecord]; let spent: String }
@@ -156,6 +173,41 @@ private struct TodayCard: View {
         return SafeToSpend.compute(flexibleBudget: flexibleBudget, spentBeforeToday: before, spentToday: todaySum,
                                    today: today, periodEnd: SafeToSpend.endOfMonth(containing: today, calendar: calendar),
                                    calendar: calendar)
+    }
+}
+
+// MARK: - Nhìn lại tuần này
+
+private struct WeekCard: View {
+    let summary: WeeklySummary
+    let primary: Currency
+    let language: AppLanguage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(language.t(.weekSpent, spentText)).font(.headline)
+            if let id = summary.topCategoryID {
+                let category = CategoryCatalog.resolve(id: id)
+                Text(language.t(.weekTop, category.emoji + " " + category.name(in: language)))
+            }
+            if summary.noSpendDays > 0 {
+                Text(language.t(.weekNoSpend, "\(summary.noSpendDays)"))
+            }
+            Text(language.t(.weekLogged, "\(summary.loggedDays)", "\(summary.elapsedDays)"))
+                .foregroundStyle(.secondary)
+        }
+        .font(.callout)
+        .padding(.vertical, 4)
+    }
+
+    /// Tiền của nơi chi tiêu trước, tiền khác sau, không quy đổi.
+    private var spentText: String {
+        let order = [primary] + Currency.allCases.filter { $0 != primary }
+        let parts = order.compactMap { currency -> String? in
+            guard let sum = summary.spent[currency], sum > 0 else { return nil }
+            return MoneyFormatter.compact(sum, currency: currency, language: language)
+        }
+        return parts.isEmpty ? MoneyFormatter.compact(0, currency: primary, language: language) : parts.joined(separator: " · ")
     }
 }
 

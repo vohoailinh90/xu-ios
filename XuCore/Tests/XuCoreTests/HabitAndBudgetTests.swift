@@ -194,3 +194,51 @@ final class HabitProgressTests: XCTestCase {
         XCTAssertEqual(p.streak, 0)
     }
 }
+
+final class WeeklySummaryTests: XCTestCase {
+    var calendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        return cal
+    }()
+    /// Thứ Sáu 25/09/2026 → tuần từ thứ Hai 21/09 tới Chủ nhật 27/09
+    let today = DayKey(year: 2026, month: 9, day: 25)
+
+    private func d(_ day: Int, month: Int = 9) -> DayKey { DayKey(year: 2026, month: month, day: day) }
+
+    func testWeekBoundsAndTotalsPerCurrency() {
+        let entries = [
+            LedgerEntry(amount: 1_200, isIncome: false, categoryID: "food", day: d(21), currency: .jpy),
+            LedgerEntry(amount: 450, isIncome: false, categoryID: "drinks", day: d(22), currency: .jpy),
+            LedgerEntry(amount: 500, isIncome: false, categoryID: "drinks", day: d(23), currency: .jpy),
+            LedgerEntry(amount: 5_000_000, isIncome: false, categoryID: "family", day: d(24), currency: .vnd),
+            LedgerEntry(amount: 250_000, isIncome: true, categoryID: "income.salary", day: d(25), currency: .jpy),
+            LedgerEntry(amount: 9_999, isIncome: false, categoryID: "food", day: d(20), currency: .jpy)  // tuần trước
+        ]
+        let s = WeeklySummary.compute(entries: entries, closedDays: [], today: today, primary: .jpy, calendar: calendar)
+        XCTAssertEqual(s.weekStart, d(21))
+        XCTAssertEqual(s.weekEnd, d(27))
+        XCTAssertEqual(s.spent[.jpy], 2_150, "Không cộng khoản thu, không cộng tuần trước")
+        XCTAssertEqual(s.spent[.vnd], 5_000_000, "Tiền khác cộng riêng, không quy đổi")
+        XCTAssertEqual(s.topCategoryID, "food", "1.200 ăn uống > 950 đồ uống; tiền đồng không tính vào xếp hạng")
+        XCTAssertEqual(s.elapsedDays, 5)
+        XCTAssertEqual(s.loggedDays, 5)
+    }
+
+    func testNoSpendDaysNeedClosure() {
+        let entries = [LedgerEntry(amount: 300, isIncome: false, categoryID: "drinks", day: d(22), currency: .jpy)]
+        let s = WeeklySummary.compute(entries: entries, closedDays: [d(21), d(22), d(23)], today: today,
+                                      primary: .jpy, calendar: calendar)
+        XCTAssertEqual(s.noSpendDays, 2, "21 và 23 đã chốt, không tiêu vặt; 22 có cà phê")
+        XCTAssertEqual(s.loggedDays, 3)
+    }
+
+    func testSundayBelongsToTheWeekStartingMonday() {
+        let sunday = d(27)
+        let s = WeeklySummary.compute(entries: [], closedDays: [], today: sunday, primary: .vnd, calendar: calendar)
+        XCTAssertEqual(s.weekStart, d(21))
+        XCTAssertEqual(s.elapsedDays, 7)
+        XCTAssertTrue(s.isEmpty)
+        XCTAssertNil(s.topCategoryID)
+    }
+}

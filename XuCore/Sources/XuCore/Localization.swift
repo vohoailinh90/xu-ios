@@ -94,6 +94,8 @@ public enum L10n: String, CaseIterable, Sendable {
     // Ô nhập nhanh
     case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
+    // Nhìn lại tuần
+    case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
     // Sửa giao dịch
     case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
     // Thói quen & chốt ngày
@@ -172,6 +174,17 @@ public enum L10n: String, CaseIterable, Sendable {
         case .placeholderJapan:
             LocalizedText(vi: "konbini 500, cơm 980 yên hôm qua…", en: "coffee 350, train 220 yesterday…",
                           ja: "コーヒー 350円、昨日 電車 220…")
+
+        case .weekTitle:
+            LocalizedText(vi: "Nhìn lại tuần này", en: "This week", ja: "今週のふり返り")
+        case .weekSpent:
+            LocalizedText(vi: "Tuần này đã tiêu {0}", en: "Spent this week: {0}", ja: "今週の支出 {0}")
+        case .weekTop:
+            LocalizedText(vi: "Nhiều nhất: {0}", en: "Most on: {0}", ja: "いちばん多いのは {0}")
+        case .weekNoSpend:
+            LocalizedText(vi: "🌱 {0} ngày không tiêu vặt", en: "🌱 {0} no-spend days", ja: "🌱 小さな出費なしの日 {0}日")
+        case .weekLogged:
+            LocalizedText(vi: "📝 Có ghi chép {0}/{1} ngày", en: "📝 Logged on {0} of {1} days", ja: "📝 記録した日 {0}/{1}日")
 
         case .editEntry:
             LocalizedText(vi: "Sửa khoản", en: "Edit entry", ja: "記録を編集")

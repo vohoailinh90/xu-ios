@@ -40,9 +40,11 @@ public struct LedgerEntry: Sendable {
     public let isIncome: Bool
     public let categoryID: String
     public let day: DayKey
+    public let currency: Currency
 
-    public init(amount: Int64, isIncome: Bool, categoryID: String, day: DayKey) {
+    public init(amount: Int64, isIncome: Bool, categoryID: String, day: DayKey, currency: Currency = .vnd) {
         self.amount = amount; self.isIncome = isIncome; self.categoryID = categoryID; self.day = day
+        self.currency = currency
     }
 }
 
