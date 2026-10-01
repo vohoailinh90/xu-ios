@@ -54,6 +54,19 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("給料 25万").amount, 250_000)
     }
 
+    func testNumbersWrittenInKanji() {
+        XCTAssertEqual(parse("千五百円 ランチ").amount, 1_500)
+        XCTAssertEqual(parse("千五百円 ランチ").note, "ランチ")
+        XCTAssertEqual(parse("一万二千円 服").amount, 12_000)
+        XCTAssertEqual(parse("三百円 お茶").amount, 300)
+        XCTAssertEqual(parse("二〇〇円 パン屋").amount, 200)
+        XCTAssertEqual(parse("百円 ガム").amount, 100)
+        XCTAssertNil(parse("万円").amount, "\"万\" đứng một mình không phải số")
+        let greengrocer = parse("八百屋 500")
+        XCTAssertEqual(greengrocer.amount, 500, "Chữ số Hán không kèm 円 không phải số tiền")
+        XCTAssertEqual(greengrocer.categoryID, "groceries")
+    }
+
     func testKanjiInNamesIsNotAnAmount() {
         XCTAssertEqual(parse("千葉 電車 450").amount, 450)
         XCTAssertEqual(parse("千葉 電車 450").note, "千葉 電車")
@@ -180,6 +193,22 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(spaced), "2026-09-25", "3泊 4日 có khoảng trắng vẫn là thời lượng")
         XCTAssertEqual(spaced.note, "ホテル 3泊 4日")
         XCTAssertEqual(day(parse("ランチ (20日) 900")), "2026-09-20", "Ngày trong ngoặc vẫn đứng riêng")
+    }
+
+    func testWeekdayInParentheses() {
+        let r = parse("9/23(水) ランチ 900")
+        XCTAssertEqual(day(r), "2026-09-23")
+        XCTAssertEqual(r.note, "ランチ", "Thứ trong ngoặc sau ngày cũng bỏ khỏi ghi chú")
+        XCTAssertEqual(parse("9/23 (水曜日) ランチ 900").note, "ランチ")
+        XCTAssertEqual(day(parse("(月) ランチ 900")), "2026-09-21")
+        XCTAssertEqual(day(parse("（月） ランチ 900")), "2026-09-21", "Ngoặc toàn khổ")
+        XCTAssertEqual(parse("（月） ランチ 900").note, "ランチ")
+    }
+
+    func testReiwaYear() {
+        XCTAssertEqual(day(parse("令和8年9月1日 家賃 65000")), "2026-09-01")
+        XCTAssertEqual(day(parse("令和元年5月1日 家賃 65000")), "2019-05-01")
+        XCTAssertEqual(parse("令和8年9月1日 家賃 65000").note, "家賃")
     }
 
     func testJapaneseWeekdays() {
