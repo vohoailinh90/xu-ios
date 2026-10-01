@@ -13,6 +13,7 @@ struct HomeView: View {
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
     @AppStorage(AppSettings.Key.focusRequest, store: AppSettings.defaults) private var focusRequest: Double = 0
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     @State private var focusTrigger = 0
     @State private var showSettings = false
@@ -79,6 +80,12 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showHabits) { HabitsView() }
+            .fullScreenCover(isPresented: showOnboarding) {
+                OnboardingView {
+                    hasOnboarded = true
+                    focusTrigger += 1
+                }
+            }
             .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
         .onOpenURL { url in
@@ -90,6 +97,11 @@ struct HomeView: View {
             showHabits = false
             focusTrigger += 1
         }
+    }
+
+    /// Onboarding chỉ hiện lần mở đầu; xong hoặc bỏ qua thì không hiện lại.
+    private var showOnboarding: Binding<Bool> {
+        Binding(get: { !hasOnboarded }, set: { if !$0 { hasOnboarded = true } })
     }
 
     private var weeklySummary: WeeklySummary {

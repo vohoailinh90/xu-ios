@@ -1,5 +1,4 @@
 import SwiftUI
-import WidgetKit
 import XuCore
 
 struct SettingsView: View {
@@ -62,8 +61,8 @@ struct SettingsView: View {
             }
             .navigationTitle(language.t(.settings))
             .toolbar { Button(language.t(.done)) { dismiss() } }
-            .onChange(of: language) { refreshAfterChange() }
-            .onChange(of: market) { refreshAfterChange() }
+            .onChange(of: language) { PreferenceChanges.apply() }
+            .onChange(of: market) { PreferenceChanges.apply() }
             .onChange(of: reminderEnabled) {
                 guard reminderEnabled else { ReminderScheduler.disable(); return }
                 Task {
@@ -74,14 +73,6 @@ struct SettingsView: View {
             }
             .onChange(of: reminderMinutes) { ReminderScheduler.refresh() }
         }
-    }
-
-    /// Khoản quen mặc định đổi theo ngôn ngữ/nơi chi tiêu; widget vẽ lại để đổi chữ và loại tiền;
-    /// thông báo nhắc đặt lại để đổi chữ.
-    private func refreshAfterChange() {
-        SampleData.refreshSeedsIfUntouched()
-        WidgetCenter.shared.reloadAllTimelines()
-        ReminderScheduler.refresh()
     }
 
     /// Giờ nhắc lưu dạng số phút trong ngày; DatePicker cần Date.

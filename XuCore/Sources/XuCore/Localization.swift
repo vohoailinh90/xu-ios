@@ -94,6 +94,9 @@ public enum L10n: String, CaseIterable, Sendable {
     // Ô nhập nhanh
     case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
+    // Onboarding
+    case onboardingWelcome, onboardingIntro, onboardingTry, onboardingSaveFirst, onboardingSaved
+    case onboardingBudgetTitle, onboardingHabitTitle, onboardingHabitHint, next, skip, getStarted
     // Nhìn lại tuần
     case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
     // Sửa giao dịch
@@ -174,6 +177,34 @@ public enum L10n: String, CaseIterable, Sendable {
         case .placeholderJapan:
             LocalizedText(vi: "konbini 500, cơm 980 yên hôm qua…", en: "coffee 350, train 220 yesterday…",
                           ja: "コーヒー 350円、昨日 電車 220…")
+
+        case .onboardingWelcome:
+            LocalizedText(vi: "Chào bạn 👋", en: "Welcome 👋", ja: "ようこそ 👋")
+        case .onboardingIntro:
+            LocalizedText(vi: "Xu giúp bạn ghi chi tiêu trong 2 giây: gõ một câu là xong. Không cần tài khoản, dữ liệu nằm trên máy bạn.",
+                          en: "Xu logs your spending in 2 seconds: type one sentence and you're done. No account, your data stays on your phone.",
+                          ja: "Xuなら、ひと言入力するだけで2秒で支出を記録できます。アカウント不要、データはこの端末の中だけ。")
+        case .onboardingTry:
+            LocalizedText(vi: "Gõ thử một câu", en: "Try a sentence", ja: "試しに入力してみよう")
+        case .onboardingSaveFirst:
+            LocalizedText(vi: "Ghi luôn khoản này", en: "Log this one", ja: "これを記録する")
+        case .onboardingSaved:
+            LocalizedText(vi: "Đã ghi khoản đầu tiên 🎉", en: "Your first entry is logged 🎉", ja: "最初の記録ができました 🎉")
+        case .onboardingBudgetTitle:
+            LocalizedText(vi: "Mỗi tháng bạn muốn tiêu vặt khoảng bao nhiêu?", en: "How much do you want for everyday treats each month?",
+                          ja: "毎月、自由に使いたいお金はどれくらい?")
+        case .onboardingHabitTitle:
+            LocalizedText(vi: "Chọn một thói quen nhỏ", en: "Pick one small habit", ja: "小さな習慣をひとつ選ぼう")
+        case .onboardingHabitHint:
+            LocalizedText(vi: "\"Ghi chép mỗi ngày\" đã bật sẵn. Thêm một thói quen nữa nếu bạn muốn, đổi lúc nào cũng được.",
+                          en: "\"Log every day\" is already on. Add one more if you like; you can change it anytime.",
+                          ja: "「毎日記録する」はオンになっています。よければもうひとつ追加しましょう。いつでも変えられます。")
+        case .next:
+            LocalizedText(vi: "Tiếp", en: "Next", ja: "次へ")
+        case .skip:
+            LocalizedText(vi: "Bỏ qua", en: "Skip", ja: "スキップ")
+        case .getStarted:
+            LocalizedText(vi: "Bắt đầu", en: "Get started", ja: "はじめる")
 
         case .weekTitle:
             LocalizedText(vi: "Nhìn lại tuần này", en: "This week", ja: "今週のふり返り")
