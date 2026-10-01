@@ -48,7 +48,7 @@ final class LocalizationTests: XCTestCase {
     func testNoKeywordInTwoCategories() {
         var owner: [String: String] = [:]
         for category in CategoryCatalog.defaults {
-            for keyword in category.keywords {
+            for keyword in category.keywords + category.accentedKeywords {
                 if let other = owner[keyword] {
                     XCTFail("Từ khóa \"\(keyword)\" có ở cả \(other) và \(category.id)")
                 }
@@ -67,9 +67,20 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
+    /// Từ khoá có dấu phải thật sự có dấu (không thì để vào `keywords`) và viết thường.
+    func testAccentedKeywordsKeepTheirDiacritics() {
+        for category in CategoryCatalog.defaults {
+            for keyword in category.accentedKeywords {
+                XCTAssertNotEqual(TextFolding.fold(keyword), keyword, "\(category.id): \"\(keyword)\" không có dấu")
+                XCTAssertEqual(CategoryMatcher.normalize(keyword.lowercased()), keyword, "\(category.id): \"\(keyword)\"")
+            }
+        }
+    }
+
     /// Một âm tiết mà bỏ dấu thì thành từ khác nghĩa: dễ xếp nhầm danh mục (docs/04).
     func testAmbiguousSyllablesAreNotKeywords() {
-        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "tui", "ca", "trung", "mung", "son", "mon", "sat"]
+        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "tui", "ca", "trung", "mung", "son", "mon", "sat",
+                                      "mua ca", "ca hoi", "vi trung"]
         for category in CategoryCatalog.defaults {
             for keyword in category.keywords where ambiguous.contains(keyword) {
                 XCTFail("\(category.id): \"\(keyword)\" trùng nghĩa khi bỏ dấu, dùng cụm dài hơn")

@@ -110,8 +110,13 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 - Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục; `testKeywordsAreWrittenFolded` bắt từ khoá viết
   chưa ở dạng đã gấp (sẽ không bao giờ khớp).
 - Tiếng Việt: không dùng một âm tiết mà bỏ dấu thành từ khác nghĩa — `tui` (túi/tui = tôi), `ca` (cá/cả), `trung`
-  (trứng/trung tâm), `mung` (mừng/mùng 1), `son` (son/Sơn)… Dùng cụm: `tui xach`, `mua ca`, `trung ga`, `mung cuoi`, `son moi`.
-  Danh sách nằm trong `testAmbiguousSyllablesAreNotKeywords`.
+  (trứng/trung tâm), `mung` (mừng/mùng 1), `son` (son/Sơn)… Hai cách thay:
+  - cụm đã gấp rõ nghĩa: `tui xach`, `trung ga`, `mung cuoi`, `son moi`. Coi chừng cụm cũng trùng: `mua ca` khớp cả
+    "mua cà phê" lẫn "mua cả sách";
+  - từ **có dấu** trong `accentedKeywords`: `cá`, `trứng`, `túi`, `mừng` — so khớp trên ghi chú giữ dấu, nên "cá 50k" → đi chợ
+    mà "cả hội" thì không. Gõ không dấu ("ca 50k") thì ra "Khác", sửa một chạm là Xu học.
+  Cụm dài hơn vẫn thắng giữa hai loại ("cà phê" thắng "cá"); dài bằng nhau thì bản có dấu thắng.
+  Danh sách âm tiết/cụm cấm nằm trong `testAmbiguousSyllablesAreNotKeywords`.
 
 ## Việc tiếp theo cho parser
 

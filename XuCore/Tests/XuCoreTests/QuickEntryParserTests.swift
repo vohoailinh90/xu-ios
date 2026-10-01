@@ -143,6 +143,12 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertNotEqual(parse("mùng 1 đi chùa 100k").categoryID, "family", "\"mùng\" không phải \"mừng\"")
         XCTAssertEqual(parse("mừng cưới 500k").categoryID, "family")
         XCTAssertEqual(parse("mua cá 50k").categoryID, "groceries")
+        XCTAssertEqual(parse("cá 50k").categoryID, "groceries", "Câu ngắn có dấu vẫn đúng")
+        XCTAssertEqual(parse("trứng 30k").categoryID, "groceries")
+        XCTAssertEqual(parse("túi 200k").categoryID, "shopping")
+        XCTAssertEqual(parse("mua cà phê 35k").categoryID, "drinks", "\"cà phê\" không phải \"cá\"")
+        XCTAssertEqual(parse("mua cả sách 200k").categoryID, "education", "\"cả\" không phải \"cá\"")
+        XCTAssertEqual(parse("quà cho cả hội 500k").categoryID, "family")
         XCTAssertEqual(parse("giấy vệ sinh 50k").categoryID, "groceries", "Cụm dài thắng \"giay\" (giày)")
         XCTAssertEqual(parse("son môi 300k").categoryID, "shopping")
     }
