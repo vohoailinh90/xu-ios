@@ -57,6 +57,26 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
+    /// Ghi chú được gấp (bỏ dấu, chữ thường, nửa khổ, bỏ dấu câu) trước khi so với từ khoá,
+    /// nên từ khoá phải viết sẵn ở dạng đã gấp — nếu không sẽ không bao giờ khớp.
+    func testKeywordsAreWrittenFolded() {
+        for category in CategoryCatalog.defaults {
+            for keyword in category.keywords {
+                XCTAssertEqual(CategoryMatcher.learningKey(for: keyword), keyword, "\(category.id): \"\(keyword)\" chưa ở dạng đã gấp")
+            }
+        }
+    }
+
+    /// Một âm tiết mà bỏ dấu thì thành từ khác nghĩa: dễ xếp nhầm danh mục (docs/04).
+    func testAmbiguousSyllablesAreNotKeywords() {
+        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "tui", "ca", "trung", "mung", "son", "mon", "sat"]
+        for category in CategoryCatalog.defaults {
+            for keyword in category.keywords where ambiguous.contains(keyword) {
+                XCTFail("\(category.id): \"\(keyword)\" trùng nghĩa khi bỏ dấu, dùng cụm dài hơn")
+            }
+        }
+    }
+
     // MARK: Chọn ngôn ngữ, thị trường
 
     func testPreferredLanguage() {

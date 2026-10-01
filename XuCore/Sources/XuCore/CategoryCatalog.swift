@@ -33,7 +33,9 @@ public enum CategoryCatalog {
     public static let otherIncomeID = "income.other"
 
     /// Danh mục mặc định. Lưu ý khi thêm từ khóa (xem docs/04):
-    /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả).
+    /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả,
+    ///   túi/tui, cá/cả, trứng/trung tâm, mừng/mùng, son/Sơn). Dùng cụm hai âm tiết: "tui xach", "mua ca".
+    ///   Test `testAmbiguousSyllablesAreNotKeywords` giữ danh sách này.
     /// - Tiếng Nhật được so khớp **chuỗi con** (không có khoảng trắng giữa từ), nên tránh từ một chữ Hán
     ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
@@ -52,7 +54,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
                            emoji: "🛒", keywords: [
-            "di cho", "sieu thi", "rau", "thit", "ca", "trung", "gao", "trai cay", "winmart",
+            "di cho", "sieu thi", "rau", "thit", "mua ca", "ca thu", "ca hoi", "trung ga", "trung vit", "mua trung",
+            "vi trung", "gao", "trai cay", "nuoc mam", "nuoc tuong", "dau an", "giay ve sinh", "bot giat", "winmart",
             "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven",
             // Người Việt ở Nhật hay gõ chữ Latin
             "konbini", "combini", "lawson", "familymart", "family mart", "seven eleven",
@@ -97,8 +100,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "shopping", names: LocalizedText(vi: "Mua sắm", en: "Shopping", ja: "買い物"),
                            emoji: "🛍️", isDiscretionary: true, keywords: [
-            "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui",
-            "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
+            "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui xach",
+            "balo", "my pham", "son moi", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
             // English
             "amazon", "rakuten", "clothes", "shoes", "shopping", "ikea", "mercari",
             // 日本語
@@ -124,7 +127,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "family", names: LocalizedText(vi: "Gia đình & quà", en: "Family & gifts", ja: "家族・贈り物"),
                            emoji: "🎁", keywords: [
-            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung", "gui ve nha", "gui me", "gui bo",
+            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung cuoi", "tien mung", "mung tuoi",
+            "gui ve nha", "gui me", "gui bo",
             "gui tien ve", "gui tien ve nha", "chuyen tien ve", "chuyen tien ve nha",
             // English
             "gift", "present", "birthday", "wedding", "send home", "remittance",
@@ -133,7 +137,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "education", names: LocalizedText(vi: "Học tập", en: "Learning", ja: "学び"),
                            emoji: "📚", keywords: [
-            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt",
+            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt", "tieng anh", "tieng nhat",
+            "hoc tieng", "trung tam ngoai ngu",
             // English
             "tuition", "books", "course", "textbook",
             // 日本語

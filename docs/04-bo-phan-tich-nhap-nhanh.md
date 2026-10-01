@@ -107,7 +107,11 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 
 - Từ khoá có chữ Nhật được so khớp **chuỗi con** (tiếng Nhật không có khoảng trắng giữa từ); cụm dài nhất vẫn thắng: `セブンでコーヒー` → đồ uống.
 - Tránh từ khoá một chữ Hán nằm trong từ khác: `本` có trong `日本`, `パン` có trong `パンツ`. Dùng `本屋`, `パン屋`.
-- Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục.
+- Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục; `testKeywordsAreWrittenFolded` bắt từ khoá viết
+  chưa ở dạng đã gấp (sẽ không bao giờ khớp).
+- Tiếng Việt: không dùng một âm tiết mà bỏ dấu thành từ khác nghĩa — `tui` (túi/tui = tôi), `ca` (cá/cả), `trung`
+  (trứng/trung tâm), `mung` (mừng/mùng 1), `son` (son/Sơn)… Dùng cụm: `tui xach`, `mua ca`, `trung ga`, `mung cuoi`, `son moi`.
+  Danh sách nằm trong `testAmbiguousSyllablesAreNotKeywords`.
 
 ## Việc tiếp theo cho parser
 
