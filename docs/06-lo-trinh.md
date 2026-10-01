@@ -43,7 +43,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
   Làm cùng lúc giới hạn Free trong `docs/02` (2 thói quen, 2 nút widget) — hiện app **chưa áp giới hạn nào**.
 - [ ] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
-- [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm
+- [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);
+  còn sửa chỗ chậm khi có số liệu thật từ TestFlight
 - [ ] #release TestFlight cho 20–50 người dùng thử, form phản hồi
 
 ## v1.1 (sau ra mắt)

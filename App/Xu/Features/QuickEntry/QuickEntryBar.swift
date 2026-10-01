@@ -19,6 +19,8 @@ struct QuickEntryBar: View {
     @State private var showCategoryPicker = false
     @State private var toast: SavedToast?
     @State private var errorMessage: String?
+    /// Lúc gõ ký tự đầu tiên của câu đang nhập — để đo thời gian ghi (chỉ lưu trên máy).
+    @State private var typingStartedAt: Date?
     @FocusState private var focused: Bool
 
     private var parser: QuickEntryParser {
@@ -71,7 +73,12 @@ struct QuickEntryBar: View {
         .onChange(of: text) {
             errorMessage = nil
             // Xoá hết ô nhập là bỏ câu đó: danh mục đã chọn tay không được dính sang câu sau (và không được học sai).
-            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { categoryOverride = nil }
+            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                categoryOverride = nil
+                typingStartedAt = nil
+            } else if typingStartedAt == nil {
+                typingStartedAt = Date()
+            }
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryPicker(kind: preview?.isIncome == true ? .income : .expense) { id in
@@ -100,6 +107,10 @@ struct QuickEntryBar: View {
                 try Ledger.learn(note: result.note, categoryID: result.categoryID, in: context)
             }
             let record = try Ledger.save(result, rawInput: text, source: .quickText, in: context)
+            if let typingStartedAt {
+                AppSettings.entryTimings.record(Date().timeIntervalSince(typingStartedAt))
+            }
+            typingStartedAt = nil
             toast = SavedToast(recordID: record.id, amount: record.amount, currency: record.currency,
                                isIncome: record.isIncome,
                                title: record.note.isEmpty ? record.category.name(in: language) : record.note,
