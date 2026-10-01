@@ -48,7 +48,7 @@ public enum CategoryCatalog {
             "ラーメン", "うどん", "そば", "寿司", "すし", "牛丼", "定食", "弁当", "ランチ", "昼ごはん", "昼食",
             "夕食", "晩ごはん", "夜ごはん", "朝ごはん", "朝食", "外食", "居酒屋", "焼肉", "カレー", "パン屋",
             "マクドナルド", "マック", "ケンタッキー", "すき家", "吉野家", "松屋", "サイゼリヤ", "ガスト",
-            "餃子", "ピザ", "パスタ", "ご飯", "ごはん", "飲み会", "おにぎり", "出前館"
+            "餃子", "ピザ", "パスタ", "から揚げ", "唐揚げ", "ご飯", "ごはん", "飲み会", "おにぎり", "出前館"
         ]),
         CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
                            emoji: "🛒", keywords: [
@@ -83,7 +83,7 @@ public enum CategoryCatalog {
             "train", "subway", "uber", "parking", "flight", "fuel",
             // 日本語
             "電車", "地下鉄", "バス", "タクシー", "新幹線", "定期券", "乗車券", "交通費", "切符", "ガソリン", "駐車場",
-            "駐輪場", "高速代", "飛行機", "航空券"
+            "駐輪場", "高速代", "飛行機", "航空券", "レンタカー"
         ]),
         CategoryDefinition(id: "bills", names: LocalizedText(vi: "Hóa đơn & nhà", en: "Bills & home", ja: "住まい・光熱費"),
                            emoji: "🧾", keywords: [

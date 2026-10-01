@@ -378,7 +378,8 @@ public struct QuickEntryParser: Sendable {
     }
 
     /// Chữ hay đi ngay sau ngày: buổi trong ngày và trợ từ ("20日朝", "20日午後", "20日から", "20日の").
-    static let dayFollowers = ["午前", "午後", "から", "まで", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の", "に", "は", "で", "も"]
+    /// Không có "まで": "最長3日まで" (tối đa 3 ngày) là thời lượng, không phải ngày 3.
+    static let dayFollowers = ["午前", "午後", "から", "ごろ", "朝", "昼", "夕", "夜", "晩", "頃", "の", "に", "は", "で", "も"]
 
     /// "20日" đứng một mình là ngày khi sau nó là hết câu, khoảng trắng, dấu câu, ký hiệu tiền, buổi trong ngày
     /// hoặc trợ từ (`dayFollowers`); còn chữ khác thì là một phần của từ ghép ("1日乗車券", "2日酔い").
@@ -448,18 +449,22 @@ public struct QuickEntryParser: Sendable {
             .compactMap { characterRange($0.range, in: text) }
     }
 
-    /// Trợ từ ngay sau ngày cũng bỏ khỏi ghi chú: "昨日のランチ" → "ランチ", "20日から旅行" → "旅行".
-    static let dateParticles = ["から", "まで", "の", "に", "は", "で"]
+    /// Trợ từ ngay sau ngày cũng bỏ khỏi ghi chú: "昨日のランチ" → "ランチ", "20日から 旅行" → "旅行".
+    static let dateParticles = ["から", "の", "に", "は", "で"]
 
-    /// Giữ trợ từ nếu sau nó là hiragana, vì có thể là đầu một từ: "昨日のり弁" → "のり弁".
+    /// Thà để sót trợ từ trong ghi chú còn hơn cắt mất chữ của người dùng:
+    /// - trợ từ một chữ: giữ nếu sau nó là hiragana, vì có thể là đầu một từ ("昨日のり弁" → "のり弁");
+    /// - "から": chỉ bỏ khi đứng riêng (sau là khoảng trắng, dấu câu, hết câu), vì "昨日から揚げ" là món から揚げ.
     static func includingParticle(_ range: Range<Int>, in chars: [Character]) -> Range<Int> {
         let end = range.upperBound
         guard end < chars.count else { return range }
         let rest = String(chars[end...].prefix(2))
         guard let particle = dateParticles.first(where: { rest.hasPrefix($0) }) else { return range }
         let after = end + particle.count
-        if after < chars.count, let scalar = chars[after].unicodeScalars.first,
-           (0x3041...0x309F).contains(scalar.value) {
+        let next: Character? = after < chars.count ? chars[after] : nil
+        if particle.count > 1 {
+            if let next, !next.isWhitespace, !next.isPunctuation { return range }
+        } else if let scalar = next?.unicodeScalars.first, (0x3041...0x309F).contains(scalar.value) {
             return range
         }
         return range.lowerBound..<after

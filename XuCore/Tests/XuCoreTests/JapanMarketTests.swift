@@ -140,10 +140,26 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(morning.amount, 500)
         XCTAssertEqual(day(parse("20日午後 ランチ 900円")), "2026-09-20")
         XCTAssertEqual(day(parse("20日夜 居酒屋 3000")), "2026-09-20")
-        let trip = parse("20日から旅行 5000円")
+        let trip = parse("20日から 旅行 5000円")
         XCTAssertEqual(day(trip), "2026-09-20")
-        XCTAssertEqual(trip.note, "旅行", "Trợ từ から sau ngày bỏ khỏi ghi chú")
+        XCTAssertEqual(trip.note, "旅行", "から đứng riêng sau ngày thì bỏ khỏi ghi chú")
         XCTAssertEqual(trip.categoryID, "entertainment")
+        XCTAssertEqual(day(parse("20日から旅行 5000円")), "2026-09-20")
+    }
+
+    func testParticleThatStartsAWordIsKept() {
+        let karaage = parse("昨日から揚げ 500円")
+        XCTAssertEqual(day(karaage), "2026-09-24")
+        XCTAssertEqual(karaage.note, "から揚げ", "から揚げ là tên món, không được cắt mất から")
+        XCTAssertEqual(karaage.categoryID, "food")
+    }
+
+    func testDurationIsNotADate() {
+        let rental = parse("レンタカー最長3日まで5000円")
+        XCTAssertEqual(day(rental), "2026-09-25", "最長3日まで là tối đa 3 ngày, không phải ngày 3")
+        XCTAssertEqual(rental.amount, 5_000)
+        XCTAssertEqual(rental.note, "レンタカー最長3日まで")
+        XCTAssertEqual(rental.categoryID, "transport")
     }
 
     func testJapaneseWeekdays() {

@@ -96,8 +96,10 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 | `月曜`, `月曜日`, `monday` | 21/09 (thứ Hai gần nhất, tính cả hôm nay) |
 
 - Tiếng Anh chỉ hiểu tên thứ đầy đủ: viết tắt `mon`, `sat` trùng `món`, `sát` sau khi bỏ dấu.
-- `昨日のランチ` → ghi chú `ランチ`, `20日から旅行` → `旅行`: bỏ trợ từ (`の`, `から`, `まで`, `に`, `は`, `で`) ngay sau ngày,
-  trừ khi sau trợ từ là hiragana (`昨日のり弁` → `のり弁`).
+- `昨日のランチ` → ghi chú `ランチ`, `20日から 旅行` → `旅行`: bỏ trợ từ ngay sau ngày, nhưng thà để sót trợ từ còn hơn cắt mất chữ:
+  `の`, `に`, `は`, `で` giữ lại nếu sau nó là hiragana (`昨日のり弁` → `のり弁`); `から` chỉ bỏ khi đứng riêng
+  (`昨日から揚げ` → `から揚げ`, `20日から旅行` → `から旅行`).
+- `まで` không làm "N日" thành ngày: `最長3日まで` là tối đa 3 ngày.
 
 ### Danh mục
 
