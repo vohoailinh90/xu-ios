@@ -94,11 +94,14 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | Parser câu nhập tiếng Việt (+ tiếng Nhật, tiếng Anh, yên) | `XuCore/Sources/XuCore/QuickEntryParser.swift` | Có test |
 | Tiền tệ (VND/JPY), nơi chi tiêu, ngôn ngữ vi/en/ja | `XuCore/Sources/XuCore/Market.swift`, `Localization.swift` | Có test |
 | Danh mục + học từ khóa | `XuCore/Sources/XuCore/CategoryCatalog.swift` | Có test |
-| Thói quen (điểm sức mạnh, chuỗi mềm) | `XuCore/Sources/XuCore/HabitEngine.swift` | Có test |
+| Thói quen (điểm sức mạnh, chuỗi mềm, tiến độ từng thói quen) | `XuCore/Sources/XuCore/HabitEngine.swift` | Có test |
+| Nhìn lại tuần này | `XuCore/Sources/XuCore/WeeklySummary.swift`, thẻ trên Home | Có test / Khung |
 | "Còn được tiêu hôm nay" | `XuCore/Sources/XuCore/SafeToSpend.swift` | Có test |
 | Dữ liệu SwiftData dùng chung app + widget | `App/Shared/Persistence/` | Khung |
 | Thanh nhập nhanh, xem trước, hoàn tác | `App/Xu/Features/QuickEntry/` | Khung |
-| Home, xuất CSV, cài đặt ngân sách, ngôn ngữ, nơi chi tiêu | `App/Xu/Features/Home/`, `Settings/` | Khung |
+| Home, sửa/xoá giao dịch, xuất CSV, cài đặt ngân sách, ngôn ngữ, nơi chi tiêu | `App/Xu/Features/Home/`, `Settings/` | Khung |
+| Màn Thói quen, chốt ngày, nhắc buổi tối (thông báo có nút) | `App/Xu/Features/Habits/`, `App/Xu/Support/ReminderScheduler.swift` | Khung |
+| Onboarding 3 màn (ngôn ngữ, nơi chi tiêu, câu đầu tiên → ngân sách → thói quen) | `App/Xu/Features/Onboarding/` | Khung |
 | Shortcuts / Action Button / Apple Pay | `App/Shared/Intents/` | Khung |
 | Widget khoản quen + màn hình khóa | `App/XuWidgets/` | Khung |
 

@@ -1,5 +1,4 @@
 import SwiftUI
-import WidgetKit
 import XuCore
 
 struct SettingsView: View {
@@ -9,6 +8,10 @@ struct SettingsView: View {
     @AppStorage("smallNumbersAreThousands") private var smallNumbersAreThousands = true
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
+    @AppStorage(AppSettings.Key.reminderEnabled, store: AppSettings.defaults) private var reminderEnabled = false
+    @AppStorage(AppSettings.Key.reminderMinutes, store: AppSettings.defaults)
+    private var reminderMinutes = AppSettings.defaultReminderMinutes
+    @State private var reminderDenied = false
 
     var body: some View {
         NavigationStack {
@@ -41,6 +44,15 @@ struct SettingsView: View {
                         Toggle(language.t(.smallNumbersToggle), isOn: $smallNumbersAreThousands)
                     }
                 }
+                Section {
+                    Toggle(language.t(.reminderToggle), isOn: $reminderEnabled)
+                    if reminderEnabled {
+                        DatePicker(language.t(.reminderTime), selection: reminderTime, displayedComponents: .hourAndMinute)
+                            .environment(\.locale, language.locale)
+                    }
+                } footer: {
+                    Text(language.t(reminderDenied ? .reminderDenied : .reminderFooter))
+                }
                 Section(language.t(.fasterEntry)) {
                     Label(language.t(.tipWidget), systemImage: "square.grid.2x2")
                     Label(language.t(.tipActionButton), systemImage: "button.horizontal.top.press")
@@ -49,14 +61,27 @@ struct SettingsView: View {
             }
             .navigationTitle(language.t(.settings))
             .toolbar { Button(language.t(.done)) { dismiss() } }
-            .onChange(of: language) { refreshAfterChange() }
-            .onChange(of: market) { refreshAfterChange() }
+            .onChange(of: language) { PreferenceChanges.apply() }
+            .onChange(of: market) { PreferenceChanges.apply() }
+            .onChange(of: reminderEnabled) {
+                guard reminderEnabled else { ReminderScheduler.refresh(); return }
+                Task {
+                    let granted = await ReminderScheduler.enable()
+                    reminderDenied = !granted
+                    if !granted { reminderEnabled = false }
+                }
+            }
+            .onChange(of: reminderMinutes) { ReminderScheduler.refresh() }
         }
     }
 
-    /// Khoản quen mặc định đổi theo ngôn ngữ/nơi chi tiêu; widget vẽ lại để đổi chữ và loại tiền.
-    private func refreshAfterChange() {
-        SampleData.refreshSeedsIfUntouched()
-        WidgetCenter.shared.reloadAllTimelines()
+    /// Giờ nhắc lưu dạng số phút trong ngày; DatePicker cần Date.
+    private var reminderTime: Binding<Date> {
+        Binding {
+            Calendar.current.date(bySettingHour: reminderMinutes / 60, minute: reminderMinutes % 60, second: 0, of: Date()) ?? Date()
+        } set: { date in
+            let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+            reminderMinutes = (parts.hour ?? 21) * 60 + (parts.minute ?? 0)
+        }
     }
 }

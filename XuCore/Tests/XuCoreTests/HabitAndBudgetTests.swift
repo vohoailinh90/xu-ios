@@ -15,6 +15,31 @@ final class HabitAndBudgetTests: XCTestCase {
 
     // MARK: DayKey
 
+    func testDayKeyRoundTripsThroughText() {
+        let key = DayKey(year: 2026, month: 9, day: 5)
+        XCTAssertEqual(key.description, "2026-09-05")
+        XCTAssertEqual(DayKey("2026-09-05"), key)
+        XCTAssertNil(DayKey("2026-9-5"))
+        XCTAssertNil(DayKey("2026-13-01"))
+        XCTAssertNil(DayKey("hôm nay"))
+        XCTAssertEqual(DayKey("812-01-02"), DayKey(year: 812, month: 1, day: 2), "Đọc được mọi chuỗi description tạo ra")
+    }
+
+    func testDayKeyIsGregorianEvenWithJapaneseCalendar() {
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = japanese.timeZone
+        let date = gregorian.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 21))!
+        let key = DayKey(date, calendar: japanese)
+        XCTAssertEqual(key.description, "2026-10-01", "Không phải năm Reiwa 8")
+        XCTAssertEqual(DayKey(key.description), key)
+        XCTAssertEqual(key.date(in: japanese), gregorian.startOfDay(for: date))
+        XCTAssertEqual(key.adding(days: 31, calendar: japanese).description, "2026-11-01")
+        XCTAssertEqual(DayKey(year: 2019, month: 4, day: 30).adding(days: 1, calendar: japanese).description,
+                       "2019-05-01", "Qua lúc đổi niên hiệu Heisei → Reiwa vẫn đúng")
+    }
+
     func testDayKeyArithmeticAcrossMonths() {
         XCTAssertEqual(DayKey(year: 2026, month: 9, day: 30).adding(days: 1, calendar: calendar).description, "2026-10-01")
         XCTAssertEqual(DayKey(year: 2026, month: 3, day: 1).adding(days: -1, calendar: calendar).description, "2026-02-28")
@@ -103,6 +128,22 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertFalse(s.isOverToday)
     }
 
+    func testBudgetMonthIsGregorianWhateverTheSystemCalendar() {
+        // Lịch Hồi giáo: 01/10/2026 nằm trong một tháng 29 ngày — kỳ ngân sách vẫn phải tới 31/10.
+        var islamic = Calendar(identifier: .islamicUmmAlQura)
+        islamic.timeZone = calendar.timeZone
+        let october = DayKey(year: 2026, month: 10, day: 1)
+        XCTAssertEqual(SafeToSpend.endOfMonth(containing: october, calendar: islamic).description, "2026-10-31")
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        XCTAssertEqual(SafeToSpend.endOfMonth(containing: today, calendar: japanese).description, "2026-09-30")
+        let s = SafeToSpend.compute(flexibleBudget: 3_100_000, spentBeforeToday: 0, spentToday: 0, today: october,
+                                    periodEnd: SafeToSpend.endOfMonth(containing: october, calendar: islamic),
+                                    calendar: islamic)
+        XCTAssertEqual(s.daysLeft, 31)
+        XCTAssertEqual(s.dailyAllowance, 100_000)
+    }
+
     func testOverspendingTodayGivesGentleAdjustment() {
         let end = SafeToSpend.endOfMonth(containing: today, calendar: calendar)
         let s = SafeToSpend.compute(flexibleBudget: 6_000_000, spentBeforeToday: 3_000_000,
@@ -143,5 +184,123 @@ final class HabitAndBudgetTests: XCTestCase {
         XCTAssertEqual(MoneyFormatter.full(1_250_000), "1.250.000đ")
         XCTAssertEqual(MoneyFormatter.full(35_000), "35.000đ")
         XCTAssertEqual(MoneyFormatter.full(500), "500đ")
+    }
+}
+
+final class HabitProgressTests: XCTestCase {
+    var calendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")!
+        return cal
+    }()
+    let today = DayKey(year: 2026, month: 9, day: 25)
+
+    private func ago(_ n: Int) -> DayKey { today.adding(days: -n, calendar: calendar) }
+    private func entry(_ daysAgo: Int, _ categoryID: String = "food") -> LedgerEntry {
+        LedgerEntry(amount: 10_000, isIncome: false, categoryID: categoryID, day: ago(daysAgo))
+    }
+
+    func testLogDailyCountsEntriesOrClosedDays() {
+        let p = HabitProgress.compute(template: .logDaily, entries: [entry(0), entry(2)], closedDays: [ago(1)],
+                                      from: ago(3), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(0), ago(1), ago(2)])
+        XCTAssertTrue(p.isDoneToday)
+        XCTAssertEqual(p.streak, 3)
+        XCTAssertGreaterThan(p.strength, 0)
+    }
+
+    func testNoSpendDayNeedsClosureAndNoDiscretionarySpending() {
+        let entries = [entry(1, "drinks"), entry(2, "food")]
+        let p = HabitProgress.compute(template: .noSpendDay, entries: entries, closedDays: [ago(1), ago(2)],
+                                      from: ago(3), today: today, calendar: calendar)
+        // ago(1): đã chốt nhưng có cà phê → không tính; ago(2): chỉ ăn uống → tính; ago(3): chưa chốt → không tính
+        XCTAssertEqual(p.completedDays, [ago(2)])
+    }
+
+    func testManualHabitUsesCheckInsAndTodayNotDoneDoesNotHurt() {
+        let manual: Set<DayKey> = [ago(1), ago(2), ago(10)]
+        let p = HabitProgress.compute(template: .cookAtHome, entries: [], closedDays: [],
+                                      manualDays: manual, from: ago(2), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(1), ago(2)], "Ngày trước khi bắt đầu thói quen không tính")
+        XCTAssertFalse(p.isDoneToday)
+        XCTAssertEqual(p.streak, 2)
+        let perfect = HabitEngine.strength(completed: [ago(1), ago(2)], from: ago(2), through: ago(1), calendar: calendar)
+        XCTAssertEqual(p.strength, perfect, accuracy: 1e-9, "Hôm nay chưa xong thì chưa trừ điểm")
+    }
+
+    func testRestDayIsNeverCountedAsDone() {
+        // Hôm nay có ghi chép nhưng người dùng chọn "Hôm nay nghỉ": không tính xong, chuỗi không cộng thêm.
+        let p = HabitProgress.compute(template: .logDaily, entries: [entry(0), entry(1), entry(2)], closedDays: [],
+                                      restDays: [today], from: ago(2), today: today, calendar: calendar)
+        XCTAssertEqual(p.completedDays, [ago(1), ago(2)])
+        XCTAssertFalse(p.isDoneToday)
+        XCTAssertEqual(p.streak, 2)
+        let manual = HabitProgress.compute(template: .cookAtHome, entries: [], closedDays: [],
+                                           manualDays: [ago(1)], restDays: [ago(1)],
+                                           from: ago(2), today: today, calendar: calendar)
+        XCTAssertTrue(manual.completedDays.isEmpty)
+    }
+
+    func testHabitStartedTodayNotDoneHasZeroStrength() {
+        let p = HabitProgress.compute(template: .saveToday, entries: [], closedDays: [],
+                                      from: today, today: today, calendar: calendar)
+        XCTAssertEqual(p.strength, 0)
+        XCTAssertEqual(p.streak, 0)
+    }
+}
+
+final class WeeklySummaryTests: XCTestCase {
+    var calendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        return cal
+    }()
+    /// Thứ Sáu 25/09/2026 → tuần từ thứ Hai 21/09 tới Chủ nhật 27/09
+    let today = DayKey(year: 2026, month: 9, day: 25)
+
+    private func d(_ day: Int, month: Int = 9) -> DayKey { DayKey(year: 2026, month: month, day: day) }
+
+    func testWeekBoundsAndTotalsPerCurrency() {
+        let entries = [
+            LedgerEntry(amount: 1_200, isIncome: false, categoryID: "food", day: d(21), currency: .jpy),
+            LedgerEntry(amount: 450, isIncome: false, categoryID: "drinks", day: d(22), currency: .jpy),
+            LedgerEntry(amount: 500, isIncome: false, categoryID: "drinks", day: d(23), currency: .jpy),
+            LedgerEntry(amount: 5_000_000, isIncome: false, categoryID: "family", day: d(24), currency: .vnd),
+            LedgerEntry(amount: 250_000, isIncome: true, categoryID: "income.salary", day: d(25), currency: .jpy),
+            LedgerEntry(amount: 9_999, isIncome: false, categoryID: "food", day: d(20), currency: .jpy)  // tuần trước
+        ]
+        let s = WeeklySummary.compute(entries: entries, closedDays: [], today: today, primary: .jpy, calendar: calendar)
+        XCTAssertEqual(s.weekStart, d(21))
+        XCTAssertEqual(s.weekEnd, d(27))
+        XCTAssertEqual(s.spent[.jpy], 2_150, "Không cộng khoản thu, không cộng tuần trước")
+        XCTAssertEqual(s.spent[.vnd], 5_000_000, "Tiền khác cộng riêng, không quy đổi")
+        XCTAssertEqual(s.topCategoryID, "food", "1.200 ăn uống > 950 đồ uống; tiền đồng không tính vào xếp hạng")
+        XCTAssertEqual(s.elapsedDays, 5)
+        XCTAssertEqual(s.loggedDays, 5)
+    }
+
+    func testNoSpendDaysNeedClosure() {
+        let entries = [LedgerEntry(amount: 300, isIncome: false, categoryID: "drinks", day: d(22), currency: .jpy)]
+        let s = WeeklySummary.compute(entries: entries, closedDays: [d(21), d(22), d(23)], today: today,
+                                      primary: .jpy, calendar: calendar)
+        XCTAssertEqual(s.noSpendDays, 2, "21 và 23 đã chốt, không tiêu vặt; 22 có cà phê")
+        XCTAssertEqual(s.loggedDays, 3)
+    }
+
+    func testWeekIsTheSameWithJapaneseSystemCalendar() {
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        let s = WeeklySummary.compute(entries: [], closedDays: [], today: today, primary: .jpy, calendar: japanese)
+        XCTAssertEqual(s.weekStart.description, "2026-09-21")
+        XCTAssertEqual(s.weekEnd.description, "2026-09-27")
+    }
+
+    func testSundayBelongsToTheWeekStartingMonday() {
+        let sunday = d(27)
+        let s = WeeklySummary.compute(entries: [], closedDays: [], today: sunday, primary: .vnd, calendar: calendar)
+        XCTAssertEqual(s.weekStart, d(21))
+        XCTAssertEqual(s.elapsedDays, 7)
+        XCTAssertTrue(s.isEmpty)
+        XCTAssertNil(s.topCategoryID)
     }
 }

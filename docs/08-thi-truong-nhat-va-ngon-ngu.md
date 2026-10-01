@@ -47,7 +47,7 @@ String Catalog chỉ còn dùng cho chuỗi **hệ thống tự đọc theo ngô
 
 - **Đọc ảnh hoá đơn Nhật trong app** (Vision OCR): chưa làm. Trước hết chấm độ chính xác bằng trang `prototypes/cham-bien-lai.html`
   (chế độ hoá đơn Nhật). Ý tưởng và chấm điểm tính năng này làm ở App-idea-lab (luật 8), chưa có file tính năng.
-- Số viết bằng chữ Hán (千五百円), năm theo niên hiệu (令和) — parser chưa hiểu.
+- Số viết bằng chữ Hán (千五百円), năm 令和, thứ trong ngoặc (月): đã hiểu từ 2026-10-02. Còn thiếu kiểu viết tắt trên hoá đơn (`R8.9.30`).
 - Siri tiếng Nhật: câu lệnh "Xuで支出を記録" đã có trong code, nhưng câu lệnh theo từng ngôn ngữ cần `AppShortcuts.xcstrings`
   và thử trên máy thật đặt Siri tiếng Nhật.
 - Bản dịch tiếng Anh/Nhật do AI viết — cần người bản ngữ đọc lại trước TestFlight.

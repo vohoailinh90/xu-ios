@@ -60,10 +60,41 @@ enum Ledger {
         reloadWidgets()
     }
 
+    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ);
+    /// giữ nguyên ngày thì giữ nguyên giờ lúc ghi.
+    static func update(_ record: TransactionRecord, amount: Int64, currency: Currency, isIncome: Bool,
+                       categoryID: String, note: String, day: Date, in context: ModelContext) throws {
+        guard amount > 0 else { throw LedgerError.missingAmount }
+        if !Calendar.current.isDate(day, inSameDayAs: record.occurredAt) {
+            record.occurredAt = occurredAt(for: day)
+        }
+        record.amount = amount
+        record.currencyCode = currency.code
+        record.isIncome = isIncome
+        record.categoryID = categoryID
+        record.note = note
+        try context.save()
+        reloadWidgets()
+    }
+
     static func delete(_ record: TransactionRecord, in context: ModelContext) throws {
         context.delete(record)
         try context.save()
         reloadWidgets()
+    }
+
+    /// "Chốt ngày": người dùng xác nhận đã ghi đủ (hoặc mở lại). Thói quen "không tiêu…" chỉ tính ngày đã chốt.
+    static func setDayClosed(_ day: DayKey, closed: Bool, in context: ModelContext) throws {
+        let (year, month, dayOfMonth) = (day.year, day.month, day.day)
+        let existing = try context.fetch(FetchDescriptor<DayClosure>(
+            predicate: #Predicate { $0.year == year && $0.month == month && $0.day == dayOfMonth }
+        ))
+        if closed, existing.isEmpty {
+            context.insert(DayClosure(day: day))
+        } else if !closed {
+            for closure in existing { context.delete(closure) }
+        }
+        try context.save()
     }
 
     /// Người dùng sửa danh mục → lưu từ khóa để lần sau đoán đúng.

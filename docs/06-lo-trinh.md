@@ -2,41 +2,45 @@
 
 Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian ~15–20 giờ/tuần). `scripts/create-issues.sh` tạo sẵn các issue dưới đây trên GitHub.
 
+> `[x]` = đã có code, test XuCore xanh và app build được trên CI (iOS Simulator). **Chưa chạy thử trên máy thật** —
+> mục nào cũng cần thử tay trước TestFlight. Cập nhật 2026-10-02.
+
 ## M0 — Nền móng (tuần 1)
 - [ ] #setup Tạo repo, chạy `xcodegen`, build app rỗng lên máy thật
 - [ ] #setup Cấu hình App Group, bundle ID, signing cho app + widget
-- [ ] #setup Bật CI GitHub Actions chạy `swift test` cho XuCore
+- [x] #setup Bật CI GitHub Actions chạy `swift test` cho XuCore
 - [ ] #research Đọc 100 review 1–3 sao của Money Lover, MISA, Spendee; ghi lại 20 câu người dùng hay phàn nàn
 - [ ] #research Thu thập 200 câu nhập thật (nhờ bạn bè gõ thử) → biến thành test case cho parser
 
 ## M1 — Ghi chép lõi (tuần 2–3)
-- [ ] #parser Hoàn thiện parser số tiền + ngày, đạt 100% test hiện có
+- [x] #parser Hoàn thiện parser số tiền + ngày, đạt 100% test hiện có
 - [ ] #parser Bổ sung test từ 200 câu thật thu thập ở M0
 - [ ] #core Mở rộng từ khóa danh mục mặc định, kiểm tra trùng nghĩa khi bỏ dấu
-- [ ] #app QuickEntryBar: tự focus, xem trước, Enter lưu, giữ focus sau khi lưu
-- [ ] #app Thẻ xem trước: sửa danh mục bằng 1 chạm (lưới emoji)
-- [ ] #app Học từ khóa khi người dùng sửa danh mục (LearnedKeyword)
-- [ ] #app Toast "Đã ghi · Hoàn tác"
-- [ ] #app Danh sách giao dịch theo ngày, sửa/xóa
-- [ ] #app Xuất CSV qua ShareLink
+- [x] #app QuickEntryBar: tự focus, xem trước, Enter lưu, giữ focus sau khi lưu
+- [x] #app Thẻ xem trước: sửa danh mục bằng 1 chạm (lưới emoji)
+- [x] #app Học từ khóa khi người dùng sửa danh mục (LearnedKeyword)
+- [x] #app Toast "Đã ghi · Hoàn tác"
+- [x] #app Danh sách giao dịch theo ngày, sửa/xóa
+- [x] #app Xuất CSV qua ShareLink
 
 ## M2 — Kênh nhập nhanh (tuần 4)
-- [ ] #widget Widget màn hình chính với nút khoản quen tương tác (LogChipIntent)
-- [ ] #widget Widget màn hình khóa: "hôm nay đã tiêu", chạm mở app
+- [x] #widget Widget màn hình chính với nút khoản quen tương tác (LogChipIntent)
+- [x] #widget Widget màn hình khóa: "hôm nay đã tiêu", chạm mở app
 - [ ] #app Quản lý khoản quen: tự đề xuất từ khoản lặp lại, ghim/bỏ ghim, sắp xếp
-- [ ] #intent App Shortcut "Ghi chi tiêu" + hướng dẫn gán vào Action Button
+- [x] #intent App Shortcut "Ghi chi tiêu" + hướng dẫn gán vào Action Button
 - [ ] #intent Intent nhận số tiền + tên cửa hàng cho automation Apple Pay; màn hình hướng dẫn cài đặt
 
 ## M3 — Thói quen & còn được tiêu (tuần 5)
-- [ ] #core HabitEngine: tự đánh giá thói quen mẫu theo giao dịch + chốt ngày
-- [ ] #app Thẻ "Hôm nay còn được tiêu" trên Home
-- [ ] #app Màn hình thói quen: vòng sức mạnh, chuỗi mềm, đánh dấu thủ công, ngày nghỉ
-- [ ] #app Thông báo "Chốt ngày" với nút hành động
-- [ ] #app Tổng kết tuần (Chủ nhật)
+- [x] #core HabitEngine: tự đánh giá thói quen mẫu theo giao dịch + chốt ngày
+- [x] #app Thẻ "Hôm nay còn được tiêu" trên Home
+- [x] #app Màn hình thói quen: vòng sức mạnh, chuỗi mềm, đánh dấu thủ công, ngày nghỉ
+- [x] #app Thông báo "Chốt ngày" với nút hành động
+- [x] #app Tổng kết tuần (Chủ nhật)
 
 ## M4 — Hoàn thiện & TestFlight (tuần 6)
-- [ ] #app Onboarding 3 màn
-- [ ] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch
+- [x] #app Onboarding 3 màn
+- [ ] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch.
+  Làm cùng lúc giới hạn Free trong `docs/02` (2 thói quen, 2 nút widget) — hiện app **chưa áp giới hạn nào**.
 - [ ] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm

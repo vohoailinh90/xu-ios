@@ -1,7 +1,8 @@
 import Foundation
 
 /// Một ngày lịch (không có giờ), dùng làm khóa cho check-in và chốt ngày.
-public struct DayKey: Hashable, Comparable, Codable, Sendable, CustomStringConvertible {
+/// Năm/tháng/ngày luôn theo lịch Gregorian, giữ múi giờ của `calendar` truyền vào (`gregorianSameTimeZone`).
+public struct DayKey: Hashable, Comparable, Codable, Sendable, LosslessStringConvertible {
     public let year: Int
     public let month: Int
     public let day: Int
@@ -10,18 +11,31 @@ public struct DayKey: Hashable, Comparable, Codable, Sendable, CustomStringConve
         self.year = year; self.month = month; self.day = day
     }
 
+    /// Đọc lại từ `description` ("2026-09-25"), ví dụ ngày gắn trong thông báo nhắc chốt ngày.
+    public init?(_ description: String) {
+        let parts = description.split(separator: "-", omittingEmptySubsequences: false)
+        guard parts.count == 3, !parts[0].isEmpty, parts[1].count == 2, parts[2].count == 2,
+              let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]),
+              (1...12).contains(month), (1...31).contains(day) else { return nil }
+        self.init(year: year, month: month, day: day)
+    }
+
     public init(_ date: Date, calendar: Calendar) {
-        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        let c = calendar.gregorianSameTimeZone.dateComponents([.year, .month, .day], from: date)
         self.init(year: c.year ?? 1970, month: c.month ?? 1, day: c.day ?? 1)
     }
 
+    /// Nửa đêm đầu ngày, theo múi giờ của `calendar`.
     public func date(in calendar: Calendar) -> Date {
-        calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? Date(timeIntervalSince1970: 0)
+        calendar.gregorianSameTimeZone.date(from: DateComponents(year: year, month: month, day: day))
+            ?? Date(timeIntervalSince1970: 0)
     }
 
     public func adding(days: Int, calendar: Calendar) -> DayKey {
-        let shifted = calendar.date(byAdding: .day, value: days, to: date(in: calendar)) ?? date(in: calendar)
-        return DayKey(shifted, calendar: calendar)
+        let gregorian = calendar.gregorianSameTimeZone
+        let start = date(in: gregorian)
+        let shifted = gregorian.date(byAdding: .day, value: days, to: start) ?? start
+        return DayKey(shifted, calendar: gregorian)
     }
 
     public static func < (a: DayKey, b: DayKey) -> Bool {
@@ -40,9 +54,11 @@ public struct LedgerEntry: Sendable {
     public let isIncome: Bool
     public let categoryID: String
     public let day: DayKey
+    public let currency: Currency
 
-    public init(amount: Int64, isIncome: Bool, categoryID: String, day: DayKey) {
+    public init(amount: Int64, isIncome: Bool, categoryID: String, day: DayKey, currency: Currency = .vnd) {
         self.amount = amount; self.isIncome = isIncome; self.categoryID = categoryID; self.day = day
+        self.currency = currency
     }
 }
 
@@ -154,5 +170,55 @@ public enum HabitEngine {
             offset += 1
         }
         return streak
+    }
+}
+
+/// Tình hình một thói quen tới hôm nay: các ngày đã xong, sức mạnh, chuỗi mềm.
+public struct HabitProgress: Equatable, Sendable {
+    public let completedDays: Set<DayKey>
+    /// 0…1. Hôm nay chưa xong thì tính tới hôm qua, để không "trừ điểm" khi ngày chưa hết.
+    public let strength: Double
+    public let streak: Int
+    public let isDoneToday: Bool
+
+    /// Tính cho một thói quen bắt đầu từ `start`.
+    /// - Thói quen tự động: đánh giá từng ngày bằng `HabitTemplate.evaluate` (cần giao dịch và ngày đã chốt).
+    /// - Thói quen thủ công: ngày xong là ngày người dùng tự đánh dấu (`manualDays`).
+    public static func compute(template: HabitTemplate,
+                               entries: [LedgerEntry],
+                               closedDays: Set<DayKey>,
+                               manualDays: Set<DayKey> = [],
+                               restDays: Set<DayKey> = [],
+                               from start: DayKey,
+                               today: DayKey,
+                               calendar: Calendar,
+                               catalog: [CategoryDefinition] = CategoryCatalog.defaults) -> HabitProgress {
+        guard start <= today else {
+            return HabitProgress(completedDays: [], strength: 0, streak: 0, isDoneToday: false)
+        }
+        var completed: Set<DayKey> = []
+        if template.isAutomatic {
+            let byDay = Dictionary(grouping: entries.filter { $0.day >= start && $0.day <= today }, by: \.day)
+            var day = start
+            var guardCounter = 0
+            while day <= today && guardCounter < 3660 {
+                if template.evaluate(entries: byDay[day] ?? [], dayClosed: closedDays.contains(day), catalog: catalog) == true {
+                    completed.insert(day)
+                }
+                day = day.adding(days: 1, calendar: calendar)
+                guardCounter += 1
+            }
+        } else {
+            completed = manualDays.filter { $0 >= start && $0 <= today }
+        }
+        // Ngày nghỉ là "không tính": không xong, cũng không lỡ — kể cả khi hôm đó có ghi chép hay đã chốt.
+        completed.subtract(restDays)
+
+        let isDoneToday = completed.contains(today)
+        let through = isDoneToday ? today : today.adding(days: -1, calendar: calendar)
+        let strength = through < start ? 0
+            : HabitEngine.strength(completed: completed, restDays: restDays, from: start, through: through, calendar: calendar)
+        let streak = HabitEngine.softStreak(completed: completed, restDays: restDays, today: today, calendar: calendar)
+        return HabitProgress(completedDays: completed, strength: strength, streak: streak, isDoneToday: isDoneToday)
     }
 }

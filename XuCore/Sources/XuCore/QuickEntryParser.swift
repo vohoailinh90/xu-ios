@@ -43,14 +43,17 @@ public struct QuickEntryParser: Sendable {
     }
 
     public var options: Options
-    public var calendar: Calendar
+    /// Luôn là Gregorian (giữ múi giờ): "9/12", "2026年" là ngày Gregorian dù máy đặt lịch Nhật.
+    public var calendar: Calendar {
+        didSet { calendar = calendar.gregorianSameTimeZone }
+    }
     public var matcher: CategoryMatcher
 
     public init(options: Options = Options(),
                 calendar: Calendar = .current,
                 matcher: CategoryMatcher = CategoryMatcher()) {
         self.options = options
-        self.calendar = calendar
+        self.calendar = calendar.gregorianSameTimeZone
         self.matcher = matcher
     }
 
@@ -64,7 +67,7 @@ public struct QuickEntryParser: Sendable {
         var date = today
         if let hit = findDate(in: folded, today: today) {
             date = hit.date
-            removed.append(Self.includingParticle(hit.range, in: foldedChars))
+            removed.append(Self.extendDateRange(hit.range, in: foldedChars))
         }
 
         // 2. Số tiền (trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均")
@@ -143,10 +146,10 @@ public struct QuickEntryParser: Sendable {
     static let amountRegexVietnam = QuickEntryParser.amountRegex(units: QuickEntryParser.vietnamUnits)
     static let amountRegexJapan = QuickEntryParser.amountRegex(units: QuickEntryParser.japanUnits)
 
-    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円". Luôn là yên.
-    /// Chữ 千/百 đứng một mình chỉ là số tiền khi ngay sau là 円, để "千葉", "百貨店" không thành 1.000, 100.
+    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円", "千五百円". Luôn là yên.
+    /// Số viết toàn chữ Hán chỉ là số tiền khi ngay sau là 円, để "千葉", "百貨店", "八百屋" không thành số tiền.
     static let kanjiAmountRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)|([千百])(?=\s?円))\s?(円|yen)?(?![a-z0-9_/])"#
+        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)|([〇零一二三四五六七八九十百千万]+)(?=\s?円))\s?(円|yen)?(?![a-z0-9_/])"#
     )
 
     /// Tên có số không phải số tiền: "100均 330" là 330 yên, không phải 100.
@@ -164,7 +167,7 @@ public struct QuickEntryParser: Sendable {
             if let core = Self.group(m, 3, in: text) {
                 value = Self.parseKanjiNumber(core)
             } else {
-                value = Self.group(m, 4, in: text) == "千" ? Decimal(1_000) : Decimal(100)
+                value = Self.group(m, 4, in: text).flatMap(Self.parseKanjiDigits)
             }
             guard let value, value > 0 else { continue }
             kanjiRanges.append(range)
@@ -245,6 +248,32 @@ public struct QuickEntryParser: Sendable {
         return total + section
     }
 
+    /// Số viết toàn chữ Hán: "千五百" → 1500 · "一万二千" → 12000 · "三十" → 30 · "二〇〇" → 200 · "百" → 100.
+    static func parseKanjiDigits(_ text: String) -> Decimal? {
+        let digits: [Character: Int] = ["〇": 0, "零": 0, "一": 1, "二": 2, "三": 3, "四": 4,
+                                        "五": 5, "六": 6, "七": 7, "八": 8, "九": 9]
+        let units: [Character: Int] = ["十": 10, "百": 100, "千": 1_000]
+        var total = 0, section = 0, current = 0
+        for ch in text {
+            if let digit = digits[ch] {
+                current = current * 10 + digit
+            } else if let unit = units[ch] {
+                section += (current == 0 ? 1 : current) * unit
+                current = 0
+            } else if ch == "万" {
+                let head = section + current
+                guard head > 0 else { return nil }
+                total += head * 10_000
+                section = 0
+                current = 0
+            } else {
+                return nil
+            }
+        }
+        let value = total + section + current
+        return value > 0 ? Decimal(value) : nil
+    }
+
     static func int64(_ value: Decimal) -> Int64 {
         var input = value
         var rounded = Decimal()
@@ -264,10 +293,10 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![a-z0-9_/])(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?(?![a-z0-9_/])"#
     )
 
-    /// "9月30日", "2026年9月30日", "30日". Không khớp "3日間", "3日分", "2日目" (số ngày, không phải ngày).
+    /// "9月30日", "2026年9月30日", "令和8年9月30日", "30日". Không khớp "3日間", "3日分", "2日目" (số ngày, không phải ngày).
     /// "30日" thiếu tháng còn phải qua `isStandaloneDay`, vì hay nằm trong từ ghép: "1日乗車券", "2日酔い".
     static let japaneseDateRegex = try! NSRegularExpression(
-        pattern: #"(?<![0-9])(?:(\d{4})年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分目])"#
+        pattern: #"(?<![0-9])(?:(?:(\d{4})|令和(\d{1,2}|元))年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分目])"#
     )
 
     /// Thứ tự quan trọng: cụm dài/cụ thể trước ("一昨日" trước "昨日").
@@ -294,8 +323,11 @@ public struct QuickEntryParser: Sendable {
             + #"(?!\s*(?:"# + QuickEntryParser.japanUnits + #"|\d)(?![a-z0-9_]))"#
     )
 
-    /// "月曜", "月曜日"… Lịch Gregorian: 1 = 日 (Chủ nhật), 2 = 月 (thứ Hai) … 7 = 土 (thứ Bảy).
-    static let japaneseWeekdayRegex = try! NSRegularExpression(pattern: #"([日月火水木金土])曜"#)
+    /// "月曜", "月曜日", "(月)"… Lịch Gregorian: 1 = 日 (Chủ nhật), 2 = 月 (thứ Hai) … 7 = 土 (thứ Bảy).
+    /// Ngoặc toàn khổ "（月）" đã được gấp về "(月)".
+    static let japaneseWeekdayRegex = try! NSRegularExpression(
+        pattern: #"\(([日月火水木金土])(?:曜日?)?\)|([日月火水木金土])曜日?"#
+    )
     static let japaneseWeekdays: [String: Int] = ["日": 1, "月": 2, "火": 3, "水": 4, "木": 5, "金": 6, "土": 7]
 
     /// Chỉ tên đầy đủ: viết tắt "mon", "sat" trùng "món", "sát" sau khi bỏ dấu.
@@ -335,10 +367,10 @@ public struct QuickEntryParser: Sendable {
 
         let chars = Array(text)
         for m in Self.japaneseDateRegex.matches(in: text, range: ns) {
-            guard let day = Self.group(m, 3, in: text).flatMap(Int.init),
+            guard let day = Self.group(m, 4, in: text).flatMap(Int.init),
                   let range = Self.characterRange(m.range, in: text) else { continue }
-            let year = Self.group(m, 1, in: text).flatMap(Int.init)
-            let month = Self.group(m, 2, in: text).flatMap(Int.init)
+            let year = Self.group(m, 1, in: text).flatMap(Int.init) ?? Self.reiwaYear(Self.group(m, 2, in: text))
+            let month = Self.group(m, 3, in: text).flatMap(Int.init)
             if year == nil, month == nil, !Self.isStandaloneDay(range, in: chars) { continue }
             if let date = japaneseDate(year: year, month: month, day: day, today: today) {
                 return (date, range)
@@ -358,6 +390,13 @@ public struct QuickEntryParser: Sendable {
             return (date, hit.range)
         }
         return nil
+    }
+
+    /// "令和8年" → 2026 (令和元年 = 2019).
+    static func reiwaYear(_ text: String?) -> Int? {
+        guard let text else { return nil }
+        if text == "元" { return 2019 }
+        return Int(text).map { 2018 + $0 }
     }
 
     /// Ngày kiểu Nhật thiếu năm/tháng: lấy năm/tháng hiện tại; nếu ra ngày tương lai thì lùi về năm/tháng trước.
@@ -411,13 +450,10 @@ public struct QuickEntryParser: Sendable {
             return (weekday, range)
         }
         if let m = Self.japaneseWeekdayRegex.firstMatch(in: text, range: ns),
-           let name = Self.group(m, 1, in: text), let weekday = Self.japaneseWeekdays[name],
+           let name = Self.group(m, 1, in: text) ?? Self.group(m, 2, in: text),
+           let weekday = Self.japaneseWeekdays[name],
            let range = Self.characterRange(m.range, in: text) {
-            // "月曜日" → bỏ luôn chữ 日 khỏi ghi chú
-            let end = range.upperBound
-            let chars = Array(text)
-            let full = end < chars.count && chars[end] == "日" ? range.lowerBound..<(end + 1) : range
-            return (weekday, full)
+            return (weekday, range)
         }
         if let m = Self.englishWeekdayRegex.firstMatch(in: text, range: ns),
            let name = Self.group(m, 1, in: text), let index = Self.englishWeekdays.firstIndex(of: name),
@@ -464,20 +500,31 @@ public struct QuickEntryParser: Sendable {
     /// Trợ từ ngay sau ngày cũng bỏ khỏi ghi chú: "昨日のランチ" → "ランチ", "20日から 旅行" → "旅行".
     static let dateParticles = ["から", "の", "に", "は", "で"]
 
-    /// Thà để sót trợ từ trong ghi chú còn hơn cắt mất chữ của người dùng:
+    /// Phần đi kèm ngày cũng bỏ khỏi ghi chú, nhưng thà để sót còn hơn cắt mất chữ của người dùng:
+    /// - thứ trong ngoặc ngay sau ngày, cách in quen thuộc ở Nhật: "9/23(水)", "9/23 (水曜日)";
     /// - trợ từ một chữ: giữ nếu sau nó là hiragana, vì có thể là đầu một từ ("昨日のり弁" → "のり弁");
     /// - "から": chỉ bỏ khi đứng riêng (sau là khoảng trắng, dấu câu, hết câu), vì "昨日から揚げ" là món から揚げ.
-    static func includingParticle(_ range: Range<Int>, in chars: [Character]) -> Range<Int> {
-        let end = range.upperBound
-        guard end < chars.count else { return range }
+    static func extendDateRange(_ range: Range<Int>, in chars: [Character]) -> Range<Int> {
+        var end = range.upperBound
+        var i = end
+        if i < chars.count, chars[i] == " " { i += 1 }
+        if i + 1 < chars.count, chars[i] == "(", japaneseWeekdays[String(chars[i + 1])] != nil {
+            var j = i + 2
+            if j < chars.count, chars[j] == "曜" {
+                j += 1
+                if j < chars.count, chars[j] == "日" { j += 1 }
+            }
+            if j < chars.count, chars[j] == ")" { end = j + 1 }
+        }
+        guard end < chars.count else { return range.lowerBound..<end }
         let rest = String(chars[end...].prefix(2))
-        guard let particle = dateParticles.first(where: { rest.hasPrefix($0) }) else { return range }
+        guard let particle = dateParticles.first(where: { rest.hasPrefix($0) }) else { return range.lowerBound..<end }
         let after = end + particle.count
         let next: Character? = after < chars.count ? chars[after] : nil
         if particle.count > 1 {
-            if let next, !next.isWhitespace, !next.isPunctuation { return range }
+            if let next, !next.isWhitespace, !next.isPunctuation { return range.lowerBound..<end }
         } else if let scalar = next?.unicodeScalars.first, (0x3041...0x309F).contains(scalar.value) {
-            return range
+            return range.lowerBound..<end
         }
         return range.lowerBound..<after
     }

@@ -94,6 +94,19 @@ public enum L10n: String, CaseIterable, Sendable {
     // Ô nhập nhanh
     case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
+    // Onboarding
+    case onboardingWelcome, onboardingIntro, onboardingTry, onboardingSaveFirst, onboardingSaved
+    case onboardingBudgetTitle, onboardingHabitTitle, onboardingHabitHint, next, skip, getStarted
+    // Nhìn lại tuần
+    case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
+    // Sửa giao dịch
+    case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
+    // Thói quen & chốt ngày
+    case habitsTitle, closeDay, dayClosed, closeDayFooter, strength, streakDays, streakRestart, streakNone
+    case markDone, doneToday, restToday, restingToday, addHabit, automaticHabitHint
+    // Nhắc buổi tối
+    case reminderToggle, reminderTime, reminderFooter, reminderDenied, reminderTitle, reminderBody
+    case actionAllLogged, actionLogMore
     // Cài đặt
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
@@ -164,6 +177,122 @@ public enum L10n: String, CaseIterable, Sendable {
         case .placeholderJapan:
             LocalizedText(vi: "konbini 500, cơm 980 yên hôm qua…", en: "coffee 350, train 220 yesterday…",
                           ja: "コーヒー 350円、昨日 電車 220…")
+
+        case .onboardingWelcome:
+            LocalizedText(vi: "Chào bạn 👋", en: "Welcome 👋", ja: "ようこそ 👋")
+        case .onboardingIntro:
+            LocalizedText(vi: "Xu giúp bạn ghi chi tiêu trong 2 giây: gõ một câu là xong. Không cần tài khoản, dữ liệu nằm trên máy bạn.",
+                          en: "Xu logs your spending in 2 seconds: type one sentence and you're done. No account, your data stays on your phone.",
+                          ja: "Xuなら、ひと言入力するだけで2秒で支出を記録できます。アカウント不要、データはこの端末の中だけ。")
+        case .onboardingTry:
+            LocalizedText(vi: "Gõ thử một câu", en: "Try a sentence", ja: "試しに入力してみよう")
+        case .onboardingSaveFirst:
+            LocalizedText(vi: "Ghi luôn khoản này", en: "Log this one", ja: "これを記録する")
+        case .onboardingSaved:
+            LocalizedText(vi: "Đã ghi khoản đầu tiên 🎉", en: "Your first entry is logged 🎉", ja: "最初の記録ができました 🎉")
+        case .onboardingBudgetTitle:
+            LocalizedText(vi: "Mỗi tháng bạn muốn tiêu vặt khoảng bao nhiêu?", en: "How much do you want for everyday treats each month?",
+                          ja: "毎月、自由に使いたいお金はどれくらい?")
+        case .onboardingHabitTitle:
+            LocalizedText(vi: "Chọn một thói quen nhỏ", en: "Pick one small habit", ja: "小さな習慣をひとつ選ぼう")
+        case .onboardingHabitHint:
+            LocalizedText(vi: "\"Ghi chép mỗi ngày\" đã bật sẵn. Thêm một thói quen nữa nếu bạn muốn, đổi lúc nào cũng được.",
+                          en: "\"Log every day\" is already on. Add one more if you like; you can change it anytime.",
+                          ja: "「毎日記録する」はオンになっています。よければもうひとつ追加しましょう。いつでも変えられます。")
+        case .next:
+            LocalizedText(vi: "Tiếp", en: "Next", ja: "次へ")
+        case .skip:
+            LocalizedText(vi: "Bỏ qua", en: "Skip", ja: "スキップ")
+        case .getStarted:
+            LocalizedText(vi: "Bắt đầu", en: "Get started", ja: "はじめる")
+
+        case .weekTitle:
+            LocalizedText(vi: "Nhìn lại tuần này", en: "This week", ja: "今週のふり返り")
+        case .weekSpent:
+            LocalizedText(vi: "Tuần này đã tiêu {0}", en: "Spent this week: {0}", ja: "今週の支出 {0}")
+        case .weekTop:
+            LocalizedText(vi: "Nhiều nhất: {0}", en: "Most on: {0}", ja: "いちばん多いのは {0}")
+        case .weekNoSpend:
+            LocalizedText(vi: "🌱 {0} ngày không tiêu vặt", en: "🌱 {0} no-spend days", ja: "🌱 小さな出費なしの日 {0}日")
+        case .weekLogged:
+            LocalizedText(vi: "📝 Có ghi chép {0}/{1} ngày", en: "📝 Logged on {0} of {1} days", ja: "📝 記録した日 {0}/{1}日")
+
+        case .editEntry:
+            LocalizedText(vi: "Sửa khoản", en: "Edit entry", ja: "記録を編集")
+        case .noteField:
+            LocalizedText(vi: "Ghi chú", en: "Note", ja: "メモ")
+        case .amountField:
+            LocalizedText(vi: "Số tiền", en: "Amount", ja: "金額")
+        case .currencyField:
+            LocalizedText(vi: "Loại tiền", en: "Currency", ja: "通貨")
+        case .incomeToggle:
+            LocalizedText(vi: "Đây là khoản thu", en: "This is income", ja: "収入として記録")
+        case .categoryField:
+            LocalizedText(vi: "Danh mục", en: "Category", ja: "カテゴリ")
+        case .dateField:
+            LocalizedText(vi: "Ngày", en: "Date", ja: "日付")
+        case .cancel:
+            LocalizedText(vi: "Huỷ", en: "Cancel", ja: "キャンセル")
+        case .deleteEntry:
+            LocalizedText(vi: "Xoá khoản này", en: "Delete entry", ja: "この記録を削除")
+
+        case .habitsTitle:
+            LocalizedText(vi: "Thói quen", en: "Habits", ja: "習慣")
+        case .closeDay:
+            LocalizedText(vi: "Hôm nay mình đã ghi đủ", en: "I've logged everything today", ja: "今日の記録はこれで全部")
+        case .dayClosed:
+            LocalizedText(vi: "Đã chốt hôm nay ✓", en: "Today is closed ✓", ja: "今日は締めました ✓")
+        case .closeDayFooter:
+            LocalizedText(
+                vi: "Chốt ngày giúp Xu biết hôm nay bạn không tiêu gì thêm, chứ không phải quên ghi. Chạm lần nữa để mở lại.",
+                en: "Closing the day tells Xu you didn't spend anything else, rather than forgot to log it. Tap again to reopen.",
+                ja: "締めると、記録し忘れではなく本当に使わなかった日だと分かります。もう一度タップで取り消せます。")
+        case .strength:
+            LocalizedText(vi: "Sức mạnh {0}", en: "Strength {0}", ja: "定着度 {0}")
+        case .streakDays:
+            LocalizedText(vi: "Chuỗi {0} ngày", en: "{0}-day streak", ja: "{0}日連続")
+        case .streakRestart:
+            LocalizedText(vi: "Chuỗi mới bắt đầu. Sức mạnh thói quen vẫn còn {0}.",
+                          en: "A new streak starts. Your habit strength is still {0}.",
+                          ja: "新しい連続記録のスタート。定着度は{0}のままです。")
+        case .streakNone:
+            LocalizedText(vi: "Bắt đầu từ hôm nay", en: "Starting today", ja: "今日から始めよう")
+        case .markDone:
+            LocalizedText(vi: "Hôm nay xong", en: "Done today", ja: "今日はできた")
+        case .doneToday:
+            LocalizedText(vi: "Đã xong ✓", en: "Done ✓", ja: "できた ✓")
+        case .restToday:
+            LocalizedText(vi: "Hôm nay nghỉ", en: "Rest today", ja: "今日は休み")
+        case .restingToday:
+            LocalizedText(vi: "Hôm nay nghỉ — không tính", en: "Resting today — doesn't count", ja: "今日は休み — 数えません")
+        case .addHabit:
+            LocalizedText(vi: "Thêm thói quen", en: "Add a habit", ja: "習慣を追加")
+        case .automaticHabitHint:
+            LocalizedText(vi: "Tự tính từ khoản đã ghi và chốt ngày", en: "Counted from your entries and day close",
+                          ja: "記録と締めから自動で判定")
+
+        case .reminderToggle:
+            LocalizedText(vi: "Nhắc chốt ngày buổi tối", en: "Evening reminder to close the day", ja: "夜の締めリマインダー")
+        case .reminderTime:
+            LocalizedText(vi: "Giờ nhắc", en: "Time", ja: "時刻")
+        case .reminderFooter:
+            LocalizedText(
+                vi: "Mỗi tối một thông báo: \"Đã ghi đủ\" để chốt ngày, \"Ghi thêm\" để mở ô nhập. Chỉ đặt lịch trên máy.",
+                en: "One notification each evening: \"All logged\" closes the day, \"Log more\" opens the input. Scheduled on this device only.",
+                ja: "毎晩1回通知します。「全部記録した」で締め、「もっと記録」で入力欄を開きます。通知はこの端末内だけで設定されます。")
+        case .reminderDenied:
+            LocalizedText(vi: "Thông báo của Xu đang tắt. Bật lại trong Cài đặt của iPhone › Xu › Thông báo.",
+                          en: "Notifications for Xu are off. Turn them on in iPhone Settings › Xu › Notifications.",
+                          ja: "Xuの通知がオフになっています。iPhoneの設定 › Xu › 通知 でオンにできます。")
+        case .reminderTitle:
+            LocalizedText(vi: "Chốt ngày", en: "Close the day", ja: "今日の締め")
+        case .reminderBody:
+            LocalizedText(vi: "Hôm nay có khoản nào chưa ghi không?", en: "Anything left to log today?",
+                          ja: "今日、まだ記録していない出費はありますか?")
+        case .actionAllLogged:
+            LocalizedText(vi: "Đã ghi đủ", en: "All logged", ja: "全部記録した")
+        case .actionLogMore:
+            LocalizedText(vi: "Ghi thêm", en: "Log more", ja: "もっと記録")
 
         case .language:
             LocalizedText(vi: "Ngôn ngữ", en: "Language", ja: "言語")

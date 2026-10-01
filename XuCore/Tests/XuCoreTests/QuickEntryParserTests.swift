@@ -105,6 +105,15 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertEqual(parse("hoá đơn điện 12/9 650k").amount, 650_000)
     }
 
+    func testDatesAreGregorianEvenWithJapaneseSystemCalendar() {
+        var japanese = Calendar(identifier: .japanese)
+        japanese.timeZone = calendar.timeZone
+        let jp = QuickEntryParser(calendar: japanese)
+        XCTAssertEqual(day(jp.parse("hoá đơn điện 12/9 650k", now: now)), "2026-09-12")
+        XCTAssertEqual(day(jp.parse("quà 1/3/2026 500k", now: now)), "2026-03-01")
+        XCTAssertEqual(day(jp.parse("Grab 52k hôm qua", now: now)), "2026-09-24")
+    }
+
     // MARK: Ghi chú & danh mục
 
     func testNoteKeepsDiacritics() {

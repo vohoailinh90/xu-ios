@@ -4,14 +4,22 @@ import XuCore
 
 @main
 struct XuApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
+
     init() {
         AppSettings.registerDefaults()
         SampleData.seedQuickChipsIfNeeded()
+        SampleData.seedHabitsIfNeeded()
     }
 
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .onChange(of: scenePhase) {
+                    // Mỗi lần quay lại app: nạp thêm lịch nhắc chốt ngày cho các ngày tới.
+                    if scenePhase == .active { ReminderScheduler.refresh() }
+                }
         }
         .modelContainer(SharedStore.container)
     }
@@ -26,6 +34,15 @@ enum SampleData {
         let count = (try? context.fetchCount(FetchDescriptor<QuickChip>())) ?? 0
         guard count == 0 else { return }
         insertSeeds(in: context)
+    }
+
+    /// "Ghi chép mỗi ngày" là thói quen mặc định, bật sẵn (docs/05).
+    static func seedHabitsIfNeeded() {
+        let context = SharedStore.container.mainContext
+        let count = (try? context.fetchCount(FetchDescriptor<MoneyHabit>())) ?? 0
+        guard count == 0 else { return }
+        context.insert(MoneyHabit(template: .logDaily))
+        try? context.save()
     }
 
     /// Đổi ngôn ngữ hoặc nơi chi tiêu: thay khoản quen mặc định cho hợp (tên, loại tiền),

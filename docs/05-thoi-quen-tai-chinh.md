@@ -1,6 +1,7 @@
 # 05 — Thói quen tài chính
 
-Code: `XuCore/Sources/XuCore/HabitEngine.swift`, `SafeToSpend.swift`
+Code: `XuCore/Sources/XuCore/HabitEngine.swift` (`HabitProgress`), `SafeToSpend.swift`, `WeeklySummary.swift` ·
+App: `App/Xu/Features/Habits/HabitsView.swift`, nhắc buổi tối `App/Xu/Support/ReminderScheduler.swift`
 
 ## Vì sao thói quen là lõi, không phải phụ kiện
 
@@ -15,7 +16,9 @@ Ghi khoản chi (2 giây) → thẻ "còn được tiêu" cập nhật
 ## Nghi thức "Chốt ngày"
 
 - Thông báo buổi tối (mặc định 21:00, đổi được): *"Hôm nay có khoản nào chưa ghi không?"* với 2 nút: **Đã ghi đủ** · **Ghi thêm**.
-- "Đã ghi đủ" tạo `DayClosure` cho ngày đó.
+- "Đã ghi đủ" tạo `DayClosure` cho đúng ngày mà thông báo nhắc (ghi sẵn trong thông báo), dù bấm lúc nào.
+- Hai tuần không mở app thì Xu thôi nhắc — không làm phiền người đã nghỉ dùng.
+- "Hôm nay nghỉ" là không tính: ngày đó không xong cũng không lỡ, kể cả khi có ghi chép hay đã chốt.
 - Tại sao cần: nếu không có chốt ngày, một ngày không có giao dịch có thể là "không tiêu gì" hoặc "quên ghi". Thói quen "ngày không tiêu vặt" chỉ được tính khi ngày **đã chốt**, tránh thưởng nhầm cho việc quên.
 
 ## Thói quen mẫu (MVP)

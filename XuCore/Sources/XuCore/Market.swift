@@ -15,6 +15,15 @@ public enum Currency: String, CaseIterable, Codable, Sendable, Identifiable {
         self = Currency(rawValue: code.uppercased()) ?? .vnd
     }
 
+    public var names: LocalizedText {
+        switch self {
+        case .vnd: LocalizedText(vi: "Đồng (VND)", en: "Vietnamese dong (VND)", ja: "ベトナムドン(VND)")
+        case .jpy: LocalizedText(vi: "Yên (JPY)", en: "Japanese yen (JPY)", ja: "日本円(JPY)")
+        }
+    }
+
+    public func name(in language: AppLanguage) -> String { names[language] }
+
     /// Ký hiệu ngắn, ví dụ để ghi cạnh ô nhập ngân sách.
     public func symbol(in language: AppLanguage) -> String {
         switch (self, language) {

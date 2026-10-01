@@ -6,14 +6,19 @@ struct HomeView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TransactionRecord.occurredAt, order: .reverse) private var records: [TransactionRecord]
     @Query(sort: \QuickChip.sortOrder) private var chips: [QuickChip]
+    @Query private var closures: [DayClosure]
     // Ngân sách tính bằng tiền của nơi chi tiêu, nên mỗi nơi một con số (khóa cũ giữ cho Việt Nam).
     @AppStorage("flexibleMonthlyBudget") private var budgetVietnam: Int = 0
     @AppStorage("flexibleMonthlyBudget.japan") private var budgetJapan: Int = 0
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
+    @AppStorage(AppSettings.Key.focusRequest, store: AppSettings.defaults) private var focusRequest: Double = 0
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     @State private var focusTrigger = 0
     @State private var showSettings = false
+    @State private var showHabits = false
+    @State private var editing: TransactionRecord?
 
     var body: some View {
         NavigationStack {
@@ -26,9 +31,20 @@ struct HomeView: View {
                 if !chips.isEmpty {
                     Section(language.t(.quickChips)) { ChipRow(chips: chips, language: language) }
                 }
+                let week = weeklySummary
+                if !week.isEmpty {
+                    Section(language.t(.weekTitle)) {
+                        WeekCard(summary: week, primary: market.currency, language: language)
+                    }
+                }
                 ForEach(groupedByDay, id: \.day) { group in
                     Section {
-                        ForEach(group.items) { TransactionRow(record: $0, language: language) }
+                        ForEach(group.items) { record in
+                            Button { editing = record } label: {
+                                TransactionRow(record: record, language: language)
+                            }
+                            .buttonStyle(.plain)
+                        }
                             .onDelete { offsets in
                                 for i in offsets { try? Ledger.delete(group.items[i], in: context) }
                             }
@@ -50,6 +66,10 @@ struct HomeView: View {
                     }
                     .accessibilityLabel(language.t(.exportCSV))
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showHabits = true } label: { Image(systemName: "leaf") }
+                        .accessibilityLabel(language.t(.habitsTitle))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel(language.t(.settings))
@@ -59,10 +79,40 @@ struct HomeView: View {
                 QuickEntryBar(focusTrigger: focusTrigger)
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $showHabits) { HabitsView() }
+            .fullScreenCover(isPresented: showOnboarding) {
+                OnboardingView {
+                    hasOnboarded = true
+                    focusTrigger += 1
+                }
+            }
+            .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
         .onOpenURL { url in
             if url.host == "new" { focusTrigger += 1 }
         }
+        .onChange(of: focusRequest) {
+            // "Ghi thêm" trên thông báo chốt ngày: đóng mọi sheet đang che ô nhập rồi focus.
+            showSettings = false
+            showHabits = false
+            editing = nil
+            focusTrigger += 1
+        }
+    }
+
+    /// Onboarding chỉ hiện lần mở đầu; xong hoặc bỏ qua thì không hiện lại.
+    private var showOnboarding: Binding<Bool> {
+        Binding(get: { !hasOnboarded }, set: { if !$0 { hasOnboarded = true } })
+    }
+
+    private var weeklySummary: WeeklySummary {
+        let cal = Calendar.current
+        let entries = records.map {
+            LedgerEntry(amount: $0.amount, isIncome: $0.isIncome, categoryID: $0.categoryID,
+                        day: DayKey($0.occurredAt, calendar: cal), currency: $0.currency)
+        }
+        return WeeklySummary.compute(entries: entries, closedDays: Set(closures.map(\.dayKey)),
+                                     today: DayKey(Date(), calendar: cal), primary: market.currency, calendar: cal)
     }
 
     private struct DayGroup { let day: DayKey; let title: String; let items: [TransactionRecord]; let spent: String }
@@ -139,6 +189,41 @@ private struct TodayCard: View {
     }
 }
 
+// MARK: - Nhìn lại tuần này
+
+private struct WeekCard: View {
+    let summary: WeeklySummary
+    let primary: Currency
+    let language: AppLanguage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(language.t(.weekSpent, spentText)).font(.headline)
+            if let id = summary.topCategoryID {
+                let category = CategoryCatalog.resolve(id: id)
+                Text(language.t(.weekTop, category.emoji + " " + category.name(in: language)))
+            }
+            if summary.noSpendDays > 0 {
+                Text(language.t(.weekNoSpend, "\(summary.noSpendDays)"))
+            }
+            Text(language.t(.weekLogged, "\(summary.loggedDays)", "\(summary.elapsedDays)"))
+                .foregroundStyle(.secondary)
+        }
+        .font(.callout)
+        .padding(.vertical, 4)
+    }
+
+    /// Tiền của nơi chi tiêu trước, tiền khác sau, không quy đổi.
+    private var spentText: String {
+        let order = [primary] + Currency.allCases.filter { $0 != primary }
+        let parts = order.compactMap { currency -> String? in
+            guard let sum = summary.spent[currency], sum > 0 else { return nil }
+            return MoneyFormatter.compact(sum, currency: currency, language: language)
+        }
+        return parts.isEmpty ? MoneyFormatter.compact(0, currency: primary, language: language) : parts.joined(separator: " · ")
+    }
+}
+
 // MARK: - Khoản quen (chạm là ghi)
 
 private struct ChipRow: View {
@@ -184,5 +269,6 @@ private struct TransactionRow: View {
                 .monospacedDigit()
                 .foregroundStyle(record.isIncome ? .green : .primary)
         }
+        .contentShape(Rectangle())
     }
 }
