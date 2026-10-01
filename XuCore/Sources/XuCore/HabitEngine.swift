@@ -53,15 +53,20 @@ public enum HabitTemplate: String, CaseIterable, Codable, Sendable {
     case cookAtHome
     case saveToday
 
-    public var defaultTitle: String {
+    public var titles: LocalizedText {
         switch self {
-        case .logDaily: "Ghi chép mỗi ngày"
-        case .noSpendDay: "Ngày không tiêu vặt"
-        case .noBubbleTea: "Không trà sữa"
-        case .cookAtHome: "Nấu ăn ở nhà"
-        case .saveToday: "Để dành hôm nay"
+        case .logDaily: LocalizedText(vi: "Ghi chép mỗi ngày", en: "Log every day", ja: "毎日記録する")
+        case .noSpendDay: LocalizedText(vi: "Ngày không tiêu vặt", en: "No-spend day", ja: "ムダ使いしない日")
+        case .noBubbleTea: LocalizedText(vi: "Không trà sữa", en: "No bubble tea", ja: "タピオカを控える")
+        case .cookAtHome: LocalizedText(vi: "Nấu ăn ở nhà", en: "Cook at home", ja: "自炊する")
+        case .saveToday: LocalizedText(vi: "Để dành hôm nay", en: "Save today", ja: "今日は貯金")
         }
     }
+
+    public func title(in language: AppLanguage) -> String { titles[language] }
+
+    /// Tên tiếng Việt (ngôn ngữ phát triển chính).
+    public var defaultTitle: String { titles.vi }
 
     public var emoji: String {
         switch self {

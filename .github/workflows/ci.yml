@@ -2,12 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # Nhánh claude/** được viết ngoài macOS: chạy CI ngay khi push để biết code có biên dịch không.
+    branches: [main, 'claude/**']
   pull_request:
 
 jobs:
   xucore-tests:
     name: XuCore tests
+    # PR mở từ nhánh claude/** đã chạy ở sự kiện push của cùng commit, không chạy lại (tiết kiệm phút macOS).
+    if: github.event_name == 'push' || !startsWith(github.head_ref, 'claude/')
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4

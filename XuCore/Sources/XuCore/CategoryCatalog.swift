@@ -7,81 +7,154 @@ public enum CategoryKind: String, Codable, Sendable {
 
 public struct CategoryDefinition: Identifiable, Hashable, Sendable {
     public let id: String
-    public let name: String
+    public let names: LocalizedText
     public let emoji: String
     public let kind: CategoryKind
     /// Khoản "tiêu vặt" — dùng cho thói quen "Ngày không tiêu vặt".
     public let isDiscretionary: Bool
-    /// Từ khóa đã gấp (chữ thường, không dấu). Có thể nhiều âm tiết.
+    /// Từ khóa đã gấp (chữ thường, không dấu, nửa khổ). Có thể nhiều âm tiết.
     public let keywords: [String]
 
-    public init(id: String, name: String, emoji: String, kind: CategoryKind = .expense,
+    public init(id: String, names: LocalizedText, emoji: String, kind: CategoryKind = .expense,
                 isDiscretionary: Bool = false, keywords: [String]) {
         self.id = id
-        self.name = name
+        self.names = names
         self.emoji = emoji
         self.kind = kind
         self.isDiscretionary = isDiscretionary
         self.keywords = keywords.map { TextFolding.fold($0) }
     }
+
+    public func name(in language: AppLanguage) -> String { names[language] }
 }
 
 public enum CategoryCatalog {
     public static let otherExpenseID = "other"
     public static let otherIncomeID = "income.other"
 
-    /// Danh mục mặc định. Lưu ý khi thêm từ khóa: tránh từ một âm tiết dễ trùng nghĩa
-    /// sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả). Xem docs/04.
+    /// Danh mục mặc định. Lưu ý khi thêm từ khóa (xem docs/04):
+    /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả).
+    /// - Tiếng Nhật được so khớp **chuỗi con** (không có khoảng trắng giữa từ), nên tránh từ một chữ Hán
+    ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
-        CategoryDefinition(id: "food", name: "Ăn uống", emoji: "🍜", keywords: [
+        CategoryDefinition(id: "food", names: LocalizedText(vi: "Ăn uống", en: "Food", ja: "食事"), emoji: "🍜", keywords: [
             "an", "an sang", "an trua", "an toi", "an vat", "com", "com tam", "pho", "bun", "bun bo",
             "mi", "mien", "hu tieu", "banh mi", "banh cuon", "chao", "xoi", "lau", "nuong", "do an",
-            "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood"
+            "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood",
+            // English
+            "lunch", "dinner", "breakfast", "meal", "food", "restaurant", "ramen", "sushi", "burger",
+            "mcdonald", "uber eats", "snack", "pasta",
+            // 日本語
+            "ラーメン", "うどん", "そば", "寿司", "すし", "牛丼", "定食", "弁当", "ランチ", "昼ごはん", "昼食",
+            "夕食", "晩ごはん", "夜ごはん", "朝ごはん", "朝食", "外食", "居酒屋", "焼肉", "カレー", "パン屋",
+            "マクドナルド", "マック", "ケンタッキー", "すき家", "吉野家", "松屋", "サイゼリヤ", "ガスト",
+            "餃子", "ピザ", "パスタ", "ご飯", "ごはん", "飲み会", "おにぎり", "出前館"
         ]),
-        CategoryDefinition(id: "groceries", name: "Đi chợ", emoji: "🛒", keywords: [
+        CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
+                           emoji: "🛒", keywords: [
             "di cho", "sieu thi", "rau", "thit", "ca", "trung", "gao", "trai cay", "winmart",
-            "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven"
+            "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven",
+            // Người Việt ở Nhật hay gõ chữ Latin
+            "konbini", "combini", "lawson", "familymart", "family mart", "seven eleven",
+            // English
+            "groceries", "grocery", "supermarket", "convenience store",
+            // 日本語
+            "コンビニ", "セブン", "ローソン", "ファミマ", "ファミリーマート", "ミニストップ", "スーパー",
+            "イオン", "業務スーパー", "西友", "イトーヨーカドー", "マックスバリュ", "食料品", "食材", "野菜",
+            "お米", "日用品"
         ]),
-        CategoryDefinition(id: "drinks", name: "Cà phê & đồ uống", emoji: "☕", isDiscretionary: true, keywords: [
+        CategoryDefinition(id: "drinks", names: LocalizedText(vi: "Cà phê & đồ uống", en: "Coffee & drinks", ja: "カフェ・飲み物"),
+                           emoji: "☕", isDiscretionary: true, keywords: [
             "ca phe", "cafe", "cf", "cafe sua", "bac xiu", "tra sua", "ts", "tra da", "tra chanh",
             "tra dao", "sinh to", "nuoc ep", "nuoc", "bia", "highlands", "phuc long", "starbucks",
-            "katinat", "the coffee house", "trung nguyen", "cong ca phe", "gong cha", "tocotoco"
+            "katinat", "the coffee house", "trung nguyen", "cong ca phe", "gong cha", "tocotoco",
+            // English
+            "coffee", "latte", "tea", "bubble tea", "boba", "juice", "beer", "drinks",
+            // 日本語
+            "コーヒー", "カフェ", "スタバ", "スターバックス", "ドトール", "タリーズ", "コメダ", "お茶", "紅茶",
+            "タピオカ", "ジュース", "飲み物", "ビール", "お酒"
         ]),
-        CategoryDefinition(id: "transport", name: "Di chuyển", emoji: "🛵", keywords: [
+        CategoryDefinition(id: "transport", names: LocalizedText(vi: "Di chuyển", en: "Transport", ja: "交通"),
+                           emoji: "🛵", keywords: [
             "grab", "grabbike", "grabcar", "xanh sm", "taxi", "xang", "do xang", "gui xe", "ve xe",
-            "bus", "xe buyt", "xe om", "gojek", "sua xe", "rua xe", "ve tau", "ve may bay", "metro", "cau duong"
+            "bus", "xe buyt", "xe om", "gojek", "sua xe", "rua xe", "ve tau", "ve may bay", "metro", "cau duong",
+            "tau dien", "shinkansen", "suica", "pasmo", "icoca",
+            // English
+            "train", "subway", "uber", "parking", "flight", "fuel",
+            // 日本語
+            "電車", "地下鉄", "バス", "タクシー", "新幹線", "定期券", "交通費", "切符", "ガソリン", "駐車場",
+            "駐輪場", "高速代", "飛行機", "航空券"
         ]),
-        CategoryDefinition(id: "bills", name: "Hóa đơn & nhà", emoji: "🧾", keywords: [
+        CategoryDefinition(id: "bills", names: LocalizedText(vi: "Hóa đơn & nhà", en: "Bills & home", ja: "住まい・光熱費"),
+                           emoji: "🧾", keywords: [
             "hoa don", "tien dien", "dien", "tien nuoc", "internet", "wifi", "tien mang", "tien nha",
-            "thue nha", "tien phong", "dien thoai", "nap the", "nap tien dien thoai", "4g", "phi chung cu", "gas"
+            "thue nha", "tien phong", "dien thoai", "nap the", "nap tien dien thoai", "4g", "phi chung cu", "gas",
+            // English
+            "rent", "electricity", "electric bill", "water bill", "phone bill", "utilities",
+            // 日本語
+            "家賃", "電気代", "電気料金", "ガス代", "水道代", "光熱費", "携帯代", "スマホ代", "ネット代",
+            "通信費", "管理費", "税金"
         ]),
-        CategoryDefinition(id: "shopping", name: "Mua sắm", emoji: "🛍️", isDiscretionary: true, keywords: [
+        CategoryDefinition(id: "shopping", names: LocalizedText(vi: "Mua sắm", en: "Shopping", ja: "買い物"),
+                           emoji: "🛍️", isDiscretionary: true, keywords: [
             "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui",
-            "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung"
+            "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
+            // English
+            "amazon", "rakuten", "clothes", "shoes", "shopping", "ikea", "mercari",
+            // 日本語
+            "楽天", "ユニクロ", "ダイソー", "100均", "百均", "100円ショップ", "セリア", "無印", "ニトリ",
+            "ドンキ", "キホーテ", "メルカリ", "百貨店", "デパート", "洋服", "服", "靴", "パンツ", "化粧品", "買い物"
         ]),
-        CategoryDefinition(id: "entertainment", name: "Giải trí", emoji: "🎬", isDiscretionary: true, keywords: [
+        CategoryDefinition(id: "entertainment", names: LocalizedText(vi: "Giải trí", en: "Entertainment", ja: "娯楽"),
+                           emoji: "🎬", isDiscretionary: true, keywords: [
             "phim", "xem phim", "cgv", "lotte cinema", "game", "karaoke", "netflix", "spotify",
-            "youtube", "concert", "du lich", "khach san", "bida", "choi"
+            "youtube", "concert", "du lich", "khach san", "bida", "choi",
+            // English
+            "movie", "cinema", "travel", "hotel",
+            // 日本語
+            "映画", "カラオケ", "ゲーム", "旅行", "ホテル", "温泉", "ライブ", "コンサート", "遊園地", "ディズニー"
         ]),
-        CategoryDefinition(id: "health", name: "Sức khỏe", emoji: "💊", keywords: [
-            "thuoc", "nha thuoc", "kham", "kham benh", "bac si", "benh vien", "nha khoa", "gym", "yoga", "bao hiem"
+        CategoryDefinition(id: "health", names: LocalizedText(vi: "Sức khỏe", en: "Health", ja: "医療・健康"),
+                           emoji: "💊", keywords: [
+            "thuoc", "nha thuoc", "kham", "kham benh", "bac si", "benh vien", "nha khoa", "gym", "yoga", "bao hiem",
+            // English
+            "medicine", "pharmacy", "doctor", "dentist", "hospital", "insurance",
+            // 日本語
+            "薬", "薬局", "病院", "歯医者", "クリニック", "ドラッグストア", "マツキヨ", "整骨院", "保険", "ジム"
         ]),
-        CategoryDefinition(id: "family", name: "Gia đình & quà", emoji: "🎁", keywords: [
-            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung", "gui ve nha", "gui me", "gui bo"
+        CategoryDefinition(id: "family", names: LocalizedText(vi: "Gia đình & quà", en: "Family & gifts", ja: "家族・贈り物"),
+                           emoji: "🎁", keywords: [
+            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung", "gui ve nha", "gui me", "gui bo",
+            "gui tien ve", "gui tien ve nha", "chuyen tien ve", "chuyen tien ve nha",
+            // English
+            "gift", "present", "birthday", "wedding", "send home", "remittance",
+            // 日本語
+            "仕送り", "送金", "実家", "プレゼント", "お土産", "誕生日", "結婚式", "お祝い", "ご祝儀"
         ]),
-        CategoryDefinition(id: "education", name: "Học tập", emoji: "📚", keywords: [
-            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic"
+        CategoryDefinition(id: "education", names: LocalizedText(vi: "Học tập", en: "Learning", ja: "学び"),
+                           emoji: "📚", keywords: [
+            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt",
+            // English
+            "tuition", "books", "course", "textbook",
+            // 日本語
+            "学費", "授業料", "教科書", "参考書", "本屋", "書籍", "塾", "日本語学校", "習い事"
         ]),
-        CategoryDefinition(id: otherExpenseID, name: "Khác", emoji: "📦", keywords: []),
+        CategoryDefinition(id: otherExpenseID, names: LocalizedText(vi: "Khác", en: "Other", ja: "その他"),
+                           emoji: "📦", keywords: []),
 
-        CategoryDefinition(id: "income.salary", name: "Lương", emoji: "💰", kind: .income, keywords: [
-            "luong", "tien luong", "nhan luong"
+        CategoryDefinition(id: "income.salary", names: LocalizedText(vi: "Lương", en: "Salary", ja: "給料"),
+                           emoji: "💰", kind: .income, keywords: [
+            "luong", "tien luong", "nhan luong", "salary", "paycheck", "wage", "wages",
+            "給料", "給与", "バイト代"
         ]),
-        CategoryDefinition(id: "income.bonus", name: "Thưởng", emoji: "🎉", kind: .income, keywords: [
-            "thuong", "tien thuong", "bonus"
+        CategoryDefinition(id: "income.bonus", names: LocalizedText(vi: "Thưởng", en: "Bonus", ja: "ボーナス"),
+                           emoji: "🎉", kind: .income, keywords: [
+            "thuong", "tien thuong", "bonus", "ボーナス", "賞与"
         ]),
-        CategoryDefinition(id: otherIncomeID, name: "Thu nhập khác", emoji: "💵", kind: .income, keywords: [
-            "thu nhap", "nhan tien", "hoan tien", "duoc cho", "duoc tang", "tien lai", "freelance"
+        CategoryDefinition(id: otherIncomeID, names: LocalizedText(vi: "Thu nhập khác", en: "Other income", ja: "その他の収入"),
+                           emoji: "💵", kind: .income, keywords: [
+            "thu nhap", "nhan tien", "hoan tien", "duoc cho", "duoc tang", "tien lai", "freelance",
+            "income", "refund", "cashback", "収入", "臨時収入", "返金"
         ])
     ]
 
@@ -97,6 +170,7 @@ public enum CategoryCatalog {
 
 /// So khớp danh mục theo cụm từ nguyên vẹn, cụm dài nhất thắng.
 /// Từ khóa người dùng đã dạy (`learned`) được ưu tiên hơn từ khóa mặc định.
+/// Từ khóa có chữ Nhật được so khớp chuỗi con, vì tiếng Nhật không có khoảng trắng giữa các từ.
 public struct CategoryMatcher: Sendable {
     public var catalog: [CategoryDefinition]
     /// cụm từ đã gấp → categoryID
@@ -127,10 +201,9 @@ public struct CategoryMatcher: Sendable {
 
     private func longestMatch(in padded: String, candidates: [(String, String)]) -> String? {
         var best: (length: Int, id: String)?
-        for (keyword, id) in candidates where !keyword.isEmpty {
-            if padded.contains(" " + keyword + " "), keyword.count > (best?.length ?? 0) {
-                best = (keyword.count, id)
-            }
+        for (keyword, id) in candidates where !keyword.isEmpty && keyword.count > (best?.length ?? 0) {
+            let hit = TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
+            if hit { best = (keyword.count, id) }
         }
         return best?.id
     }
