@@ -2,12 +2,12 @@
 
 > Bản cho Codex của [CLAUDE.md](CLAUDE.md). Hai file phải nói cùng một luật — sửa file này thì sửa cả file kia.
 
-Trả lời bằng tiếng Việt. Đọc `docs/01-san-pham.md` trước khi làm bất cứ việc gì.
+Trả lời bằng tiếng Việt. Đọc `README.md` và `docs/01-tam-nhin-san-pham.md` trước khi làm bất cứ việc gì.
 
 ## Luật
 
-1. **Tôn trọng 4 nguyên tắc** trong `docs/01`: quy tắc 2 giây, không tội lỗi, riêng tư/offline, Việt Nam trước. Thay đổi làm chậm việc ghi thì không làm.
-2. **Không làm** những mục trong "Không làm" của `docs/01` (liên kết ngân hàng, mạng xã hội, đầu tư/crypto, Android sớm).
+1. **Tôn trọng 4 nguyên tắc** trong `README.md` (mục "Nguyên tắc sản phẩm"): quy tắc 2 giây, không tội lỗi, riêng tư/offline, Việt Nam trước. Thay đổi làm chậm việc ghi thì không làm.
+2. **Không làm** những mục trong "Không làm" của `docs/01-tam-nhin-san-pham.md` (liên kết ngân hàng, mạng xã hội, đầu tư/crypto, Android sớm).
 3. **Không bịa** số liệu, link, giá hay điều khoản App Store. Chưa chắc thì ghi "cần kiểm tra".
 4. **Pháp lý & chính sách:** dữ liệu tài chính cá nhân, App Privacy, thanh toán → ghi "cần kiểm tra văn bản mới nhất", không tư vấn như luật sư.
    Mọi tính năng số bán qua IAP (StoreKit 2); không lách IAP.

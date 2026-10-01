@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    # Nhánh claude/** được viết ngoài macOS: chạy CI ngay khi push để biết code có biên dịch không.
+    branches: [main, 'claude/**']
+  pull_request:
+
+jobs:
+  xucore-tests:
+    name: XuCore tests
+    # PR mở từ nhánh claude/** của chính repo này đã chạy ở sự kiện push của cùng commit, không chạy lại
+    # (tiết kiệm phút macOS). PR từ fork thì luôn chạy, vì push của fork không chạy CI ở đây.
+    if: >-
+      github.event_name == 'push'
+      || github.event.pull_request.head.repo.full_name != github.repository
+      || !startsWith(github.head_ref, 'claude/')
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Run tests
+        working-directory: XuCore
+        run: swift test --parallel
+
+  app-build:
+    name: App build (iOS Simulator)
+    if: >-
+      github.event_name == 'push'
+      || github.event.pull_request.head.repo.full_name != github.repository
+      || !startsWith(github.head_ref, 'claude/')
+    runs-on: macos-15
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build app + widget (không ký, chỉ để biết code biên dịch được)
+        run: |
+          xcodebuild build -quiet \
+            -project Xu.xcodeproj -scheme Xu \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
