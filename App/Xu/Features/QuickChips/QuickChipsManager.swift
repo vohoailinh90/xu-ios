@@ -84,8 +84,10 @@ struct QuickChipsManager: View {
         let calendar = Calendar.current
         let today = DayKey(Date(), calendar: calendar)
         let start = calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: Date())) ?? .distantPast
+        // Cũ → mới: ChipSuggester lấy cách viết và danh mục của lần ghi sau cùng trong ngày.
         let records = (try? context.fetch(FetchDescriptor<TransactionRecord>(
-            predicate: #Predicate { $0.occurredAt >= start && $0.isIncome == false }
+            predicate: #Predicate { $0.occurredAt >= start && $0.isIncome == false },
+            sortBy: [SortDescriptor(\.occurredAt), SortDescriptor(\.createdAt)]
         ))) ?? []
         let entries = records.map {
             ChipSuggester.Entry(note: $0.note, amount: $0.amount, currency: $0.currency, categoryID: $0.categoryID,

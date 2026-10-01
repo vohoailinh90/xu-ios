@@ -43,6 +43,8 @@ public enum ChipSuggester {
         public let days: Int
     }
 
+    /// `entries` xếp từ cũ tới mới: trong cùng một ngày, khoản đứng sau được coi là ghi sau
+    /// (lấy cách viết và phá hoà danh mục theo nó).
     public static func suggest(entries: [Entry], pinned: [Pinned], today: DayKey, calendar: Calendar,
                                windowDays: Int = 30, minimumDays: Int = 3, limit: Int = 3) -> [Suggestion] {
         let start = today.adding(days: -(windowDays - 1), calendar: calendar)
