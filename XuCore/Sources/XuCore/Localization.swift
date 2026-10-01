@@ -114,6 +114,8 @@ public enum L10n: String, CaseIterable, Sendable {
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
     case fasterEntry, tipWidget, tipActionButton, tipApplePay
+    // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
+    case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayNotes, openShortcuts
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
@@ -368,6 +370,38 @@ public enum L10n: String, CaseIterable, Sendable {
                 vi: "Tự ghi khi quẹt Apple Pay (Phím tắt › Tự động hóa › Giao dịch)",
                 en: "Log automatically when you pay with Apple Pay (Shortcuts › Automation › Transaction)",
                 ja: "Apple Payで払ったら自動で記録(ショートカット › オートメーション)")
+
+        case .applePayGuideTitle:
+            LocalizedText(vi: "Tự ghi khi trả Apple Pay", en: "Auto-log Apple Pay", ja: "Apple Payを自動記録")
+        case .applePayGuideIntro:
+            LocalizedText(
+                vi: "Mỗi lần trả bằng thẻ trong Ví, app Phím tắt gọi Xu để ghi số tiền và tên cửa hàng — không cần mở app. Mọi thứ chạy trên máy; Xu không kết nối ngân hàng.",
+                en: "Every time you pay with a card in Wallet, the Shortcuts app asks Xu to log the amount and merchant — no need to open the app. It all runs on your phone; Xu never connects to your bank.",
+                ja: "ウォレットのカードで払うたびに、ショートカットAppがXuに金額と支払先を記録させます。アプリを開く必要はありません。すべて端末内で動き、Xuは銀行に接続しません。")
+        case .applePayStep1:
+            LocalizedText(vi: "Mở app Phím tắt › Tự động hóa › nút +.",
+                          en: "Open the Shortcuts app › Automation › the + button.",
+                          ja: "ショートカットAppを開き、オートメーション › 「+」をタップ。")
+        case .applePayStep2:
+            LocalizedText(vi: "Chọn Giao dịch (Ví), chọn thẻ bạn hay dùng, rồi chọn chạy ngay không cần xác nhận.",
+                          en: "Choose Transaction (Wallet), pick the cards you use, then choose to run immediately.",
+                          ja: "「取引」(ウォレット)を選び、よく使うカードを選んで、すぐに実行する設定にします。")
+        case .applePayStep3:
+            LocalizedText(vi: "Thêm tác vụ \"Ghi giao dịch thẻ\" của Xu.",
+                          en: "Add Xu's \"Log card payment\" action.",
+                          ja: "Xuのアクション「カード払いを記録」を追加。")
+        case .applePayStep4:
+            LocalizedText(vi: "Ở ô Số tiền chọn biến số tiền của giao dịch, ở ô Người bán chọn biến tên cửa hàng.",
+                          en: "Set Amount to the transaction's amount and Merchant to the transaction's merchant.",
+                          ja: "「金額」に取引の金額、「支払先」に取引の店舗名を入れます。")
+        case .applePayNotes:
+            // {0} tên loại tiền của nơi chi tiêu
+            LocalizedText(
+                vi: "Chỉ chạy với thẻ đã thêm vào Ví. Tên các mục trong app Phím tắt có thể khác một chút tuỳ phiên bản iOS. Số tiền được ghi bằng {0}; sửa được trong danh sách như mọi khoản khác.",
+                en: "Only works with cards added to Wallet. Labels in the Shortcuts app may differ slightly between iOS versions. Amounts are logged in {0}; you can edit them in the list like any entry.",
+                ja: "ウォレットに追加したカードのみ対象です。ショートカットAppの項目名はiOSのバージョンによって少し異なる場合があります。金額は{0}で記録され、一覧からいつでも修正できます。")
+        case .openShortcuts:
+            LocalizedText(vi: "Mở app Phím tắt", en: "Open Shortcuts", ja: "ショートカットAppを開く")
 
         case .csvHeader:
             LocalizedText(vi: "ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon",

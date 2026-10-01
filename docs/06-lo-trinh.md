@@ -28,7 +28,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 - [x] #widget Widget màn hình khóa: "hôm nay đã tiêu", chạm mở app
 - [x] #app Quản lý khoản quen: tự đề xuất từ khoản lặp lại, ghim/bỏ ghim, sắp xếp (tối đa 8; giới hạn Free 2 nút widget làm cùng paywall ở M4)
 - [x] #intent App Shortcut "Ghi chi tiêu" + hướng dẫn gán vào Action Button
-- [ ] #intent Intent nhận số tiền + tên cửa hàng cho automation Apple Pay; màn hình hướng dẫn cài đặt
+- [x] #intent Intent nhận số tiền + tên cửa hàng cho automation Apple Pay; màn hình hướng dẫn cài đặt (Cài đặt › Nhập nhanh hơn; tên mục trong app Phím tắt cần kiểm tra trên máy thật)
 
 ## M3 — Thói quen & còn được tiêu (tuần 5)
 - [x] #core HabitEngine: tự đánh giá thói quen mẫu theo giao dịch + chốt ngày

@@ -100,7 +100,7 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
 - **Không đọc được thông báo biến động số dư** của app ngân hàng (khác Android). Đừng hứa "tự động ghi từ ngân hàng".
 - **Siri và tiếng Việt.** Siri hỗ trợ tiếng Việt từ iOS 18.4, nên câu lệnh App Shortcut cần được bản địa hóa tiếng Việt (file `AppShortcuts.xcstrings`) và kiểm tra trên máy thật. "Siri AI" thế hệ mới (iOS 27) lúc ra mắt chỉ có tiếng Anh. Câu lệnh Siri nên ngắn và cố định ("Ghi chi tiêu với Xu"), còn nội dung khoản chi nói ở bước hỏi tiếp. Trong app, giọng nói dùng đọc chính tả của bàn phím hoặc framework Speech.
 - **Widget màn hình khóa không tương tác được** như widget màn hình chính: chạm vào chỉ mở app. Vì vậy app phải mở thẳng vào ô nhập với bàn phím sẵn sàng.
-- **Apple Pay automation**: app Phím tắt có tự động hóa "Giao dịch" chạy khi thanh toán bằng thẻ trong Wallet. Người dùng phải tự tạo automation (app cung cấp hướng dẫn và intent nhận số tiền, tên cửa hàng). Chỉ áp dụng cho thẻ đã thêm vào Apple Pay.
+- **Apple Pay automation**: app Phím tắt có tự động hóa "Giao dịch" chạy khi thanh toán bằng thẻ trong Wallet. Người dùng phải tự tạo automation (app cung cấp hướng dẫn `ApplePayGuideView` và intent `LogPaymentIntent` nhận số tiền, tên cửa hàng). Chỉ áp dụng cho thẻ đã thêm vào Apple Pay.
 - **OCR tiếng Việt**: cần kiểm chứng `VNRecognizeTextRequest.supportedRecognitionLanguages()` trên iOS 17/18 có `vi-VT` hay không trước khi cam kết tính năng. Nếu chưa có, chỉ cần đọc số tiền và ngày (chữ số và ký tự Latin) là đủ dùng — đây là spike trong M4.
 - **Apple Foundation Models** chỉ có trên thiết bị hỗ trợ Apple Intelligence và phụ thuộc ngôn ngữ được hỗ trợ; luôn phải có đường lui bằng parser luật.
 
