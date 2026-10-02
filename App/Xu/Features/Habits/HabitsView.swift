@@ -5,6 +5,9 @@ import XuCore
 
 /// Thói quen tài chính (docs/05): chốt ngày, sức mạnh thói quen không reset về 0, chuỗi mềm, ngày nghỉ.
 struct HabitsView: View {
+    /// `false` khi ô nhập nhanh còn khoản đang gõ dở: không hỏi đánh giá lúc đó (để lần chốt sau).
+    var canAskForReview = true
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
@@ -106,9 +109,11 @@ struct HabitsView: View {
         try? context.save()
     }
 
-    /// Hỏi đánh giá một lần, ngay sau khi người dùng tự chốt ngày thứ 5 (docs/07) — không bao giờ lúc đang ghi.
+    /// Hỏi đánh giá một lần, ngay sau khi người dùng tự chốt ngày thứ 5 (docs/07) — không bao giờ lúc đang ghi:
+    /// còn khoản gõ dở trong ô nhập thì chưa hỏi, cũng chưa tính là đã hỏi.
     private func askForReviewIfDue(closedDays: Int) {
-        guard ReviewPrompt.shouldAsk(closedDays: closedDays, alreadyAsked: reviewRequested) else { return }
+        guard canAskForReview,
+              ReviewPrompt.shouldAsk(closedDays: closedDays, alreadyAsked: reviewRequested) else { return }
         reviewRequested = true
         requestReview()
     }
