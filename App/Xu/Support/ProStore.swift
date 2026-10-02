@@ -104,7 +104,7 @@ final class ProStore {
         if !isPro { notice = unverified ? .restoreFailed : .nothingToRestore }
     }
 
-    /// Đóng paywall thì thôi báo, để lần mở sau không thấy thông báo cũ.
+    /// Mở paywall thì bỏ thông báo của lần trước, để không thấy kết quả cũ.
     func clearNotice() {
         notice = nil
     }
