@@ -34,8 +34,10 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu (và bỏ danh mục đã chọn tay cho câu cũ):
     /// - từ rỗng sang có chữ;
     /// - câu cũ bị thay gần hết (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa;
-    /// - một phần câu bị thay và ghi chú đổi hẳn, không còn từ nào chung ("phở 45k" → "grab 45k").
-    /// Sửa số tiền, sửa hay thêm một từ ("cơm gà" → "cơm vịt"), thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
+    /// - một phần câu bị thay và ghi chú đổi hẳn: không còn từ nào chung, và đầu + cuối ghi chú giữ lại chưa tới một nửa
+    ///   ("phở 45k" → "grab 45k").
+    /// Sửa số tiền, sửa lỗi gõ ("grba" → "grab"), sửa hay thêm một từ ("cơm gà" → "cơm vịt"), thêm, xoá ở đầu hay cuối
+    /// câu thì vẫn là câu đang đo.
     /// `parser` là parser của ô nhập (cùng nơi chi tiêu), để tách ghi chú và đọc số tiền.
     /// Bộ gõ tiếng Nhật (IME) đổi chữ đang soạn sang chữ Hán/katakana cũng thay cả cụm ("きのう" → "昨日"). Thay đổi chỉ
     /// được coi là IME chuyển đổi (không phải câu mới) khi:
@@ -57,10 +59,7 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
         guard !a.isEmpty else { return true }
-        var prefix = 0
-        while prefix < min(a.count, b.count), a[prefix] == b[prefix] { prefix += 1 }
-        var suffix = 0
-        while suffix < min(a.count, b.count) - prefix, a[a.count - 1 - suffix] == b[b.count - 1 - suffix] { suffix += 1 }
+        let (prefix, suffix) = sharedEnds(a, b)
         let replaced = a[prefix..<(a.count - suffix)]
         let inserted = b[prefix..<(b.count - suffix)]
         if !replaced.isEmpty, replaced.allSatisfy(isBeingComposed),
@@ -75,13 +74,27 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         // Giữ phần lớn ký tự nhưng thay hẳn ghi chú: khoản khác. Chỉ xét khi có thay (không phải gõ thêm hay xoá),
         // nên gõ từng chữ không phải đọc lại câu.
         guard !replaced.isEmpty, !inserted.isEmpty else { return false }
-        let wordsBefore = noteWords(parser.parse(old).note), wordsAfter = noteWords(parser.parse(new).note)
-        return !wordsBefore.isEmpty && !wordsAfter.isEmpty && wordsBefore.isDisjoint(with: wordsAfter)
+        // Ghi chú so sau khi gấp (bỏ dấu, chữ thường): "Cà phê" và "ca phe" là như nhau.
+        let noteBefore = Array(TextFolding.fold(parser.parse(old).note))
+        let noteAfter = Array(TextFolding.fold(parser.parse(new).note))
+        let wordsBefore = words(noteBefore), wordsAfter = words(noteAfter)
+        guard !wordsBefore.isEmpty, !wordsAfter.isEmpty, wordsBefore.isDisjoint(with: wordsAfter) else { return false }
+        // Sửa lỗi gõ trong từ ("grba" → "grab") vẫn giữ phần lớn chữ của ghi chú.
+        let kept = sharedEnds(noteBefore, noteAfter)
+        return (kept.prefix + kept.suffix) * 2 < noteBefore.count
     }
 
-    /// Các từ của ghi chú đã gấp (bỏ dấu, chữ thường): "Cà phê" và "ca phe" là cùng từ.
-    private static func noteWords(_ note: String) -> Set<String> {
-        Set(TextFolding.fold(note).split(whereSeparator: \.isWhitespace).map(String.init))
+    /// Số ký tự giống nhau ở đầu và ở cuối (không chồng lên nhau) của hai chuỗi.
+    private static func sharedEnds(_ a: [Character], _ b: [Character]) -> (prefix: Int, suffix: Int) {
+        var prefix = 0
+        while prefix < min(a.count, b.count), a[prefix] == b[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < min(a.count, b.count) - prefix, a[a.count - 1 - suffix] == b[b.count - 1 - suffix] { suffix += 1 }
+        return (prefix, suffix)
+    }
+
+    private static func words(_ text: [Character]) -> Set<String> {
+        Set(text.split(whereSeparator: \.isWhitespace).map { String($0) })
     }
 
     /// Cách đọc hiragana của chữ số/đơn vị Hán mà IME đổi ra, dài trước ngắn sau ("ろっぴゃく" → "六百").
