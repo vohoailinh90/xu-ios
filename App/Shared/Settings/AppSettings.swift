@@ -25,6 +25,8 @@ enum AppSettings {
         /// Lời mời Pro (docs/07): ngày thẻ hiện lần đầu (`DayKey`, "" = chưa) và đã chạm "Để sau"/"Xem Xu Pro" chưa.
         static let proInviteDay = "proInviteDay"
         static let proInviteDismissed = "proInviteDismissed"
+        /// Đã hỏi đánh giá App Store sau lần chốt ngày thứ 5 (docs/07), để chỉ hỏi một lần.
+        static let reviewRequested = "reviewRequested"
     }
 
     static let defaultReminderMinutes = 21 * 60

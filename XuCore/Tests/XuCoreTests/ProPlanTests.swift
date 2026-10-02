@@ -62,3 +62,12 @@ final class ProInviteTests: XCTestCase {
         XCTAssertFalse(evaluated)
     }
 }
+
+final class ReviewPromptTests: XCTestCase {
+    func testAsksOnceFromTheFifthClosedDay() {
+        XCTAssertFalse(ReviewPrompt.shouldAsk(closedDays: 4, alreadyAsked: false))
+        XCTAssertTrue(ReviewPrompt.shouldAsk(closedDays: 5, alreadyAsked: false))
+        XCTAssertTrue(ReviewPrompt.shouldAsk(closedDays: 12, alreadyAsked: false), "Đã chốt nhiều ngày trước bản này: hỏi ở lần chốt tới")
+        XCTAssertFalse(ReviewPrompt.shouldAsk(closedDays: 5, alreadyAsked: true))
+    }
+}
