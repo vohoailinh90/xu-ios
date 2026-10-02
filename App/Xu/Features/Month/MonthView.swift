@@ -91,8 +91,9 @@ private struct CategoryChart: View {
     var body: some View {
         Chart(slices, id: \.categoryID) { slice in
             let category = CategoryCatalog.resolve(id: slice.categoryID)
-            BarMark(x: .value("Amount", Double(slice.amount)),
-                    y: .value("Category", category.emoji + " " + category.name(in: language)))
+            // Nhãn trục theo ngôn ngữ đang chọn: VoiceOver và biểu đồ trợ năng đọc chúng.
+            BarMark(x: .value(language.t(.amountField), Double(slice.amount)),
+                    y: .value(language.t(.categoryField), category.emoji + " " + category.name(in: language)))
                 .foregroundStyle(.tint)
                 .annotation(position: .trailing, alignment: .leading) {
                     Text(MoneyFormatter.compact(slice.amount, currency: currency, language: language))
