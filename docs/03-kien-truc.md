@@ -119,4 +119,10 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
   nên bấm sau nửa đêm hay ở múi giờ khác vẫn chốt đúng ngày. Ngày đã nhắc rồi (đã đặt mà không còn trong danh sách chờ của iOS) thì đổi giờ nhắc cũng không nhắc lại.
 - Ngày/tháng/năm luôn theo lịch Gregorian giữ múi giờ (`Calendar.gregorianSameTimeZone`): `DayKey`, câu nhập, cuối tháng
   của ngân sách, tuần — kể cả khi máy đặt lịch Nhật (năm Reiwa) hay lịch Hồi giáo.
+- **Chưa xử lý: đổi múi giờ.** Ngày của một khoản là `occurredAt` đọc theo múi giờ **hiện tại** của máy, ở mọi chỗ:
+  danh sách theo ngày, thẻ "Hôm nay", tuần, tháng, thói quen, khoản quen, widget. Khoản ghi 23:30 ngày 31/8 ở Việt Nam,
+  mở ở Nhật (nhanh hơn 2 giờ) sẽ thành 01:30 ngày 1/9 — sang ngày khác, có khi sang tháng khác. Người Việt đi lại
+  Việt Nam ↔ Nhật gặp đúng chuyện này. Hướng sửa (PR riêng, cho cả app một lúc để các màn không lệch nhau): lưu ngày
+  lịch (hoặc múi giờ) lúc ghi vào `TransactionRecord` — trường mới, có giá trị mặc định nên SwiftData tự chuyển dữ liệu;
+  khoản cũ không có thì vẫn đọc theo múi giờ hiện tại — rồi mọi chỗ lấy ngày qua một hàm chung.
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.
