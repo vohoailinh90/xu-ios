@@ -86,6 +86,8 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | `docs/06-lo-trinh.md` | Lộ trình 6 tuần và danh sách issue |
 | `docs/07-kinh-doanh-aso.md` | Giá, ASO, ra mắt, chỉ số đo lường |
 | `docs/08-thi-truong-nhat-va-ngon-ngu.md` | Thị trường Nhật (yên, câu tiếng Nhật), chọn ngôn ngữ Việt/Anh/Nhật |
+| `docs/09-quyen-rieng-tu.md` | Dữ liệu Xu lưu, App Privacy, privacy manifest, việc cần kiểm tra trước khi nộp |
+| `docs/privacy-policy.md` | Chính sách quyền riêng tư vi/en/ja để đăng công khai |
 
 ## Đã có sẵn trong khung
 

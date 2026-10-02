@@ -24,6 +24,9 @@ targets:
     sources:
       - App/Xu
       - App/Shared
+      # Privacy manifest (docs/09): khai rõ là tài nguyên, không để XcodeGen đoán theo đuôi tệp.
+      - path: App/Privacy/PrivacyInfo.xcprivacy
+        buildPhase: resources
     dependencies:
       - package: XuCore
       - target: XuWidgets
@@ -52,6 +55,8 @@ targets:
     sources:
       - App/XuWidgets
       - App/Shared
+      - path: App/Privacy/PrivacyInfo.xcprivacy
+        buildPhase: resources
     dependencies:
       - package: XuCore
       - sdk: WidgetKit.framework

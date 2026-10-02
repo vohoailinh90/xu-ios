@@ -44,7 +44,10 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
   (đổi theo bundle ID) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
   Chưa khoá: Apple Pay automation (`docs/02` xếp vào Pro, nhưng đó cũng là một đường ghi — luật "không khoá việc ghi"; cần quyết),
   lời mời Pro sau 7 ngày liền (`docs/07`).
-- [ ] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect
+- [x] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect (`docs/09`): màn Cài đặt › Quyền riêng tư (offline,
+  vi/en/ja), privacy manifest cho app + widget, bản chính sách `docs/privacy-policy.md`, câu trả lời App Privacy
+  "Data Not Collected". Còn làm trước khi nộp: đăng chính sách ở URL công khai, điền tên + email liên hệ, điền App Privacy
+  trên App Store Connect — cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật.
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);
   còn sửa chỗ chậm khi có số liệu thật từ TestFlight
