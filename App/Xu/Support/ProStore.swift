@@ -104,9 +104,10 @@ final class ProStore {
         if !isPro { notice = unverified ? .restoreFailed : .nothingToRestore }
     }
 
-    /// Mở paywall thì bỏ thông báo của lần trước, để không thấy kết quả cũ.
-    func clearNotice() {
-        notice = nil
+    /// Mở paywall thì bỏ các kết quả đã xong của lần trước, để không thấy kết quả cũ. Giữ "đang chờ duyệt": giao dịch
+    /// vẫn chờ thật, tới khi được duyệt (`refreshEntitlement` xoá) hoặc người dùng mua lại.
+    func clearStaleNotice() {
+        if notice != .purchasePending { notice = nil }
     }
 
     /// Đọc lại quyền Xu Pro từ StoreKit. Trả về `true` nếu có giao dịch Xu Pro không xác minh được, để báo lỗi

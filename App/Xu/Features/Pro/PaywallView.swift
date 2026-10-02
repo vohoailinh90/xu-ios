@@ -57,8 +57,9 @@ struct PaywallView: View {
             }
             .task { if store.product == nil { await store.loadProduct() } }
             // Xoá lúc mở, không phải lúc đóng: mua/khôi phục có thể xong sau khi người dùng đã đóng paywall,
-            // kết quả muộn đó không được hiện ở lần mở sau. Mở lại khi thao tác còn chạy thì vẫn thấy kết quả của nó.
-            .onAppear { store.clearNotice() }
+            // kết quả muộn đó không được hiện ở lần mở sau. Mở lại khi thao tác còn chạy thì vẫn thấy kết quả của nó;
+            // giao dịch đang chờ duyệt thì vẫn báo.
+            .onAppear { store.clearStaleNotice() }
         }
     }
 
