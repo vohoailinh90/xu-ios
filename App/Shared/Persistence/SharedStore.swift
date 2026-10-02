@@ -80,16 +80,16 @@ enum Ledger {
         reloadWidgets()
     }
 
-    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ) và chốt
-    /// ngày mới theo múi giờ hiện tại; giữ nguyên ngày thì giữ nguyên giờ lúc ghi.
+    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ); giữ nguyên
+    /// ngày thì giữ nguyên giờ lúc ghi. Ngày trên màn sửa luôn được chốt vào `storedDay`, kể cả khoản cũ chưa có.
     static func update(_ record: TransactionRecord, amount: Int64, currency: Currency, isIncome: Bool,
                        categoryID: String, note: String, day: Date, in context: ModelContext) throws {
         guard amount > 0 else { throw LedgerError.missingAmount }
         let newDay = DayKey(day, calendar: .current)
         if newDay != record.day() {
             record.occurredAt = occurredAt(for: day)
-            record.storedDay = newDay.description
         }
+        record.storedDay = newDay.description
         record.amount = amount
         record.currencyCode = currency.code
         record.isIncome = isIncome

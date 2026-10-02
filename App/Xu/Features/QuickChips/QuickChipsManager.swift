@@ -88,7 +88,10 @@ struct QuickChipsManager: View {
     private func refreshSuggestions() {
         let calendar = Calendar.current
         let today = DayKey(Date(), calendar: calendar)
-        let start = calendar.date(byAdding: .day, value: -30, to: calendar.startOfDay(for: Date())) ?? .distantPast
+        // Lấy rộng hơn cửa sổ 30 ngày 2 ngày: ngày của khoản là ngày đã chốt lúc ghi (`day(in:)`), có thể lệch tới
+        // hơn một ngày so với `occurredAt` đọc theo múi giờ hiện tại (múi giờ cách nhau tối đa 26 giờ).
+        // ChipSuggester tự lọc đúng cửa sổ theo ngày đã chốt.
+        let start = calendar.date(byAdding: .day, value: -32, to: calendar.startOfDay(for: Date())) ?? .distantPast
         // Cũ → mới: ChipSuggester lấy cách viết và danh mục của lần ghi sau cùng trong ngày.
         let records = (try? context.fetch(FetchDescriptor<TransactionRecord>(
             predicate: #Predicate { $0.occurredAt >= start && $0.isIncome == false },
