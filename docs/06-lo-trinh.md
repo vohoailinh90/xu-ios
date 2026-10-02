@@ -15,7 +15,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 ## M1 — Ghi chép lõi (tuần 2–3)
 - [x] #parser Hoàn thiện parser số tiền + ngày, đạt 100% test hiện có
 - [ ] #parser Bổ sung test từ 200 câu thật thu thập ở M0
-- [ ] #core Mở rộng từ khóa danh mục mặc định, kiểm tra trùng nghĩa khi bỏ dấu
+- [x] #core Mở rộng từ khóa danh mục mặc định, kiểm tra trùng nghĩa khi bỏ dấu
 - [x] #app QuickEntryBar: tự focus, xem trước, Enter lưu, giữ focus sau khi lưu
 - [x] #app Thẻ xem trước: sửa danh mục bằng 1 chạm (lưới emoji)
 - [x] #app Học từ khóa khi người dùng sửa danh mục (LearnedKeyword)

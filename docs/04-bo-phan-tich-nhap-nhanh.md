@@ -107,7 +107,17 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 
 - Từ khoá có chữ Nhật được so khớp **chuỗi con** (tiếng Nhật không có khoảng trắng giữa từ); cụm dài nhất vẫn thắng: `セブンでコーヒー` → đồ uống.
 - Tránh từ khoá một chữ Hán nằm trong từ khác: `本` có trong `日本`, `パン` có trong `パンツ`. Dùng `本屋`, `パン屋`.
-- Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục.
+- Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục; `testKeywordsAreWrittenFolded` bắt từ khoá viết
+  chưa ở dạng đã gấp (sẽ không bao giờ khớp).
+- Tiếng Việt: không thêm từ khoá một âm tiết mà bỏ dấu thành từ khác nghĩa (bé/be, chợ/cho, bạn/bán, trà/trả…).
+  Các âm tiết đã có từ trước mà nhiều nghĩa — `ca` (cá, cà / cả), `trung` (trứng / trung tâm, trung thu), `tui` (túi / tui = tôi),
+  `mung` (mừng / mùng 1), `son` (son / Sơn) — khai trong `CategoryCatalog.ambiguousSyllables` kèm các dạng có dấu được tính.
+  Xét **từng âm tiết**: gõ đúng dạng đó ("cá 50k", "cà chua") hoặc gõ không dấu ("ca", "trung gà", "tui xách") thì khớp như cũ;
+  gõ bằng dạng có dấu khác nghĩa ("cả nhà", "mùng 1", "Sơn") thì không. "tui" không dấu vừa là "túi" vừa là "tui" (tôi)
+  nên vẫn khớp mua sắm như trước — không đoán được.
+  Mọi từ khoá khác giữ nguyên như trước; chỉ thêm cụm rõ nghĩa (`nuoc mam`, `giay ve sinh`, `tieng anh`, `an trung`…).
+  Coi chừng cụm cũng trùng: `mua ca` khớp cả "mua cà phê" lẫn "mua cả sách" — danh sách cấm nằm trong
+  `testAmbiguousSyllablesAreNotKeywords`.
 
 ## Việc tiếp theo cho parser
 

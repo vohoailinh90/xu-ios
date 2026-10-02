@@ -57,6 +57,37 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
+    /// Ghi chú được gấp (bỏ dấu, chữ thường, nửa khổ, bỏ dấu câu) trước khi so với từ khoá,
+    /// nên từ khoá phải viết sẵn ở dạng đã gấp — nếu không sẽ không bao giờ khớp.
+    func testKeywordsAreWrittenFolded() {
+        for category in CategoryCatalog.defaults {
+            for keyword in category.keywords {
+                XCTAssertEqual(CategoryMatcher.learningKey(for: keyword), keyword, "\(category.id): \"\(keyword)\" chưa ở dạng đã gấp")
+            }
+        }
+    }
+
+    /// Âm tiết nhiều nghĩa khai trong `ambiguousSyllables` phải là từ khoá thật, và mỗi nghĩa gấp lại đúng âm tiết đó.
+    func testAmbiguousSyllablesAreDeclaredCorrectly() {
+        let all = Set(CategoryCatalog.defaults.flatMap(\.keywords))
+        for (syllable, senses) in CategoryCatalog.ambiguousSyllables {
+            XCTAssertTrue(all.contains(syllable), "\"\(syllable)\" không còn là từ khoá")
+            for sense in senses {
+                XCTAssertEqual(TextFolding.fold(sense), syllable, "\"\(sense)\" không gấp thành \"\(syllable)\"")
+            }
+        }
+    }
+
+    /// Một âm tiết (hay cụm) mà bỏ dấu thì thành từ khác nghĩa, chưa khai nghĩa: không được làm từ khoá (docs/04).
+    func testAmbiguousSyllablesAreNotKeywords() {
+        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "mon", "sat", "mua ca", "ca hoi", "vi trung"]
+        for category in CategoryCatalog.defaults {
+            for keyword in category.keywords where ambiguous.contains(keyword) {
+                XCTFail("\(category.id): \"\(keyword)\" trùng nghĩa khi bỏ dấu, dùng cụm dài hơn")
+            }
+        }
+    }
+
     // MARK: Chọn ngôn ngữ, thị trường
 
     func testPreferredLanguage() {
@@ -94,6 +125,7 @@ final class LocalizationTests: XCTestCase {
     func testFoldingKeepsKanaAndNarrowsWidth() {
         XCTAssertEqual(TextFolding.fold("バス"), "バス", "Không bỏ dấu ゛ của kana")
         XCTAssertEqual(TextFolding.fold("ＡＢＣ１２３"), "abc123")
+        XCTAssertEqual(TextFolding.foldWidth("ＴＵＩ Túi ＣÁ"), "tui túi cá", "Nửa khổ, chữ thường, giữ dấu")
         XCTAssertEqual(TextFolding.fold("￥３５０"), "¥350")
         XCTAssertEqual(TextFolding.fold("Cà Phê Đá"), "ca phe da")
         let text = "コーヒー３５０円"

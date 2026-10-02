@@ -34,11 +34,13 @@ public enum CategoryCatalog {
 
     /// Danh mục mặc định. Lưu ý khi thêm từ khóa (xem docs/04):
     /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả).
+    ///   Âm tiết đã có sẵn mà nhiều nghĩa (cá/cả, trứng/trung tâm, túi/tui…) phải khai trong `ambiguousSyllables`.
+    ///   Thêm cụm dài cũng có thể trùng: "mua ca" khớp cả "mua cà phê" lẫn "mua cả sách".
     /// - Tiếng Nhật được so khớp **chuỗi con** (không có khoảng trắng giữa từ), nên tránh từ một chữ Hán
     ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
         CategoryDefinition(id: "food", names: LocalizedText(vi: "Ăn uống", en: "Food", ja: "食事"), emoji: "🍜", keywords: [
-            "an", "an sang", "an trua", "an toi", "an vat", "com", "com tam", "pho", "bun", "bun bo",
+            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "banh trung thu", "com", "com tam", "pho", "bun", "bun bo",
             "mi", "mien", "hu tieu", "banh mi", "banh cuon", "chao", "xoi", "lau", "nuong", "do an",
             "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood",
             // English
@@ -52,7 +54,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
                            emoji: "🛒", keywords: [
-            "di cho", "sieu thi", "rau", "thit", "ca", "trung", "gao", "trai cay", "winmart",
+            "di cho", "sieu thi", "rau", "thit", "ca", "trung",
+            "gao", "trai cay", "nuoc mam", "nuoc tuong", "dau an", "giay ve sinh", "bot giat", "winmart",
             "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven",
             // Người Việt ở Nhật hay gõ chữ Latin
             "konbini", "combini", "lawson", "familymart", "family mart", "seven eleven",
@@ -98,7 +101,7 @@ public enum CategoryCatalog {
         CategoryDefinition(id: "shopping", names: LocalizedText(vi: "Mua sắm", en: "Shopping", ja: "買い物"),
                            emoji: "🛍️", isDiscretionary: true, keywords: [
             "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui",
-            "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
+            "balo", "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
             // English
             "amazon", "rakuten", "clothes", "shoes", "shopping", "ikea", "mercari",
             // 日本語
@@ -124,7 +127,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "family", names: LocalizedText(vi: "Gia đình & quà", en: "Family & gifts", ja: "家族・贈り物"),
                            emoji: "🎁", keywords: [
-            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung", "gui ve nha", "gui me", "gui bo",
+            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung",
+            "gui ve nha", "gui me", "gui bo",
             "gui tien ve", "gui tien ve nha", "chuyen tien ve", "chuyen tien ve nha",
             // English
             "gift", "present", "birthday", "wedding", "send home", "remittance",
@@ -133,7 +137,8 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "education", names: LocalizedText(vi: "Học tập", en: "Learning", ja: "学び"),
                            emoji: "📚", keywords: [
-            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt",
+            "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt", "tieng anh", "tieng nhat",
+            "hoc tieng", "trung tam ngoai ngu",
             // English
             "tuition", "books", "course", "textbook",
             // 日本語
@@ -156,6 +161,17 @@ public enum CategoryCatalog {
             "thu nhap", "nhan tien", "hoan tien", "duoc cho", "duoc tang", "tien lai", "freelance",
             "income", "refund", "cashback", "収入", "臨時収入", "返金"
         ])
+    ]
+
+    /// Từ khoá một âm tiết mà bỏ dấu thì nhiều nghĩa → các dạng có dấu được tính là khớp.
+    /// Xét từng âm tiết: gõ đúng dạng này ("cá", "cà chua") hoặc gõ không dấu ("ca", "trung gà") thì khớp như mọi từ khoá;
+    /// gõ bằng dạng có dấu khác nghĩa ("cả nhà", "mùng 1", "Sơn") thì không.
+    public static let ambiguousSyllables: [String: Set<String>] = [
+        "ca": ["cá", "cà"],
+        "trung": ["trứng"],
+        "tui": ["túi"],
+        "mung": ["mừng"],
+        "son": ["son"]
     ]
 
     private static let byID: [String: CategoryDefinition] =
@@ -194,18 +210,35 @@ public struct CategoryMatcher: Sendable {
            let category = catalog.first(where: { $0.id == hit }) {
             return category
         }
-        let defaults = catalog.flatMap { category in category.keywords.map { ($0, category.id) } }
-        guard let hit = longestMatch(in: padded, candidates: defaults) else { return nil }
-        return catalog.first(where: { $0.id == hit })
+        // Cụm dài nhất thắng, dài bằng nhau thì danh mục đứng trước thắng.
+        // Bản giữ dấu chỉ đổi về chữ thường + nửa khổ: "ｃａ" (bàn phím Nhật) vẫn là gõ không dấu.
+        let accentedWords = Self.normalize(TextFolding.foldWidth(note)).split(separator: " ").map(String.init)
+        var best: (length: Int, category: CategoryDefinition)?
+        for category in catalog {
+            for keyword in category.keywords where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
+                if let senses = CategoryCatalog.ambiguousSyllables[keyword] {
+                    // Loại khi mọi lần âm tiết này xuất hiện đều gõ bằng dạng có dấu khác nghĩa ("cả", "mùng", "Sơn").
+                    let forms = accentedWords.filter { TextFolding.fold($0) == keyword }
+                    if !forms.isEmpty, !forms.contains(where: { $0 == keyword || senses.contains($0) }) { continue }
+                }
+                best = (keyword.count, category)
+            }
+        }
+        return best?.category
     }
 
     private func longestMatch(in padded: String, candidates: [(String, String)]) -> String? {
         var best: (length: Int, id: String)?
-        for (keyword, id) in candidates where !keyword.isEmpty && keyword.count > (best?.length ?? 0) {
-            let hit = TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
-            if hit { best = (keyword.count, id) }
+        for (keyword, id) in candidates where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
+            best = (keyword.count, id)
         }
         return best?.id
+    }
+
+    /// Chữ Nhật so khớp chuỗi con; chữ khác so khớp nguyên cụm (có khoảng trắng hai bên).
+    private static func contains(_ keyword: String, in padded: String) -> Bool {
+        guard !keyword.isEmpty else { return false }
+        return TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
     }
 
     /// Thay dấu câu bằng khoảng trắng và gộp khoảng trắng liên tiếp.

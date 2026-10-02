@@ -129,8 +129,48 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertEqual(parse("phở 45k").categoryID, "food")
         XCTAssertEqual(parse("tiền nước 120k").categoryID, "bills", "Cụm dài 'tiền nước' thắng 'nước'")
         XCTAssertEqual(parse("nước 10k").categoryID, "drinks")
+        XCTAssertEqual(parse("nước mắm 30k").categoryID, "groceries", "Cụm dài 'nước mắm' thắng 'nước'")
         XCTAssertEqual(parse("shopee 199k").categoryID, "shopping")
         XCTAssertEqual(parse("abcxyz 10k").categoryID, CategoryCatalog.otherExpenseID)
+    }
+
+    /// Từ trùng nghĩa khi bỏ dấu không kéo khoản chi sang danh mục sai.
+    func testCategoriesWithAmbiguousSyllables() {
+        XCTAssertEqual(parse("túi xách 500k").categoryID, "shopping")
+        XCTAssertEqual(parse("trung tâm tiếng Anh 2tr").categoryID, "education", "\"trung tâm\" không phải \"trứng\"")
+        XCTAssertEqual(parse("trứng gà 30k").categoryID, "groceries")
+        XCTAssertNotEqual(parse("mùng 1 đi chùa 100k").categoryID, "family", "\"mùng\" không phải \"mừng\"")
+        XCTAssertEqual(parse("mừng cưới 500k").categoryID, "family")
+        XCTAssertEqual(parse("mua cá 50k").categoryID, "groceries")
+        XCTAssertEqual(parse("cá 50k").categoryID, "groceries", "Câu ngắn có dấu vẫn đúng")
+        XCTAssertEqual(parse("cà chua 20k").categoryID, "groceries")
+        XCTAssertEqual(parse("cà rốt 15k").categoryID, "groceries")
+        XCTAssertEqual(parse("cà na 30k").categoryID, "groceries")
+        XCTAssertEqual(parse("bột cà ri 20k").categoryID, "groceries")
+        XCTAssertEqual(parse("cà tím nướng 40k").categoryID, "food", "Cụm dài \"nuong\" thắng âm tiết \"ca\"")
+        XCTAssertEqual(parse("ăn cà rốt 15k").categoryID, "food")
+        XCTAssertEqual(parse("bánh trung thu 100k").categoryID, "food", "\"trung thu\" không phải \"trứng\"")
+        XCTAssertEqual(parse("ăn cá 50k").categoryID, "food", "Cụm \"ăn cá\" thuộc ăn uống")
+        XCTAssertEqual(parse("ăn trứng 30k").categoryID, "food")
+        XCTAssertEqual(parse("bánh mì trứng 20k").categoryID, "food")
+        XCTAssertEqual(parse("mua túi đi học 200k").categoryID, "shopping", "\"túi\" và \"học\" dài bằng nhau: mua sắm đứng trước")
+        XCTAssertEqual(parse("trứng 30k").categoryID, "groceries")
+        XCTAssertEqual(parse("túi 200k").categoryID, "shopping")
+        XCTAssertEqual(parse("mua cà phê 35k").categoryID, "drinks", "\"cà phê\" không phải \"cá\"")
+        XCTAssertEqual(parse("mua cả sách 200k").categoryID, "education", "\"cả\" không phải \"cá\"")
+        XCTAssertEqual(parse("quà cho cả hội 500k").categoryID, "family")
+        XCTAssertEqual(parse("giấy vệ sinh 50k").categoryID, "groceries", "Cụm dài thắng \"giay\" (giày)")
+        XCTAssertEqual(parse("son môi 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("son 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("son dưỡng 150k").categoryID, "shopping")
+        XCTAssertNotEqual(parse("trả Sơn 200k").categoryID, "shopping", "\"Sơn\" là tên người")
+        // Chữ toàn khổ của bàn phím Nhật không phải dấu tiếng Việt: vẫn khớp như gõ không dấu.
+        XCTAssertEqual(parse("ｃａ 50k").categoryID, "groceries")
+        XCTAssertEqual(parse("ｓｏｎ 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("ｔｕｉ 200k").categoryID, "shopping")
+        // Quên dấu một từ: âm tiết gõ không dấu vẫn khớp như cũ.
+        XCTAssertEqual(parse("trung gà 30k").categoryID, "groceries")
+        XCTAssertEqual(parse("tui xách 500k").categoryID, "shopping")
     }
 
     func testIncome() {

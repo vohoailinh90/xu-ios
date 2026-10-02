@@ -32,6 +32,18 @@ public enum TextFolding {
         String(foldAligned(text).folded)
     }
 
+    /// Chỉ chữ thường và nửa khổ, **giữ dấu**: "ＴＵＩ Túi" → "tui túi". Dùng để biết người dùng có gõ dấu
+    /// tiếng Việt hay không mà không nhầm chữ toàn khổ của bàn phím Nhật là dấu.
+    public static func foldWidth(_ text: String) -> String {
+        String(text.precomposedStringWithCanonicalMapping.map { character -> Character in
+            let lower = String(character).lowercased()
+            let folded = lower.folding(options: [.widthInsensitive], locale: vietnamese)
+            if folded.count == 1, let first = folded.first { return first }
+            if lower.count == 1, let first = lower.first { return first }
+            return character
+        })
+    }
+
     /// Chữ có chữ Nhật/Hán (kana, kanji) — không có khoảng trắng giữa các từ nên phải so khớp chuỗi con.
     public static func containsCJK(_ text: String) -> Bool {
         text.unicodeScalars.contains { scalar in
