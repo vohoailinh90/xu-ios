@@ -86,6 +86,8 @@ final class EntryTimingTests: XCTestCase {
         XCTAssertTrue(isNew("phở 45k hôm qua", "grab 45k hôm qua"))
         XCTAssertFalse(isNew("cơm gà 45k", "cơm vịt 45k"), "Sửa một từ")
         XCTAssertFalse(isNew("grba 45k", "grab 45k"), "Sửa lỗi gõ")
+        XCTAssertFalse(isNew("cơm, gà 45k", "cơm vịt 45k"), "Dấu câu không dính vào từ")
+        XCTAssertFalse(isNew("cà phê. 35k", "cà phê sữa 35k"))
         XCTAssertFalse(isNew("strabucks 60k", "starbucks 60k"))
         XCTAssertTrue(isNew("bún 45k", "bánh 45k"))
         XCTAssertTrue(isNew("taxi 120k", "grab 120k"))
