@@ -53,7 +53,7 @@ struct SettingsView: View {
                 } footer: {
                     Text(language.t(reminderDenied ? .reminderDenied : .reminderFooter))
                 }
-                Section(language.t(.fasterEntry)) {
+                Section {
                     NavigationLink {
                         QuickChipsManager()
                     } label: {
@@ -65,6 +65,16 @@ struct SettingsView: View {
                         ApplePayGuideView()
                     } label: {
                         Label(language.t(.tipApplePay), systemImage: "creditcard")
+                    }
+                } header: {
+                    Text(language.t(.fasterEntry))
+                } footer: {
+                    // Chỉ hiện khi đã đủ vài lần đo, để con số có nghĩa.
+                    let timings = AppSettings.entryTimings
+                    if timings.count >= 5, let median = timings.median {
+                        Text(language.t(.entryTimingSummary,
+                                        median.formatted(.number.precision(.fractionLength(1)).locale(language.locale)),
+                                        "\(timings.count)"))
                     }
                 }
             }

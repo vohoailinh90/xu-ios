@@ -57,6 +57,7 @@ Xu đứng ở giao điểm: **tốc độ của Streaks + sự nhẹ nhàng c�
 
 Chỉ số phụ:
 - Thời gian trung vị để ghi một khoản: < 3 giây (đo từ lúc focus ô nhập đến lúc lưu).
+  Trong app đo từ ký tự đầu tiên đến lúc lưu, vì ô nhập tự focus khi mở app và giữ focus sau khi lưu; chỉ lưu trên máy (`EntryTimingLog`).
 - Tỷ lệ còn dùng sau 30 ngày (D30): mục tiêu > 25%.
 - Tỷ lệ khoản chi được nhận đúng danh mục tự động: > 80%.
 - Tỷ lệ chuyển đổi Free → Pro: 3–5%.

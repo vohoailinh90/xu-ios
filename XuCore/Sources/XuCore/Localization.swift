@@ -113,7 +113,7 @@ public enum L10n: String, CaseIterable, Sendable {
     // Cài đặt
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
-    case fasterEntry, tipWidget, tipActionButton, tipApplePay
+    case fasterEntry, tipWidget, tipActionButton, tipApplePay, entryTimingSummary
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
@@ -366,6 +366,11 @@ public enum L10n: String, CaseIterable, Sendable {
                 vi: "Gán \"Ghi chi tiêu\" vào Action Button (Cài đặt › Nút Tác vụ › Phím tắt)",
                 en: "Assign \"Log expense\" to the Action Button (Settings › Action Button › Shortcut)",
                 ja: "「支出を記録」をアクションボタンに割り当てる(設定 › アクションボタン › ショートカット)")
+        case .entryTimingSummary:
+            // {0} số giây (một chữ số lẻ) · {1} số lần đã đo
+            LocalizedText(vi: "Bạn ghi một khoản mất khoảng {0} giây (trung vị {1} lần gần nhất, chỉ lưu trên máy).",
+                          en: "Logging takes you about {0} seconds (median of your last {1} entries, stored only on this phone).",
+                          ja: "1件の記録にかかる時間は約{0}秒です(直近{1}件の中央値。この端末にのみ保存)。")
         case .tipApplePay:
             LocalizedText(
                 vi: "Tự ghi khi quẹt Apple Pay (Phím tắt › Tự động hóa › Giao dịch)",

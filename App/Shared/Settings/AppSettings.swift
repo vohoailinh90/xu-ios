@@ -16,6 +16,8 @@ enum AppSettings {
         static let focusRequest = "focusRequest"
         /// Người dùng đã tự thêm/sửa/xoá/sắp xếp khoản quen: không bao giờ tự đặt lại khoản quen mặc định nữa.
         static let chipsCustomized = "chipsCustomized"
+        /// `EntryTimingLog` dạng JSON — thời gian ghi, chỉ trên máy.
+        static let entryTimings = "entryTimings"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -27,6 +29,14 @@ enum AppSettings {
     static var chipsCustomized: Bool {
         get { defaults.bool(forKey: Key.chipsCustomized) }
         set { defaults.set(newValue, forKey: Key.chipsCustomized) }
+    }
+
+    static var entryTimings: EntryTimingLog {
+        get {
+            defaults.data(forKey: Key.entryTimings)
+                .flatMap { try? JSONDecoder().decode(EntryTimingLog.self, from: $0) } ?? EntryTimingLog()
+        }
+        set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.entryTimings) }
     }
 
     static func requestFocus() {
