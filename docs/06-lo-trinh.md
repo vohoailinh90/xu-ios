@@ -55,11 +55,14 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 
 ## v1.1 (sau ra mắt)
 - Đồng bộ iCloud · OCR chuyển khoản · Tách nhiều khoản · Số bằng chữ (giọng nói) · Face ID · Danh mục tùy chỉnh · Biểu đồ tháng · Control Center control
+- Đã làm sớm (2026-10-02): tách nhiều khoản trong một câu (E8, `docs/04`) — nút gợi ý trên thẻ xem trước, Enter vẫn lưu một khoản.
 
 ## v1.2
 - Đa tiền tệ cho người Việt ở nước ngoài · Mục tiêu gửi tiền về nhà · Apple Watch · Thử thách + Live Activity
 - Đã làm sớm (2026-10-01, `docs/08`): tiền yên + thị trường Nhật, câu nhập tiếng Nhật/Anh, chọn ngôn ngữ giao diện Việt/Anh/Nhật.
-  Còn lại cho Nhật: đọc ảnh hoá đơn Nhật (chấm độ chính xác trước bằng `prototypes/cham-bien-lai.html`), Siri tiếng Nhật, App Store tiếng Nhật.
+  Còn lại cho Nhật: đọc ảnh hoá đơn Nhật (chấm độ chính xác trước bằng `prototypes/cham-bien-lai.html`).
+  Siri tiếng Nhật (`App/Xu/AppShortcuts.xcstrings`) và nội dung App Store tiếng Nhật (`docs/10`) đã có; cần người Nhật
+  đọc lại câu chữ và thử Siri trên máy thật.
 
 ## Quy trình làm việc đề xuất
 

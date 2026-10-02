@@ -58,27 +58,15 @@ public struct QuickEntryParser: Sendable {
     }
 
     public func parse(_ text: String, now: Date = Date()) -> QuickEntryResult {
-        let (original, foldedChars) = TextFolding.foldAligned(text)
-        let folded = String(foldedChars)
-        var removed: [Range<Int>] = []
+        let analysis = analyze(text, now: now)
+        var removed = analysis.dateRange.map { [$0] } ?? []
+        let explicit = analysis.explicit
 
-        // 1. Ngày
-        let today = calendar.startOfDay(for: now)
-        var date = today
-        if let hit = findDate(in: folded, today: today) {
-            date = hit.date
-            removed.append(Self.extendDateRange(hit.range, in: foldedChars))
-        }
-
-        // 2. Số tiền (trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均")
-        let masked = Self.mask(foldedChars, ranges: removed + Self.ranges(of: Self.numericNameRegex, in: folded))
-        let candidates = findAmounts(in: masked)
-        let explicit = candidates.filter(\.hasUnit)
-        let pool = explicit.isEmpty ? candidates : explicit
+        // Ưu tiên số có đơn vị: nhiều số có đơn vị thì lấy số đầu tiên; chỉ có số trần thì lấy số lớn nhất.
         var amount: Int64?
         var currency = options.market.currency
         var signedIncome = false
-        if let pick = explicit.isEmpty ? pool.max(by: { $0.value < $1.value }) : pool.first {
+        if let pick = explicit.first ?? analysis.candidates.max(by: { $0.value < $1.value }) {
             amount = pick.value
             currency = pick.currency
             signedIncome = pick.isPlus
@@ -86,21 +74,57 @@ public struct QuickEntryParser: Sendable {
         }
 
         // 3. Ghi chú (giữ dấu từ chuỗi gốc)
-        let note = Self.buildNote(original, removing: removed)
+        let note = Self.buildNote(analysis.original, removing: removed)
 
         // 4. Danh mục & thu/chi
-        let matched = matcher.match(note: note)
-        let isIncome = signedIncome || matched?.kind == .income
-        let categoryID: String
-        if isIncome {
-            categoryID = (matched?.kind == .income ? matched?.id : nil) ?? CategoryCatalog.otherIncomeID
-        } else {
-            categoryID = matched?.id ?? CategoryCatalog.otherExpenseID
+        let (isIncome, categoryID) = Self.classify(matcher.match(note: note), signedIncome: signedIncome)
+
+        return QuickEntryResult(amount: amount, currency: currency, isIncome: isIncome, date: analysis.date,
+                                categoryID: categoryID, note: note,
+                                hasMultipleAmounts: explicit.count > 1)
+    }
+
+    /// Bước 1–2, dùng chung cho `parse` và `split`.
+    struct Analysis {
+        /// Các ký tự gốc (NFC) và bản đã gấp, cùng độ dài.
+        let original: [Character]
+        let folded: [Character]
+        let date: Date
+        /// Vùng ngày (kèm thứ trong ngoặc, trợ từ) để bỏ khỏi ghi chú.
+        let dateRange: Range<Int>?
+        /// Mọi số tìm thấy, theo thứ tự trong câu.
+        let candidates: [AmountCandidate]
+        /// Số có đơn vị tường minh (k, tr, đ, 円…).
+        var explicit: [AmountCandidate] { candidates.filter(\.hasUnit) }
+    }
+
+    func analyze(_ text: String, now: Date) -> Analysis {
+        let (original, foldedChars) = TextFolding.foldAligned(text)
+        let folded = String(foldedChars)
+
+        // 1. Ngày
+        let today = calendar.startOfDay(for: now)
+        var date = today
+        var dateRange: Range<Int>?
+        if let hit = findDate(in: folded, today: today) {
+            date = hit.date
+            dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
 
-        return QuickEntryResult(amount: amount, currency: currency, isIncome: isIncome, date: date,
-                                categoryID: categoryID, note: note,
-                                hasMultipleAmounts: pool.count > 1)
+        // 2. Số tiền (trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均")
+        let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? [])
+                                   + Self.ranges(of: Self.numericNameRegex, in: folded))
+        return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange,
+                        candidates: findAmounts(in: masked))
+    }
+
+    /// Thu/chi và danh mục: dấu "+" hoặc danh mục thu nhập là khoản thu. Có "+" mà danh mục đoán được là khoản chi
+    /// → "Thu nhập khác".
+    static func classify(_ matched: CategoryDefinition?, signedIncome: Bool) -> (isIncome: Bool, categoryID: String) {
+        if signedIncome || matched?.kind == .income {
+            return (true, (matched?.kind == .income ? matched?.id : nil) ?? CategoryCatalog.otherIncomeID)
+        }
+        return (false, matched?.id ?? CategoryCatalog.otherExpenseID)
     }
 
     // MARK: - Số tiền
@@ -540,6 +564,9 @@ public struct QuickEntryParser: Sendable {
     static func buildNote(_ original: [Character], removing ranges: [Range<Int>]) -> String {
         let kept = original.indices.filter { i in !ranges.contains(where: { $0.contains(i) }) }.map { original[$0] }
         let collapsed = String(kept).split(whereSeparator: \.isWhitespace).joined(separator: " ")
-        return collapsed.trimmingCharacters(in: CharacterSet(charactersIn: " ,.;:-+–、。・"))
+        return collapsed.trimmingCharacters(in: noteEdgePunctuation)
     }
+
+    /// Dấu câu thừa bỏ ở hai đầu ghi chú.
+    static let noteEdgePunctuation = CharacterSet(charactersIn: " ,.;:-+–、。・")
 }

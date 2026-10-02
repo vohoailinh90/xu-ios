@@ -40,6 +40,13 @@ struct QuickEntryBar: View {
         return result
     }
 
+    /// Câu có nhiều số tiền ("ăn trưa 45k tip 5k"): các khoản nếu tách ra (E8). Rỗng nếu chỉ có một khoản.
+    private var splitParts: [QuickEntryResult] {
+        guard preview?.hasMultipleAmounts == true else { return [] }
+        let parts = parser.split(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        return parts.count > 1 ? parts : []
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             if let toast {
@@ -48,6 +55,11 @@ struct QuickEntryBar: View {
             }
             if let preview {
                 PreviewCard(result: preview, language: language) { showCategoryPicker = true }
+            }
+            // Gợi ý thêm một chạm, không thay Enter: Enter vẫn lưu một khoản như thẻ xem trước.
+            let parts = splitParts
+            if !parts.isEmpty {
+                SplitSuggestion(parts: parts, language: language) { submitSplit(parts) }
             }
             if let errorMessage {
                 Text(errorMessage).font(.footnote).foregroundStyle(.secondary)
@@ -109,17 +121,30 @@ struct QuickEntryBar: View {
             focused = true
             return
         }
+        save([result])
+    }
+
+    /// "Tách thành N khoản": lưu từng khoản của câu trong một lần. Danh mục chọn tay trên thẻ xem trước là của
+    /// khoản đầu — khoản thẻ đang hiện.
+    private func submitSplit(_ parts: [QuickEntryResult]) {
+        var parts = parts
+        if let categoryOverride, !parts.isEmpty {
+            parts[0].categoryID = categoryOverride
+            parts[0].isIncome = CategoryCatalog.resolve(id: categoryOverride).kind == .income
+        }
+        save(parts)
+    }
+
+    private func save(_ results: [QuickEntryResult]) {
         do {
-            if categoryOverride != nil {
-                try Ledger.learn(note: result.note, categoryID: result.categoryID, in: context)
+            if categoryOverride != nil, let first = results.first {
+                try Ledger.learn(note: first.note, categoryID: first.categoryID, in: context)
             }
-            let record = try Ledger.save(result, rawInput: text, source: .quickText, in: context)
+            let records = try Ledger.save(results, rawInput: text, source: .quickText, in: context)
+            // Một câu là một lần ghi, dù tách thành mấy khoản.
             let timing = typingStartedAt.flatMap { AppSettings.entryTimings.record(Date().timeIntervalSince($0)) }
             typingStartedAt = nil
-            toast = SavedToast(recordID: record.id, amount: record.amount, currency: record.currency,
-                               isIncome: record.isIncome,
-                               title: record.note.isEmpty ? record.category.name(in: language) : record.note,
-                               emoji: record.category.emoji, timing: timing)
+            toast = SavedToast(records: records, language: language, timing: timing)
             text = ""
             categoryOverride = nil
         } catch {
@@ -129,10 +154,10 @@ struct QuickEntryBar: View {
     }
 
     private func undo(_ toast: SavedToast) {
-        let id = toast.recordID
-        if let record = try? context.fetch(FetchDescriptor<TransactionRecord>(
-            predicate: #Predicate { $0.id == id })).first,
-           (try? Ledger.delete(record, in: context)) != nil {
+        let records = toast.recordIDs.compactMap { id in
+            try? context.fetch(FetchDescriptor<TransactionRecord>(predicate: #Predicate { $0.id == id })).first
+        }
+        if !records.isEmpty, (try? Ledger.delete(records, in: context)) != nil {
             // Khoản đã xoá được thì lần đo của nó cũng không tính; xoá không được thì giữ cả hai.
             if let timing = toast.timing { AppSettings.entryTimings.remove(timing) }
         }
@@ -141,14 +166,60 @@ struct QuickEntryBar: View {
 }
 
 struct SavedToast: Equatable {
-    let recordID: UUID
-    let amount: Int64
-    let currency: Currency
-    let isIncome: Bool
-    let title: String
-    let emoji: String
-    /// Lần đo thời gian ghi của khoản này (nếu có), để hoàn tác thì xoá luôn.
+    /// Các khoản vừa lưu từ một câu (nhiều khoản nếu đã tách), để hoàn tác xoá hết.
+    let recordIDs: [UUID]
+    /// Câu hiện trên toast, dựng lúc lưu.
+    let message: String
+    /// Lần đo thời gian ghi của câu này (nếu có), để hoàn tác thì xoá luôn.
     var timing: Double?
+}
+
+extension SavedToast {
+    init(records: [TransactionRecord], language: AppLanguage, timing: Double?) {
+        recordIDs = records.map(\.id)
+        if records.count == 1, let record = records.first {
+            message = language.t(.savedToast, record.category.emoji,
+                                 MoneyFormatter.signed(record.amount, isIncome: record.isIncome,
+                                                       currency: record.currency, language: language, compact: true),
+                                 record.note.isEmpty ? record.category.name(in: language) : record.note)
+        } else {
+            message = language.t(.savedManyToast, "\(records.count)",
+                                 amountList(records.map { (amount: $0.amount, isIncome: $0.isIncome, currency: $0.currency) },
+                                            language: language))
+        }
+        self.timing = timing
+    }
+}
+
+/// "45k, 5k": số tiền gọn của các khoản tách ra.
+private func amountList(_ items: [(amount: Int64, isIncome: Bool, currency: Currency)], language: AppLanguage) -> String {
+    items.map { MoneyFormatter.signed($0.amount, isIncome: $0.isIncome, currency: $0.currency,
+                                      language: language, compact: true) }
+        .joined(separator: language == .ja ? "、" : ", ")
+}
+
+/// Gợi ý tách câu nhiều số tiền thành từng khoản: một chạm là lưu hết (E8, docs/04).
+private struct SplitSuggestion: View {
+    let parts: [QuickEntryResult]
+    let language: AppLanguage
+    let onSplit: () -> Void
+
+    var body: some View {
+        Button(action: onSplit) {
+            HStack(spacing: 6) {
+                Image(systemName: "scissors")
+                Text(language.t(.splitEntries, "\(parts.count)"))
+                Text(amountList(parts.compactMap { part in
+                    part.amount.map { (amount: $0, isIncome: part.isIncome, currency: part.currency) }
+                }, language: language))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .font(.subheadline)
+        }
+        .buttonStyle(.bordered)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 }
 
 private struct ToastView: View {
@@ -158,10 +229,7 @@ private struct ToastView: View {
 
     var body: some View {
         HStack {
-            Text(language.t(.savedToast, toast.emoji,
-                            MoneyFormatter.signed(toast.amount, isIncome: toast.isIncome, currency: toast.currency,
-                                                  language: language, compact: true),
-                            toast.title))
+            Text(toast.message)
                 .lineLimit(1)
             Spacer()
             Button(language.t(.undo), action: onUndo).bold()
