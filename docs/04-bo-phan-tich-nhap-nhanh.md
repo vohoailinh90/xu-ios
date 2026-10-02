@@ -37,6 +37,30 @@ parse("Grab 52k hôm qua", now: 25/09/2026)
 - Nhiều số có đơn vị → lấy số đầu tiên và bật `hasMultipleAmounts` để UI gợi ý tách. `ăn trưa 45k tip 5k` → 45.000, ghi chú "ăn trưa tip 5k".
 - Chỉ có số trần → lấy số lớn nhất, không gợi ý tách (`trà sữa 2 ly 30` không phải hai khoản).
 
+### Số bằng chữ — đọc chính tả (E9, từ 2026-10-02)
+
+`SpokenAmounts.swift` · Test: `XuCore/Tests/XuCoreTests/SpokenAmountTests.swift`. Câu đọc bằng giọng nói có thể ra chữ
+thay vì số (máy viết số hay chữ tuỳ phiên bản iOS — cần kiểm tra trên máy thật); parser hiểu cả hai.
+
+| Người dùng nói | Kết quả |
+|---|---|
+| `ba mươi lăm nghìn`, `hai lăm nghìn`, `ba mốt nghìn`, `năm chục nghìn` | 35.000 · 25.000 · 31.000 · 50.000 |
+| `hai trăm năm mươi nghìn đồng`, `một trăm linh năm nghìn` | 250.000 · 105.000 |
+| `một triệu rưỡi`, `hai nghìn rưỡi`, `một triệu hai trăm nghìn` | 1.500.000 · 2.500 · 1.200.000 |
+| `hai nghìn năm trăm`, `hai nghìn năm mươi`, `một triệu năm mươi` | 2.500 · 2.050 · 1.050.000 — phần lẻ đọc rõ hàng trăm/chục là số của hàng kế dưới |
+| `một triệu hai`, `một triệu hai lăm`, `hai nghìn năm` | 1.200.000 · 1.250.000 · 2.500 — nói tắt như `1tr2`, `1tr25`, `2k5`; chỉ khi là chữ cuối của cụm (`một triệu hai ly` → 1.000.000, ghi chú "hai ly") |
+| `cơm ba trăm năm mươi yên` | 350 yên; `nghìn` nhân 1.000 với tiền của nơi chi tiêu như `k`, `triệu` luôn là tiền đồng |
+
+- Phải có đơn vị (nghìn/ngàn, triệu, yên; `đồng` sau nghìn/triệu) và chữ số **có dấu** như máy đọc chính tả viết ra.
+  Không dấu (`ba muoi nghin`) thì để nguyên: `bay` có thể là bay, `nam` là năm hay nam — người gõ tay thì gõ số.
+- Không đoán bừa: `ba ly`, `năm nay` (không có đơn vị), `hai củ khoai` (`củ` không nhận), `hai đồng hồ` (`đồng` đứng
+  một mình không nhận) không phải số tiền. Từ ghép không phải đơn vị: `triệu chứng`, `triệu phú`, `yên tâm`, `yên xe`,
+  `đồng hồ`… (`SpokenAmounts.compounds`); `triệu đô` là đô-la, không nhận.
+- Câu đã có số tiền gõ bằng chữ số kèm đơn vị thì **không** đọc số bằng chữ: câu gõ tay giữ nguyên kết quả cũ
+  (`quà cho một triệu phú 50k` → 50.000). Có `+` sát trước thì là khoản thu, như `+10tr`: `+mười triệu`.
+- Số bằng chữ là số có đơn vị: thắng số trần, và tách được như số gõ tay
+  (`cà phê ba mươi lăm nghìn và bánh hai mươi nghìn`).
+
 ### Tách nhiều khoản (E8, từ 2026-10-02)
 
 `split(_:)` trong `EntrySplitter.swift` · Test: `XuCore/Tests/XuCoreTests/SplitEntryTests.swift`.
@@ -152,7 +176,7 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 
 ## Việc tiếp theo cho parser
 
-- [ ] Số bằng chữ từ giọng nói: "ba mươi lăm nghìn", "một triệu hai" (issue E9).
+- [x] Số bằng chữ từ giọng nói: "ba mươi lăm nghìn", "một triệu hai" (issue E9) — 2026-10-02.
 - [x] Tách nhiều khoản trong một câu (issue E8) — 2026-10-02.
 - [ ] Từ lóng tiền: `lít`, `xị`, `chai` — tắt mặc định vì dễ nhầm ("2 lít xăng"), cho bật trong Cài đặt.
 - [ ] Giờ: "7h sáng" → gán giờ cho `occurredAt`.

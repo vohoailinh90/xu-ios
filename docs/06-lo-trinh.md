@@ -61,6 +61,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
   Control Center control (W4, iOS 18): nút "Ghi chi tiêu" cho Trung tâm điều khiển / màn hình khoá / Nút Tác vụ, chạm là mở
   Xu với con trỏ trong ô ghi (`QuickEntryControl`, `OpenQuickEntryIntent`); gợi ý trong Cài đặt › Nhập nhanh hơn.
   Cần thử trên máy thật iOS 18: thêm nút, chạm khi app đang đóng và khi app đang mở một màn khác.
+  Số bằng chữ (E9, `docs/04`): "ba mươi lăm nghìn", "một triệu hai" từ đọc chính tả — chỉ khi có đơn vị và chữ có dấu.
 
 ## v1.2
 - Đa tiền tệ cho người Việt ở nước ngoài · Mục tiêu gửi tiền về nhà · Apple Watch · Thử thách + Live Activity
