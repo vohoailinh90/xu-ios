@@ -43,6 +43,13 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     ///   ("せんえん" → "千円" vẫn là ¥1.000; "せんえん" → "百円", "やちん980" → "家賃980万" là đổi số tiền).
     /// Ví dụ câu mới: "ラーメン980" → "寿司1200", "でんしゃ980" → "家賃1200", "でんしゃ980" → "給料+980".
     /// Vẫn là câu đang đo: "やちん8まん" → "家賃8万", "いちまんえん" → "1万円".
+    ///
+    /// Giới hạn đã biết (cố ý): chỉ nhìn chuỗi văn bản thì không phân biệt được IME chuyển đổi với việc chọn hết rồi
+    /// dán một cụm chữ Nhật/Hán khác có cùng số tiền ("らーめん980" → "寿司980" trông giống "すし980" → "寿司980").
+    /// Muốn phân biệt phải có từ điển cách đọc kanji, hoặc biết vùng đang soạn (marked text) của IME — SwiftUI
+    /// `TextField` không cho biết, còn thay ô nhập nhanh bằng UIKit là đổi lớn ở đúng chỗ phải giữ quy tắc 2 giây.
+    /// Chọn không đo lại trong trường hợp hiếm này để mọi câu tiếng Nhật gõ bằng IME không bị đo thiếu. Danh mục chọn
+    /// tay vẫn hiện trên thẻ xem trước nên người dùng thấy trước khi lưu, và trung vị ít bị lệch bởi vài lần đo.
     public static func startsNewSentence(from old: String, to new: String) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)

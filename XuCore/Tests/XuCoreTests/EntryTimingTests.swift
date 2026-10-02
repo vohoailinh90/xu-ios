@@ -66,6 +66,8 @@ final class EntryTimingTests: XCTestCase {
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "いちまんえん", to: "1万円"), "IME gợi ý số Ả Rập")
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "ろっぴゃくえん", to: "六百円"))
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "ぎゅうにく980", to: "牛肉980"))
+        // Giới hạn đã biết: dán cụm chữ Hán khác cùng số tiền trông như IME chuyển đổi (xem chú thích của hàm).
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "らーめん980", to: "寿司980"))
     }
 
     func testRoundTripsThroughJSON() throws {
