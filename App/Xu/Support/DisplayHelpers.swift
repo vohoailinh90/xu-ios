@@ -23,7 +23,10 @@ enum SpendingSummary {
     }
 
     static func text(for records: [TransactionRecord], primary: Currency, language: AppLanguage) -> String {
-        let sums = totals(of: records)
+        text(for: totals(of: records), primary: primary, language: language)
+    }
+
+    static func text(for sums: [Currency: Int64], primary: Currency, language: AppLanguage) -> String {
         let order = [primary] + Currency.allCases.filter { $0 != primary }
         let parts = order.compactMap { currency -> String? in
             guard let sum = sums[currency], sum > 0 else { return nil }

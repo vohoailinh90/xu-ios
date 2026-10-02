@@ -23,6 +23,7 @@ struct PaywallView: View {
                           systemImage: "leaf")
                     Label(language.t(.proBenefitWidget, "\(ProPlan.widgetChipCapacity)", "\(ProPlan.freeWidgetChipLimit)"),
                           systemImage: "square.grid.2x2")
+                    Label(language.t(.proBenefitMonths), systemImage: "chart.bar.xaxis")
                 } footer: {
                     Text(language.t(.proAlwaysFree))
                 }
