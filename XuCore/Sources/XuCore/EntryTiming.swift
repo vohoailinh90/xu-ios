@@ -35,13 +35,14 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
     /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
     /// Bộ gõ tiếng Nhật (IME) đổi chữ đang soạn sang chữ Hán/katakana cũng thay cả cụm ("きのう" → "昨日"). Thay đổi chỉ
-    /// được coi là IME chuyển đổi (không phải câu mới) khi giữ nguyên mọi thứ làm đổi số tiền:
+    /// được coi là IME chuyển đổi (không phải câu mới) khi:
     /// - phần bị thay chỉ gồm chữ đang soạn (hiragana, "ー", chữ/số Latin khi gõ romaji), phần mới có chữ Nhật/Hán;
     /// - phần mới chỉ gồm chữ Nhật/Hán, chữ/số Latin và khoảng trắng — không thêm dấu "+", "¥"…;
-    /// - chữ số giữ nguyên, chữ Latin không tự xuất hiện thêm ("k");
-    /// - mỗi chữ đơn vị tiền mới (万 千 百 億 円) phải có cách đọc của nó trong phần bị thay ("まん" → "万").
-    /// Ví dụ câu mới: "ラーメン980" → "寿司1200", "でんしゃ980" → "家賃1200", "やちん980" → "家賃980万",
-    /// "でんしゃ980" → "給料+980". Vẫn là câu đang đo: "やちん8まん" → "家賃8万", "せんえん" → "千円".
+    /// - chữ Latin không tự xuất hiện thêm ("k");
+    /// - số tiền parser đọc được không đổi, sau khi đổi cách đọc số trong phần bị thay sang chữ Hán
+    ///   ("せんえん" → "千円" vẫn là ¥1.000; "せんえん" → "百円", "やちん980" → "家賃980万" là đổi số tiền).
+    /// Ví dụ câu mới: "ラーメン980" → "寿司1200", "でんしゃ980" → "家賃1200", "でんしゃ980" → "給料+980".
+    /// Vẫn là câu đang đo: "やちん8まん" → "家賃8万", "いちまんえん" → "1万円".
     public static func startsNewSentence(from old: String, to new: String) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
@@ -55,20 +56,29 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         if !replaced.isEmpty, replaced.allSatisfy(isBeingComposed),
            inserted.contains(where: isJapanese),
            inserted.allSatisfy({ isJapanese($0) || isBeingComposed($0) || $0.isWhitespace }),
-           ascii(replaced, where: \.isNumber) == ascii(inserted, where: \.isNumber),
-           isSubsequence(ascii(inserted, where: \.isLetter), of: ascii(replaced, where: \.isLetter)),
-           inserted.filter({ amountUnits.contains($0) }).count <= unitReadingCount(in: String(replaced)) {
-            return false
+           isSubsequence(asciiLetters(inserted), of: asciiLetters(replaced)) {
+            let before = String(a[..<prefix]) + numeralReadingsAsKanji(String(replaced)) + String(a[(a.count - suffix)...])
+            let parsedBefore = imeParser.parse(before), parsedAfter = imeParser.parse(new)
+            if parsedBefore.amount == parsedAfter.amount, parsedBefore.currency == parsedAfter.currency { return false }
         }
         return (prefix + suffix) * 2 < a.count
     }
 
-    /// Chữ đơn vị làm đổi số tiền khi parser đọc ("980万", "千円"), và cách đọc hiragana mà IME đổi ra chúng.
-    private static let amountUnits: Set<Character> = ["万", "千", "百", "億", "円"]
-    private static let unitReadings = ["まん", "せん", "ぜん", "ひゃく", "びゃく", "ぴゃく", "おく", "えん"]
+    /// Parser chỉ dùng để so số tiền trước/sau khi IME chuyển đổi. Cùng một parser cho cả hai phía nên tuỳ chọn
+    /// của người dùng không ảnh hưởng tới kết quả so sánh.
+    private static let imeParser = QuickEntryParser(options: .init(smallNumbersAreThousands: false, market: .japan))
 
-    private static func unitReadingCount(in text: String) -> Int {
-        unitReadings.reduce(0) { $0 + text.components(separatedBy: $1).count - 1 }
+    /// Cách đọc hiragana của chữ số/đơn vị Hán mà IME đổi ra, dài trước ngắn sau ("ろっぴゃく" → "六百").
+    /// Không có các cách đọc một chữ dễ trùng như "し", "く", "よ".
+    private static let numeralReadings: [(reading: String, kanji: String)] = [
+        ("ひゃく", "百"), ("びゃく", "百"), ("ぴゃく", "百"), ("きゅう", "九"), ("じゅう", "十"), ("じゅっ", "十"),
+        ("まん", "万"), ("せん", "千"), ("ぜん", "千"), ("おく", "億"), ("えん", "円"),
+        ("いち", "一"), ("いっ", "一"), ("さん", "三"), ("よん", "四"), ("ろく", "六"), ("ろっ", "六"),
+        ("なな", "七"), ("しち", "七"), ("はち", "八"), ("はっ", "八"), ("に", "二"), ("ご", "五"),
+    ]
+
+    private static func numeralReadingsAsKanji(_ text: String) -> String {
+        numeralReadings.reduce(text) { $0.replacingOccurrences(of: $1.reading, with: $1.kanji) }
     }
 
     /// Chữ Nhật/Hán (kana, kanji, "々", "〇").
@@ -76,10 +86,9 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         character == "〇" || TextFolding.containsCJK(String(character))
     }
 
-    /// Các ký tự ASCII (sau khi gấp về chữ thường, nửa khổ) thoả `predicate`, theo thứ tự.
-    /// Số viết bằng chữ Hán ("千") không phải ASCII nên không tính.
-    private static func ascii(_ characters: ArraySlice<Character>, where predicate: (Character) -> Bool) -> [Character] {
-        characters.map { TextFolding.fold($0) }.filter { $0.isASCII && predicate($0) }
+    /// Các chữ cái ASCII (sau khi gấp về chữ thường, nửa khổ), theo thứ tự.
+    private static func asciiLetters(_ characters: ArraySlice<Character>) -> [Character] {
+        characters.map { TextFolding.fold($0) }.filter { $0.isASCII && $0.isLetter }
     }
 
     /// `part` là dãy con (giữ thứ tự) của `whole`: romaji có thể biến mất khi thành kana, không thể tự thêm vào.
