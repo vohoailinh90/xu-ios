@@ -115,8 +115,8 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
     "mua cà phê" lẫn "mua cả sách";
   - từ **có dấu** trong `accentedKeywords`: `cá`, `trứng`, `túi`, `mừng` — so khớp trên ghi chú giữ dấu, nên "cá 50k" → đi chợ
     mà "cả hội" thì không. Gõ không dấu ("ca 50k") thì ra "Khác", sửa một chạm là Xu học.
-  Cụm dài hơn vẫn thắng giữa hai loại ("cà phê" thắng "cá"); dài bằng nhau thì từ khoá đã gấp thắng như trước
-  ("ăn cá 50k" → ăn uống), từ có dấu chỉ quyết khi không có gì khác khớp.
+  Từ có dấu chỉ là phương án cuối, khi không có từ khoá đã gấp nào khớp: "ăn trứng 30k", "ăn cá" → ăn uống,
+  "mua cà phê" → đồ uống, còn "cá 50k", "trứng 30k" → đi chợ.
   Danh sách âm tiết/cụm cấm nằm trong `testAmbiguousSyllablesAreNotKeywords`.
 
 ## Việc tiếp theo cho parser

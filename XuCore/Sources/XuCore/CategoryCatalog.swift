@@ -15,7 +15,8 @@ public struct CategoryDefinition: Identifiable, Hashable, Sendable {
     /// Từ khóa đã gấp (chữ thường, không dấu, nửa khổ). Có thể nhiều âm tiết.
     public let keywords: [String]
     /// Từ khóa so khớp **có dấu** (chữ thường), cho âm tiết mà bỏ dấu thì trùng nghĩa:
-    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui". Gõ không dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
+    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui". Chỉ dùng khi không có từ khoá đã gấp nào khớp.
+    /// Gõ không dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
     public let accentedKeywords: [String]
 
     public init(id: String, names: LocalizedText, emoji: String, kind: CategoryKind = .expense,
@@ -207,30 +208,20 @@ public struct CategoryMatcher: Sendable {
         let defaults = catalog.flatMap { category in category.keywords.map { ($0, category.id) } }
         let accented = catalog.flatMap { category in category.accentedKeywords.map { ($0, category.id) } }
         let accentedPadded = " " + Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased()) + " "
-        let folded = longest(in: padded, candidates: defaults)
-        let exact = longest(in: accentedPadded, candidates: accented)
-        // Cụm dài hơn thắng ("cà phê" thắng "cá"). Dài bằng nhau thì từ khoá đã gấp thắng, giữ thứ tự danh mục
-        // như trước: "ăn cá" là ăn uống chứ không phải đi chợ. Từ có dấu chỉ để câu ngắn như "cá 50k" có danh mục.
-        let best: (length: Int, id: String)?
-        switch (folded, exact) {
-        case let (f?, e?): best = e.length > f.length ? e : f
-        case let (f, e): best = e ?? f
-        }
-        guard let hit = best?.id else { return nil }
+        // Từ có dấu chỉ là phương án cuối, khi không có từ khoá nào khác khớp: "cá 50k", "trứng 30k" → đi chợ.
+        // Có từ khác thì từ đó quyết, kể cả ngắn hơn: "ăn trứng", "ăn cá" là ăn uống; "mua cà phê" là đồ uống.
+        guard let hit = longestMatch(in: padded, candidates: defaults)
+                ?? longestMatch(in: accentedPadded, candidates: accented) else { return nil }
         return catalog.first(where: { $0.id == hit })
     }
 
     private func longestMatch(in padded: String, candidates: [(String, String)]) -> String? {
-        longest(in: padded, candidates: candidates)?.id
-    }
-
-    private func longest(in padded: String, candidates: [(String, String)]) -> (length: Int, id: String)? {
         var best: (length: Int, id: String)?
         for (keyword, id) in candidates where !keyword.isEmpty && keyword.count > (best?.length ?? 0) {
             let hit = TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
             if hit { best = (keyword.count, id) }
         }
-        return best
+        return best?.id
     }
 
     /// Thay dấu câu bằng khoảng trắng và gộp khoảng trắng liên tiếp.
