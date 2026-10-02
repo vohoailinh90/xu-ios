@@ -16,7 +16,7 @@ ghi quyết định vào tài liệu này trước, rồi sửa cả ba chỗ: p
 |---|---|---|---|
 | Giao dịch: số tiền, loại tiền, danh mục, ghi chú, ngày, nguồn ghi, **câu gốc người dùng gõ** (`rawInput`) | SwiftData trong App Group | App, widget, App Intents | Không (trừ khi người dùng tự xuất CSV) |
 | Khoản quen, từ khoá học được, thói quen, đánh dấu thói quen, chốt ngày | SwiftData trong App Group | App, widget, App Intents | Không |
-| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`) | UserDefaults của App Group | App, widget | Không |
+| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`) | UserDefaults của App Group | App, widget | Không |
 | Ngân sách tháng, "số nhỏ là nghìn" | UserDefaults riêng của app | App | Không |
 | Thông báo nhắc chốt ngày | Lịch thông báo cục bộ của iOS | iOS | Không (không dùng push từ máy chủ) |
 

@@ -14,12 +14,15 @@ struct HomeView: View {
     @AppStorage(AppSettings.Key.market, store: AppSettings.defaults) private var market: Market = .vietnam
     @AppStorage(AppSettings.Key.focusRequest, store: AppSettings.defaults) private var focusRequest: Double = 0
     @AppStorage("hasOnboarded") private var hasOnboarded = false
+    @AppStorage(AppSettings.Key.proInviteDay, store: AppSettings.defaults) private var proInviteDay = ""
+    @AppStorage(AppSettings.Key.proInviteDismissed, store: AppSettings.defaults) private var proInviteDismissed = false
 
     @State private var focusTrigger = 0
     @State private var showSettings = false
     @State private var showHabits = false
     @State private var showChips = false
     @State private var editing: TransactionRecord?
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
@@ -28,6 +31,20 @@ struct HomeView: View {
                     TodayCard(records: records,
                               flexibleBudget: Int64(market == .japan ? budgetJapan : budgetVietnam),
                               currency: market.currency, language: language)
+                }
+                if showProInvite {
+                    Section {
+                        ProInviteCard(language: language) {
+                            proInviteDismissed = true
+                            showPaywall = true
+                        } onLater: {
+                            proInviteDismissed = true
+                        }
+                        .onAppear {
+                            // Ghi ngày hiện lần đầu: thẻ ở lại hết hôm nay, sang ngày khác là thôi (chỉ mời một lần).
+                            if proInviteDay.isEmpty { proInviteDay = DayKey(Date(), calendar: .current).description }
+                        }
+                    }
                 }
                 if !chips.isEmpty {
                     Section {
@@ -91,6 +108,7 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showHabits) { HabitsView() }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
             .sheet(isPresented: $showChips) {
                 NavigationStack {
                     QuickChipsManager()
@@ -109,22 +127,36 @@ struct HomeView: View {
             }
             .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
+        // Widget (`xu://new`) và "Ghi thêm" trên thông báo chốt ngày cùng một đường: đường ghi không bao giờ bị che.
         .onOpenURL { url in
-            if url.host == "new" { focusTrigger += 1 }
+            if url.host == "new" { startLogging() }
         }
-        .onChange(of: focusRequest) {
-            // "Ghi thêm" trên thông báo chốt ngày: đóng mọi sheet đang che ô nhập rồi focus.
-            showSettings = false
-            showHabits = false
-            editing = nil
-            showChips = false
-            focusTrigger += 1
-        }
+        .onChange(of: focusRequest) { startLogging() }
+    }
+
+    /// Đóng mọi sheet đang che ô nhập (cả paywall) rồi focus.
+    private func startLogging() {
+        showSettings = false
+        showHabits = false
+        editing = nil
+        showChips = false
+        showPaywall = false
+        focusTrigger += 1
     }
 
     /// Onboarding chỉ hiện lần mở đầu; xong hoặc bỏ qua thì không hiện lại.
     private var showOnboarding: Binding<Bool> {
         Binding(get: { !hasOnboarded }, set: { if !$0 { hasOnboarded = true } })
+    }
+
+    /// Lời mời Pro một lần sau 7 ngày ghi liền (docs/07). Chỉ xét các ngày trước hôm nay, nên ghi thêm hôm nay
+    /// không làm thẻ bật ra giữa lúc đang ghi.
+    private var showProInvite: Bool {
+        let cal = Calendar.current
+        return ProInvite.isVisible(
+            usedDays: Set(records.map { DayKey($0.occurredAt, calendar: cal) }).union(closures.map(\.dayKey)),
+            today: DayKey(Date(), calendar: cal), shownOn: DayKey(proInviteDay), dismissed: proInviteDismissed,
+            isPro: ProStore.shared.isPro, calendar: cal)
     }
 
     private var weeklySummary: WeeklySummary {
@@ -208,6 +240,26 @@ private struct TodayCard: View {
         return SafeToSpend.compute(flexibleBudget: flexibleBudget, spentBeforeToday: before, spentToday: todaySum,
                                    today: today, periodEnd: SafeToSpend.endOfMonth(containing: today, calendar: calendar),
                                    calendar: calendar)
+    }
+}
+
+// MARK: - Lời mời Pro
+
+private struct ProInviteCard: View {
+    let language: AppLanguage
+    let onOpen: () -> Void
+    let onLater: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(language.t(.proInviteTitle, "\(ProInvite.streakDays)")).font(.headline)
+            Text(language.t(.proInviteBody)).font(.callout).foregroundStyle(.secondary)
+            HStack {
+                Button(language.t(.proInviteOpen), action: onOpen).buttonStyle(.borderedProminent)
+                Button(language.t(.proInviteLater), action: onLater).buttonStyle(.borderless)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 
