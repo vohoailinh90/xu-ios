@@ -48,8 +48,10 @@ String Catalog chỉ còn dùng cho chuỗi **hệ thống tự đọc theo ngô
 - **Đọc ảnh hoá đơn Nhật trong app** (Vision OCR): chưa làm. Trước hết chấm độ chính xác bằng trang `prototypes/cham-bien-lai.html`
   (chế độ hoá đơn Nhật). Ý tưởng và chấm điểm tính năng này làm ở App-idea-lab (luật 8), chưa có file tính năng.
 - Số viết bằng chữ Hán (千五百円), năm 令和, thứ trong ngoặc (月): đã hiểu từ 2026-10-02. Còn thiếu kiểu viết tắt trên hoá đơn (`R8.9.30`).
-- Siri tiếng Nhật: câu lệnh "Xuで支出を記録" đã có trong code, nhưng câu lệnh theo từng ngôn ngữ cần `AppShortcuts.xcstrings`
-  và thử trên máy thật đặt Siri tiếng Nhật.
+- Siri tiếng Nhật: câu lệnh gốc tiếng Việt trong `XuShortcuts`, bản tiếng Anh/Nhật trong `App/Xu/AppShortcuts.xcstrings`
+  ("Xuで支出を記録", "Xuで家計簿をつける"); CI kiểm tra bản dịch có trong `en.lproj`/`ja.lproj` của app. Tên, câu hỏi
+  và tham số của tác vụ đã dịch trong `App/Shared/Localizable.xcstrings`. Còn phải thử trên máy thật đặt Siri tiếng Nhật
+  (cách đọc tên "Xu" bằng giọng nói tiếng Nhật cũng cần kiểm tra).
 - Bản dịch tiếng Anh/Nhật do AI viết — cần người bản ngữ đọc lại trước TestFlight.
 - App Store: mô tả, từ khoá, ảnh chụp tiếng Nhật/Anh; giá Xu Pro ở Nhật theo bảng giá App Store — **cần kiểm tra**.
   Danh sách ngôn ngữ hiện trên App Store lấy từ bản địa hoá trong gói app — kiểm tra sau lần tải lên đầu tiên là có đủ 3 ngôn ngữ.

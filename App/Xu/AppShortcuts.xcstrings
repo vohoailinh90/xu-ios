@@ -1,0 +1,38 @@
+{
+  "sourceLanguage": "vi",
+  "strings": {
+    "Ghi chi tiêu với ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log an expense in ${applicationName}"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}で支出を記録"
+          }
+        }
+      }
+    },
+    "${applicationName} ghi khoản chi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log spending with ${applicationName}"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}で家計簿をつける"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
