@@ -113,8 +113,9 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
   (trứng/trung tâm), `mung` (mừng/mùng 1), `son` (son/Sơn)… Hai cách thay:
   - cụm đã gấp rõ nghĩa: `tui xach`, `trung ga`, `mung cuoi`, `son moi`. Coi chừng cụm cũng trùng: `mua ca` khớp cả
     "mua cà phê" lẫn "mua cả sách";
-  - từ **có dấu** trong `accentedKeywords`: `cá`, `trứng`, `túi`, `mừng` — so khớp trên ghi chú giữ dấu, nên "cá 50k" → đi chợ
-    mà "cả hội" thì không. Gõ không dấu ("ca 50k") thì ra "Khác", sửa một chạm là Xu học.
+  - từ **so khớp chính xác, giữ dấu** trong `accentedKeywords`: `cá`, `trứng`, `túi`, `mừng`, `son` — so trên ghi chú giữ dấu,
+    nên "cá 50k" → đi chợ mà "cả hội" thì không; "son 300k" → mua sắm mà "Sơn" thì không. Gõ sai dấu ("ca 50k") thì ra
+    "Khác", sửa một chạm là Xu học.
   Hai loại thi chung như mọi từ khoá: cụm dài hơn thắng ("cà phê" thắng "cá"), dài bằng nhau thì danh mục đứng trước
   thắng ("mua túi đi học" → mua sắm). Muốn ngữ cảnh thắng thì thêm cụm: `an trung`, `an ca` cho "ăn trứng", "ăn cá".
   Danh sách âm tiết/cụm cấm nằm trong `testAmbiguousSyllablesAreNotKeywords`.

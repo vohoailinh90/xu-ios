@@ -14,9 +14,9 @@ public struct CategoryDefinition: Identifiable, Hashable, Sendable {
     public let isDiscretionary: Bool
     /// Từ khóa đã gấp (chữ thường, không dấu, nửa khổ). Có thể nhiều âm tiết.
     public let keywords: [String]
-    /// Từ khóa so khớp **có dấu** (chữ thường), cho âm tiết mà bỏ dấu thì trùng nghĩa:
-    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui". Thi chung với từ khoá đã gấp theo độ dài.
-    /// Gõ không dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
+    /// Từ khóa so khớp **chính xác, giữ dấu** (chữ thường), cho âm tiết mà bỏ dấu thì trùng nghĩa:
+    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui", và "son" (mỹ phẩm) ≠ "Sơn" (tên người).
+    /// Thi chung với từ khoá đã gấp theo độ dài. Gõ sai dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
     public let accentedKeywords: [String]
 
     public init(id: String, names: LocalizedText, emoji: String, kind: CategoryKind = .expense,
@@ -113,7 +113,7 @@ public enum CategoryCatalog {
             // 日本語
             "楽天", "ユニクロ", "ダイソー", "100均", "百均", "100円ショップ", "セリア", "無印", "ニトリ",
             "ドンキ", "キホーテ", "メルカリ", "百貨店", "デパート", "洋服", "服", "靴", "パンツ", "化粧品", "買い物"
-        ], accentedKeywords: ["túi"]),
+        ], accentedKeywords: ["túi", "son"]),
         CategoryDefinition(id: "entertainment", names: LocalizedText(vi: "Giải trí", en: "Entertainment", ja: "娯楽"),
                            emoji: "🎬", isDiscretionary: true, keywords: [
             "phim", "xem phim", "cgv", "lotte cinema", "game", "karaoke", "netflix", "spotify",

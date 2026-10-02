@@ -155,6 +155,9 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertEqual(parse("quà cho cả hội 500k").categoryID, "family")
         XCTAssertEqual(parse("giấy vệ sinh 50k").categoryID, "groceries", "Cụm dài thắng \"giay\" (giày)")
         XCTAssertEqual(parse("son môi 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("son 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("son dưỡng 150k").categoryID, "shopping")
+        XCTAssertNotEqual(parse("trả Sơn 200k").categoryID, "shopping", "\"Sơn\" là tên người")
     }
 
     func testIncome() {

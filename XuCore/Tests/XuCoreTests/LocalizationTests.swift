@@ -67,12 +67,16 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
-    /// Từ khoá có dấu phải thật sự có dấu (không thì để vào `keywords`) và viết thường.
-    func testAccentedKeywordsKeepTheirDiacritics() {
+    /// Từ khoá so khớp chính xác: viết thường, đã chuẩn hoá. Từ không dấu chỉ được ở đây khi bản có dấu là nghĩa khác
+    /// ("son" ≠ "Sơn"); còn lại thì để vào `keywords`.
+    func testAccentedKeywordsAreExactForms() {
+        let plainOnPurpose: Set<String> = ["son"]
         for category in CategoryCatalog.defaults {
             for keyword in category.accentedKeywords {
-                XCTAssertNotEqual(TextFolding.fold(keyword), keyword, "\(category.id): \"\(keyword)\" không có dấu")
                 XCTAssertEqual(CategoryMatcher.normalize(keyword.lowercased()), keyword, "\(category.id): \"\(keyword)\"")
+                if TextFolding.fold(keyword) == keyword {
+                    XCTAssertTrue(plainOnPurpose.contains(keyword), "\(category.id): \"\(keyword)\" không có dấu, để vào keywords")
+                }
             }
         }
     }
