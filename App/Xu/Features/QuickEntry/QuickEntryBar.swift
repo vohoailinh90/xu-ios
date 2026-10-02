@@ -126,9 +126,9 @@ struct QuickEntryBar: View {
     private func undo(_ toast: SavedToast) {
         let id = toast.recordID
         if let record = try? context.fetch(FetchDescriptor<TransactionRecord>(
-            predicate: #Predicate { $0.id == id })).first {
-            try? Ledger.delete(record, in: context)
-            // Khoản không còn thì lần đo của nó cũng không tính.
+            predicate: #Predicate { $0.id == id })).first,
+           (try? Ledger.delete(record, in: context)) != nil {
+            // Khoản đã xoá được thì lần đo của nó cũng không tính; xoá không được thì giữ cả hai.
             if let timing = toast.timing { AppSettings.entryTimings.remove(timing) }
         }
         self.toast = nil
