@@ -64,16 +64,33 @@ enum SpokenAmounts {
         return hits
     }
 
-    /// Một số tiền bắt đầu ở `words[start]`: các nhóm "số + đơn vị" nhỏ dần ("một triệu hai trăm nghìn"),
-    /// "rưỡi" sau đơn vị, và cách nói tắt "một triệu hai" (= 1tr2, như chữ số) khi đó là chữ cuối của cụm.
+    /// Từ ghép không phải đơn vị: "triệu chứng", "yên tâm", "yên xe", "đồng hồ"…
+    static let compounds: [String: Set<String>] = [
+        "triệu": ["chứng", "tập", "hồi"],
+        "yên": ["tâm", "xe", "bình", "ổn", "lặng"],
+        "đồng": ["hồ", "phục", "nghiệp", "ý", "bào", "chí", "hương"]
+    ]
+
+    /// Đơn vị ở `words[i]`, trừ khi nó là chữ đầu của một từ ghép với chữ đứng sau.
+    static func unitWord(_ words: [String], _ i: Int) -> (multiplier: Decimal, currency: Currency?)? {
+        guard i < words.count, let unit = units[words[i]] else { return nil }
+        if i + 1 < words.count, compounds[words[i]]?.contains(words[i + 1]) == true { return nil }
+        return unit
+    }
+
+    /// Một số tiền bắt đầu ở `words[start]`: các nhóm "số + đơn vị" nhỏ dần ("một triệu hai trăm nghìn"), "rưỡi" sau
+    /// đơn vị, rồi phần lẻ sau nghìn/triệu:
+    /// - có hàng trăm/chục ("hai nghìn năm trăm", "một triệu năm mươi") là số của hàng kế dưới: 2.500 · 1.050.000;
+    /// - nói tắt ("một triệu hai", "hai nghìn năm") là phần thập phân như khi gõ `1tr2`, `2k5` — chỉ khi đó là chữ cuối
+    ///   của cụm, để "một triệu hai ly" không thành 1,2 triệu.
     static func phrase(_ words: [String], from start: Int) -> (value: Decimal, currency: Currency?, next: Int)? {
         var total: Decimal = 0
         var j = start
         var last: Decimal?
         var currency: Currency?
-        while let number = belowThousand(words, j), number.next < words.count, let unit = units[words[number.next]] {
+        while let number = belowThousand(words, j), let unit = unitWord(words, number.next) {
             if let last, unit.multiplier >= last { break }
-            if words[number.next] == "đồng", last == nil { break }   // "hai đồng hồ" không phải tiền
+            if words[number.next] == "đồng", last == nil { break }   // "hai đồng" đứng một mình: không nhận
             total += Decimal(number.value) * unit.multiplier
             last = unit.multiplier
             currency = currency ?? unit.currency
@@ -85,15 +102,19 @@ enum SpokenAmounts {
             }
         }
         guard let last else { return nil }
-        if last == 1_000_000, let tail = belowThousand(words, j), tail.next == words.count, tail.value > 0 {
-            // Phần sau "triệu" là phần thập phân của triệu: hai → 0,2 · hai lăm → 0,25 · hai trăm năm mươi → 0,250.
-            var divisor: Decimal = 1
-            for _ in String(tail.value) { divisor *= 10 }
-            total += Decimal(tail.value) / divisor * last
-            j = tail.next
+        if last >= 1_000, let tail = belowThousand(words, j), tail.value > 0 {
+            if tail.isExplicit {
+                total += Decimal(tail.value) * last / 1_000
+                j = tail.next
+            } else if tail.next == words.count {
+                var divisor: Decimal = 1
+                for _ in String(tail.value) { divisor *= 10 }
+                total += Decimal(tail.value) / divisor * last
+                j = tail.next
+            }
         }
         // "năm mươi nghìn đồng", "ba nghìn yên": chữ chỉ loại tiền đứng cuối.
-        if j < words.count, let marker = units[words[j]], marker.multiplier == 1, last > 1 {
+        if let marker = unitWord(words, j), marker.multiplier == 1, last > 1 {
             currency = marker.currency
             j += 1
         }
@@ -101,38 +122,39 @@ enum SpokenAmounts {
     }
 
     /// 0…999 bắt đầu ở `words[i]`: "hai trăm năm mươi", "một trăm linh năm", "không trăm năm mươi", rồi tới `tens`.
-    static func belowThousand(_ words: [String], _ i: Int) -> (value: Int, next: Int)? {
+    /// `isExplicit`: có hàng trăm/chục đọc rõ (trăm, mươi, mười, chục), không phải cách nói tắt "hai", "hai lăm".
+    static func belowThousand(_ words: [String], _ i: Int) -> (value: Int, next: Int, isExplicit: Bool)? {
         guard i < words.count else { return nil }
         if let hundreds = digits[words[i]], i + 1 < words.count, words[i + 1] == "trăm" {
             let j = i + 2
             if j + 1 < words.count, words[j] == "linh" || words[j] == "lẻ", let unit = digits[words[j + 1]], unit > 0 {
-                return (hundreds * 100 + unit, j + 2)
+                return (hundreds * 100 + unit, j + 2, true)
             }
-            if let rest = tens(words, j) { return (hundreds * 100 + rest.value, rest.next) }
-            return (hundreds * 100, j)
+            if let rest = tens(words, j) { return (hundreds * 100 + rest.value, rest.next, true) }
+            return (hundreds * 100, j, true)
         }
         return tens(words, i)
     }
 
     /// 0…99: "mười", "mười lăm", "hai mươi", "hai mươi mốt", "năm chục", "ba lăm" (35), "bảy".
-    static func tens(_ words: [String], _ i: Int) -> (value: Int, next: Int)? {
+    static func tens(_ words: [String], _ i: Int) -> (value: Int, next: Int, isExplicit: Bool)? {
         guard i < words.count else { return nil }
         if words[i] == "mười" {
-            if i + 1 < words.count, let unit = unitDigit(words[i + 1], afterMười: true) { return (10 + unit, i + 2) }
-            return (10, i + 1)
+            if i + 1 < words.count, let unit = unitDigit(words[i + 1], afterMười: true) { return (10 + unit, i + 2, true) }
+            return (10, i + 1, true)
         }
         guard let digit = digits[words[i]] else { return nil }
         if i + 1 < words.count {
             if words[i + 1] == "mươi", digit >= 2 {
                 if i + 2 < words.count, let unit = unitDigit(words[i + 2], afterMười: false) {
-                    return (digit * 10 + unit, i + 3)
+                    return (digit * 10 + unit, i + 3, true)
                 }
-                return (digit * 10, i + 2)
+                return (digit * 10, i + 2, true)
             }
-            if words[i + 1] == "chục", digit >= 1 { return (digit * 10, i + 2) }
-            if digit >= 2, let unit = unitsAfterTens[words[i + 1]] { return (digit * 10 + unit, i + 2) }
+            if words[i + 1] == "chục", digit >= 1 { return (digit * 10, i + 2, true) }
+            if digit >= 2, let unit = unitsAfterTens[words[i + 1]] { return (digit * 10 + unit, i + 2, false) }
         }
-        return (digit, i + 1)
+        return (digit, i + 1, false)
     }
 
     /// Hàng đơn vị sau "mười"/"mươi": một…chín, tư, lăm; "mốt" chỉ sau "mươi" ("mười một", không nói "mười mốt").

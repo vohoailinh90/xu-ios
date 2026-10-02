@@ -47,13 +47,15 @@ thay vì số (máy viết số hay chữ tuỳ phiên bản iOS — cần kiể
 | `ba mươi lăm nghìn`, `hai lăm nghìn`, `ba mốt nghìn`, `năm chục nghìn` | 35.000 · 25.000 · 31.000 · 50.000 |
 | `hai trăm năm mươi nghìn đồng`, `một trăm linh năm nghìn` | 250.000 · 105.000 |
 | `một triệu rưỡi`, `hai nghìn rưỡi`, `một triệu hai trăm nghìn` | 1.500.000 · 2.500 · 1.200.000 |
-| `một triệu hai`, `một triệu hai lăm` | 1.200.000 · 1.250.000 — như `1tr2`, `1tr25`; chỉ khi là chữ cuối của cụm (`một triệu hai ly` → 1.000.000, ghi chú "hai ly") |
+| `hai nghìn năm trăm`, `hai nghìn năm mươi`, `một triệu năm mươi` | 2.500 · 2.050 · 1.050.000 — phần lẻ đọc rõ hàng trăm/chục là số của hàng kế dưới |
+| `một triệu hai`, `một triệu hai lăm`, `hai nghìn năm` | 1.200.000 · 1.250.000 · 2.500 — nói tắt như `1tr2`, `1tr25`, `2k5`; chỉ khi là chữ cuối của cụm (`một triệu hai ly` → 1.000.000, ghi chú "hai ly") |
 | `cơm ba trăm năm mươi yên` | 350 yên; `nghìn` nhân 1.000 với tiền của nơi chi tiêu như `k`, `triệu` luôn là tiền đồng |
 
 - Phải có đơn vị (nghìn/ngàn, triệu, yên; `đồng` sau nghìn/triệu) và chữ số **có dấu** như máy đọc chính tả viết ra.
   Không dấu (`ba muoi nghin`) thì để nguyên: `bay` có thể là bay, `nam` là năm hay nam — người gõ tay thì gõ số.
 - Không đoán bừa: `ba ly`, `năm nay` (không có đơn vị), `hai củ khoai` (`củ` không nhận), `hai đồng hồ` (`đồng` đứng
-  một mình không nhận) không phải số tiền.
+  một mình không nhận) không phải số tiền. Từ ghép không phải đơn vị: `triệu chứng`, `yên tâm`, `yên xe`, `đồng hồ`…
+  (`SpokenAmounts.compounds`).
 - Số bằng chữ là số có đơn vị: thắng số trần, và tách được như số gõ tay (`cà phê 35k và bánh hai mươi nghìn`).
 
 ### Tách nhiều khoản (E8, từ 2026-10-02)

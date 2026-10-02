@@ -35,7 +35,15 @@ final class SpokenAmountTests: XCTestCase {
             ("một triệu rưỡi", 1_500_000),
             ("hai nghìn rưỡi", 2_500),
             ("một triệu hai trăm nghìn", 1_200_000),
-            ("một nghìn không trăm năm mươi đồng", 1_050)
+            ("một nghìn không trăm năm mươi đồng", 1_050),
+            // Phần lẻ đọc rõ hàng trăm/chục là số của hàng kế dưới.
+            ("hai nghìn năm trăm", 2_500),
+            ("hai nghìn năm mươi", 2_050),
+            ("một triệu hai trăm", 1_200_000),
+            ("một triệu năm mươi", 1_050_000),
+            ("một triệu hai trăm nghìn năm trăm", 1_200_500),
+            // Nói tắt sau nghìn, như "2k5".
+            ("hai nghìn năm", 2_500)
         ]
         for (text, amount) in cases {
             let r = parse(text)
@@ -55,6 +63,10 @@ final class SpokenAmountTests: XCTestCase {
         let r = parse("một triệu hai ly")
         XCTAssertEqual(r.amount, 1_000_000)
         XCTAssertEqual(r.note, "hai ly")
+        // Phần lẻ đọc rõ thì không cần đứng cuối.
+        XCTAssertEqual(parse("hai nghìn năm trăm tiền gửi xe").amount, 2_500)
+        XCTAssertEqual(parse("hai nghìn năm trăm tiền gửi xe").note, "tiền gửi xe")
+        XCTAssertEqual(parse("ba mươi nghìn hai ly").amount, 30_000)
     }
 
     func testNoteCategoryAndCurrencyWord() {
@@ -84,6 +96,13 @@ final class SpokenAmountTests: XCTestCase {
         XCTAssertNil(parse("năm nay").amount)
         XCTAssertNil(parse("ba muoi nghin").amount)          // không dấu: để người dùng gõ số
         XCTAssertNil(parse("hai đồng hồ").amount)            // "đồng" đứng một mình
+        // Từ ghép không phải đơn vị: số gõ tay vẫn là số tiền, ghi chú giữ nguyên.
+        let symptom = parse("thuốc trị một triệu chứng 50k")
+        XCTAssertEqual(symptom.amount, 50_000)
+        XCTAssertEqual(symptom.note, "thuốc trị một triệu chứng")
+        XCTAssertFalse(symptom.hasMultipleAmounts)
+        XCTAssertEqual(parse("hai yên xe 300k").amount, 300_000)
+        XCTAssertEqual(parse("năm mươi nghìn đồng hồ").note, "đồng hồ")
         XCTAssertEqual(parse("hai củ khoai 10k").amount, 10_000)   // "củ" ở đây là củ khoai
         XCTAssertEqual(parse("hai củ khoai 10k").note, "hai củ khoai")
     }
