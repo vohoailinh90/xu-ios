@@ -20,8 +20,13 @@ final class ProStore {
     /// Kết quả của lần mua/khôi phục gần nhất cần báo cho người dùng (nil = không có gì để báo).
     private(set) var notice: Notice?
     /// Có giao dịch mua đang chờ duyệt (Hỏi mua, xác minh thanh toán). Là trạng thái, không phải kết quả một lần:
-    /// chỉ hết khi đã có quyền Xu Pro (duyệt xong, `Transaction.updates` báo về) — mở lại paywall hay khôi phục không xoá.
-    private(set) var isPurchasePending = false
+    /// lưu lại qua các lần mở app (`AppSettings.proPendingSince`), hết khi đã có quyền Xu Pro (duyệt xong,
+    /// `Transaction.updates` báo về) — mở lại paywall hay khôi phục không xoá.
+    private(set) var isPurchasePending = ProStore.pendingIsFresh()
+
+    /// Xu không biết được yêu cầu chờ duyệt bị từ chối hay hết hạn (không có giao dịch nào báo về), nên sau bấy lâu
+    /// thì thôi báo "đang chờ" để không treo mãi. Người dùng vẫn mua lại được bất cứ lúc nào.
+    nonisolated static let pendingNoticeLifetime: TimeInterval = 24 * 60 * 60
 
     enum Notice: Equatable {
         /// Mạng, App Store lỗi hoặc giao dịch không xác minh được: chưa mua, thử lại được.
@@ -74,7 +79,7 @@ final class ProStore {
             case .success(.unverified):
                 notice = .purchaseFailed
             case .pending:
-                isPurchasePending = true
+                setPurchasePending(true)
             case .userCancelled:
                 break
             @unknown default:
@@ -129,12 +134,24 @@ final class ProStore {
         // Đã mở khoá (kể cả giao dịch chờ duyệt vừa được duyệt qua Transaction.updates): thôi báo lỗi hay "đang chờ".
         if owned {
             notice = nil
-            isPurchasePending = false
+            setPurchasePending(false)
+        } else {
+            isPurchasePending = Self.pendingIsFresh()
         }
         if AppSettings.isPro != owned {
             AppSettings.isPro = owned
             WidgetCenter.shared.reloadAllTimelines()
         }
         return unverified
+    }
+
+    private func setPurchasePending(_ pending: Bool) {
+        isPurchasePending = pending
+        AppSettings.proPendingSince = pending ? Date() : nil
+    }
+
+    private nonisolated static func pendingIsFresh(now: Date = Date()) -> Bool {
+        guard let since = AppSettings.proPendingSince else { return false }
+        return now.timeIntervalSince(since) < pendingNoticeLifetime
     }
 }
