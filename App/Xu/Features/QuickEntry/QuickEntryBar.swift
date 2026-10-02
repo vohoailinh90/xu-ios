@@ -86,7 +86,12 @@ struct QuickEntryBar: View {
         .padding(.bottom, 8)
         .animation(.snappy, value: toast)
         .onAppear { focused = true }
-        .onChange(of: focusTrigger) { focused = true }
+        .onChange(of: focusTrigger) {
+            // Mở từ widget, thông báo hay Trung tâm điều khiển (`HomeView.startLogging`): bảng chọn danh mục của
+            // chính ô nhập cũng không được che ô ghi. Đóng rồi focus, như khi chọn xong danh mục.
+            showCategoryPicker = false
+            focused = true
+        }
         .onChange(of: text) { oldText, newText in
             errorMessage = nil
             let draft = !newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

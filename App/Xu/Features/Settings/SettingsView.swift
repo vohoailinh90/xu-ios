@@ -68,6 +68,9 @@ struct SettingsView: View {
                     }
                     Label(language.t(.tipWidget), systemImage: "square.grid.2x2")
                     Label(language.t(.tipActionButton), systemImage: "button.horizontal.top.press")
+                    if #available(iOS 18.0, *) {
+                        Label(language.t(.tipControl), systemImage: "switch.2")
+                    }
                     NavigationLink {
                         ApplePayGuideView()
                     } label: {

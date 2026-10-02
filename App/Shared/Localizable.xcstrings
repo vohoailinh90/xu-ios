@@ -113,6 +113,38 @@
         }
       }
     },
+    "Mở ô ghi chi tiêu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open expense entry"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支出の入力を開く"
+          }
+        }
+      }
+    },
+    "Mở Xu, con trỏ nằm sẵn trong ô ghi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens Xu with the cursor ready in the entry field."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力欄にカーソルがある状態でXuを開きます。"
+          }
+        }
+      }
+    },
     "Người bán" : {
       "localizations" : {
         "en" : {
