@@ -115,7 +115,7 @@ public struct QuickEntryParser: Sendable {
         let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? [])
                                    + Self.ranges(of: Self.numericNameRegex, in: folded))
         return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange,
-                        candidates: findAmounts(in: masked))
+                        candidates: findAmounts(in: masked, original: original))
     }
 
     /// Thu/chi và danh mục: dấu "+" hoặc danh mục thu nhập là khoản thu. Có "+" mà danh mục đoán được là khoản chi
@@ -181,7 +181,8 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?:100|百)(?:円ショップ|均)|100[ -]?yen shop"#
     )
 
-    func findAmounts(in text: String) -> [AmountCandidate] {
+    /// `original`: ký tự gốc cùng độ dài với `text`, để đọc số bằng chữ có dấu ("ba mươi lăm nghìn"). Bỏ trống thì không đọc.
+    func findAmounts(in text: String, original: [Character]? = nil) -> [AmountCandidate] {
         var found: [AmountCandidate] = []
         var kanjiRanges: [Range<Int>] = []
         let ns = NSRange(text.startIndex..., in: text)
@@ -222,6 +223,16 @@ public struct QuickEntryParser: Sendable {
             found.append(AmountCandidate(value: Self.int64(value), currency: currency,
                                          hasUnit: unit != nil || hasYenSign,
                                          isPlus: Self.group(m, 1, in: rest) == "+", range: range))
+        }
+
+        // Số bằng chữ (đọc chính tả): chỉ chữ cái nên không chồng lên các số ở trên; luôn có đơn vị.
+        let chars = Array(text)
+        if let original, original.count == chars.count {
+            for hit in SpokenAmounts.find(original: original, masked: chars, marketCurrency: options.market.currency)
+            where hit.value > 0 {
+                found.append(AmountCandidate(value: Self.int64(hit.value), currency: hit.currency, hasUnit: true,
+                                             isPlus: false, range: hit.range))
+            }
         }
         return found.sorted { $0.range.lowerBound < $1.range.lowerBound }
     }
