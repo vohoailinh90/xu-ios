@@ -87,6 +87,20 @@ final class SplitEntryTests: XCTestCase {
         XCTAssertEqual(mixed.map(\.categoryID), ["income.salary", CategoryCatalog.otherExpenseID])
     }
 
+    /// Danh mục người dùng chọn tay trên thẻ xem trước thay cho danh mục cả câu, như thẻ đang hiện.
+    func testFallbackCategoryFromPreview() {
+        XCTAssertEqual(split("abc 45k tip 5k").map(\.categoryID), ["other", "other"])
+        let picked = parser.split("abc 45k tip 5k", now: now, fallbackCategoryID: "food")
+        XCTAssertEqual(picked.map(\.categoryID), ["food", "food"])
+        // Khoản tự nhận ra danh mục thì giữ danh mục của nó.
+        XCTAssertEqual(parser.split("abc 45k grab 52k", now: now, fallbackCategoryID: "food").map(\.categoryID),
+                       ["food", "transport"])
+        // Danh mục thu nhập không lan sang khoản không có "+".
+        let income = parser.split("abc 45k tip 5k", now: now, fallbackCategoryID: "income.salary")
+        XCTAssertEqual(income.map(\.isIncome), [false, false])
+        XCTAssertEqual(income.map(\.categoryID), ["other", "other"])
+    }
+
     func testSingleAmountIsJustParse() {
         for text in ["trà sữa 2 ly 60k", "phở 45 trà 15", "cà phê", "Grab 52k hôm qua"] {
             XCTAssertEqual(parser.split(text, now: now), [parser.parse(text, now: now)], text)

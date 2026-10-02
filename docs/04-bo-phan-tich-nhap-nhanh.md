@@ -58,9 +58,10 @@ Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một
   Không có dấu ngăn thì theo cách gõ cả câu: có chữ trước số tiền đầu tiên → chữ đi với số đứng sau nó; câu mở đầu bằng
   số tiền → chữ đi với số đứng trước nó.
 - `va` không dấu **không** là dấu ngăn: có thể là "vá" (`gui xe 5k va xe 30k` → "gui xe" · "va xe").
-- Khoản không nhận ra danh mục lấy danh mục khoản chi của cả câu (cái thẻ xem trước đang hiện): "tip" vẫn là Ăn uống.
+- Khoản không nhận ra danh mục lấy danh mục khoản chi của cả câu — cái thẻ xem trước đang hiện, kể cả khi người dùng
+  đã chọn tay (`fallbackCategoryID`): "tip" vẫn là Ăn uống.
   Khoản thu chỉ khi khoản đó có `+` hoặc từ khoá thu nhập; danh mục thu nhập của cả câu không lan sang khoản khác.
-- Danh mục chọn tay trên thẻ xem trước là của khoản đầu (khoản thẻ đang hiện) và được học theo ghi chú của khoản đó.
+- Danh mục chọn tay trên thẻ xem trước cũng là của khoản đầu (khoản thẻ đang hiện) và được học theo ghi chú của khoản đó.
 - Vẫn là gợi ý: `giảm 20k còn 80k`, `nạp 100k tặng 20k` có hai số tiền nhưng là một khoản — người dùng cứ Enter.
 
 ## Ngày

@@ -13,9 +13,10 @@ extension QuickEntryParser {
     ///     sau nó không phải hiragana: "350円とパン200円") thì cắt ở đó, bỏ dấu ngăn;
     ///   - không có thì theo cách gõ của cả câu: có chữ trước số tiền đầu tiên ("cà phê 35k bánh 20k") thì chữ đi
     ///     với số đứng sau nó; câu mở đầu bằng số tiền ("35k cà phê 20k bánh") thì chữ đi với số đứng trước nó.
-    /// - Khoản không nhận ra danh mục thì lấy danh mục khoản chi của cả câu (cái thẻ xem trước đang hiện): "tip" trong
-    ///   "ăn trưa 45k tip 5k" vẫn là ăn uống. Khoản thu chỉ khi khoản đó có "+" hoặc từ khoá thu nhập.
-    public func split(_ text: String, now: Date = Date()) -> [QuickEntryResult] {
+    /// - Khoản không nhận ra danh mục thì lấy danh mục khoản chi của cả câu — cái thẻ xem trước đang hiện, nên người
+    ///   dùng đã chọn tay thì truyền vào `fallbackCategoryID`: "tip" trong "ăn trưa 45k tip 5k" vẫn là ăn uống.
+    ///   Khoản thu chỉ khi khoản đó có "+" hoặc từ khoá thu nhập: danh mục thu nhập không lan sang khoản khác.
+    public func split(_ text: String, now: Date = Date(), fallbackCategoryID: String? = nil) -> [QuickEntryResult] {
         let whole = parse(text, now: now)
         let analysis = analyze(text, now: now)
         let amounts = analysis.explicit
@@ -39,8 +40,8 @@ extension QuickEntryParser {
         }
         ends.append(chars.count)
 
-        let wholeMatch = matcher.match(note: whole.note)
-        let fallback = wholeMatch?.kind == .expense ? wholeMatch : nil
+        let sentenceCategory = fallbackCategoryID.map { CategoryCatalog.resolve(id: $0) } ?? matcher.match(note: whole.note)
+        let fallback = sentenceCategory?.kind == .expense ? sentenceCategory : nil
         return amounts.indices.map { i -> QuickEntryResult in
             let amount = amounts[i]
             var removed = [0..<starts[i], ends[i]..<chars.count, amount.range]

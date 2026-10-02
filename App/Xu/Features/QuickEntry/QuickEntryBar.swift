@@ -43,7 +43,9 @@ struct QuickEntryBar: View {
     /// Câu có nhiều số tiền ("ăn trưa 45k tip 5k"): các khoản nếu tách ra (E8). Rỗng nếu chỉ có một khoản.
     private var splitParts: [QuickEntryResult] {
         guard preview?.hasMultipleAmounts == true else { return [] }
-        let parts = parser.split(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        // Khoản không nhận ra danh mục lấy danh mục thẻ xem trước đang hiện, kể cả khi đã chọn tay.
+        let parts = parser.split(text.trimmingCharacters(in: .whitespacesAndNewlines),
+                                 fallbackCategoryID: categoryOverride)
         return parts.count > 1 ? parts : []
     }
 
