@@ -34,8 +34,39 @@ parse("Grab 52k hôm qua", now: 25/09/2026)
 
 **Khi có nhiều số:**
 - Ưu tiên số có đơn vị tường minh (k, tr, đ…) hơn số trần. `trà sữa 2 ly 60k` → 60.000, ghi chú "trà sữa 2 ly".
-- Nhiều số có đơn vị → lấy số đầu tiên và bật `hasMultipleAmounts` để UI gợi ý "Tách thành nhiều khoản?". `ăn trưa 45k tip 5k` → 45.000, ghi chú "ăn trưa tip 5k".
-- Chỉ có số trần → lấy số lớn nhất.
+- Nhiều số có đơn vị → lấy số đầu tiên và bật `hasMultipleAmounts` để UI gợi ý tách. `ăn trưa 45k tip 5k` → 45.000, ghi chú "ăn trưa tip 5k".
+- Chỉ có số trần → lấy số lớn nhất, không gợi ý tách (`trà sữa 2 ly 30` không phải hai khoản).
+
+### Tách nhiều khoản (E8, từ 2026-10-02)
+
+`split(_:)` trong `EntrySplitter.swift` · Test: `XuCore/Tests/XuCoreTests/SplitEntryTests.swift`.
+Thẻ xem trước hiện thêm nút "✂️ Tách thành N khoản · 45k, 5k"; chạm là lưu hết trong một lần, toast "Hoàn tác" xoá hết.
+Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một lựa chọn, không làm chậm luồng ghi.
+
+| Người dùng gõ | Các khoản |
+|---|---|
+| `ăn trưa 45k tip 5k` | ăn trưa 45.000 · tip 5.000 (cả hai là Ăn uống) |
+| `cà phê 35k, grab 52k, bánh mì 20k` | cà phê · grab · bánh mì, mỗi khoản một danh mục |
+| `35k cà phê 20k bánh mì` | cà phê 35.000 · bánh mì 20.000 |
+| `hôm qua grab 52k và cà phê 35k` | cả hai là hôm qua |
+| `lương +15tr thưởng +2tr` | hai khoản thu |
+| `コーヒー350円とパン200円` | コーヒー 350 yên · パン 200 yên |
+
+- Mỗi số tiền có đơn vị là một khoản; số trần (`2 ly`) ở lại trong ghi chú. Ngày tìm một lần, dùng chung cho mọi khoản.
+- Chữ giữa hai số tiền thuộc khoản nào, theo thứ tự:
+  1. có dấu câu ngăn (`,` `;` `、` `。` `+` `&`) thì cắt ở đó: `ăn trưa 45k với bạn, grab 20k` → "ăn trưa với bạn" · "grab";
+  2. không có thì cắt ở chữ nối: `và` `and` `と` đứng riêng, hoặc `と` sát ngay sau số tiền mà sau nó là katakana/chữ Hán
+     (`350円とパン`) hay mở đầu một từ khoá danh mục (`350円とお茶`, `とうどん`, `とおにぎり`). `と` là chữ đầu của từ thì
+     giữ — thà để sót trợ từ còn hơn cắt mất chữ: `980円とんかつ`, `とうふ`;
+  3. không có cả hai thì theo cách gõ cả câu: có chữ trước số tiền đầu tiên → chữ đi với số đứng sau nó; câu mở đầu
+     bằng số tiền → chữ đi với số đứng trước nó.
+- `va` không dấu **không** là chữ nối: có thể là "vá" (`gui xe 5k va xe 30k` → "gui xe" · "va xe").
+  `với` cũng không: thường là "cùng với" ("ăn trưa với bạn").
+- Khoản không nhận ra danh mục lấy danh mục khoản chi của cả câu — cái thẻ xem trước đang hiện, kể cả khi người dùng
+  đã chọn tay (`fallbackCategoryID`): "tip" vẫn là Ăn uống.
+  Khoản thu chỉ khi khoản đó có `+` hoặc từ khoá thu nhập; danh mục thu nhập của cả câu không lan sang khoản khác.
+- Danh mục chọn tay trên thẻ xem trước cũng là của khoản đầu (khoản thẻ đang hiện) và được học theo ghi chú của khoản đó.
+- Vẫn là gợi ý: `giảm 20k còn 80k`, `nạp 100k tặng 20k` có hai số tiền nhưng là một khoản — người dùng cứ Enter.
 
 ## Ngày
 
@@ -122,7 +153,7 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 ## Việc tiếp theo cho parser
 
 - [ ] Số bằng chữ từ giọng nói: "ba mươi lăm nghìn", "một triệu hai" (issue E9).
-- [ ] Tách nhiều khoản trong một câu (issue E8).
+- [x] Tách nhiều khoản trong một câu (issue E8) — 2026-10-02.
 - [ ] Từ lóng tiền: `lít`, `xị`, `chai` — tắt mặc định vì dễ nhầm ("2 lít xăng"), cho bật trong Cài đặt.
 - [ ] Giờ: "7h sáng" → gán giờ cho `occurredAt`.
 - [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ.

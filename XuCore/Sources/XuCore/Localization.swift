@@ -92,7 +92,7 @@ public enum L10n: String, CaseIterable, Sendable {
     case today, yesterday, quickChips, spentToday, remainingToday, overToday, budgetUsedUp, otherCurrencies
     case exportCSV, csvPreviewTitle, settings, done
     // Ô nhập nhanh
-    case save, undo, changeCategory, noAmountYet, savedToast, missingAmount
+    case save, undo, changeCategory, noAmountYet, savedToast, missingAmount, splitEntries, savedManyToast
     case exampleVietnam, exampleJapan, placeholderVietnam, placeholderJapan
     // Onboarding
     case onboardingWelcome, onboardingIntro, onboardingTry, onboardingSaveFirst, onboardingSaved
@@ -175,6 +175,12 @@ public enum L10n: String, CaseIterable, Sendable {
         case .savedToast:
             // {0} emoji danh mục · {1} số tiền · {2} ghi chú
             LocalizedText(vi: "{0} Đã ghi {1} · {2}", en: "{0} Logged {1} · {2}", ja: "{0} {1} を記録・{2}")
+        case .splitEntries:
+            // {0} số khoản
+            LocalizedText(vi: "Tách thành {0} khoản", en: "Split into {0} entries", ja: "{0}件に分ける")
+        case .savedManyToast:
+            // {0} số khoản · {1} các số tiền
+            LocalizedText(vi: "✂️ Đã ghi {0} khoản · {1}", en: "✂️ Logged {0} entries · {1}", ja: "✂️ {0}件を記録・{1}")
         case .missingAmount:
             LocalizedText(
                 vi: "Mình chưa thấy số tiền. Thử lại, ví dụ: {0}",

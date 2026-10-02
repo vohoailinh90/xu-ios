@@ -227,6 +227,13 @@ public struct CategoryMatcher: Sendable {
         return best?.category
     }
 
+    /// Chuỗi đã gấp mở đầu bằng một từ khoá có chữ Nhật (kể cả từ khoá đã học): "お茶200円" → có. Để biết "と" đứng
+    /// trước là trợ từ "và" ("コーヒー350円とお茶200円"), không phải chữ đầu của từ ("とんかつ").
+    func startsWithJapaneseKeyword(_ folded: String) -> Bool {
+        let starts = { (keyword: String) in TextFolding.containsCJK(keyword) && folded.hasPrefix(keyword) }
+        return learned.keys.contains(where: starts) || catalog.contains { $0.keywords.contains(where: starts) }
+    }
+
     private func longestMatch(in padded: String, candidates: [(String, String)]) -> String? {
         var best: (length: Int, id: String)?
         for (keyword, id) in candidates where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
