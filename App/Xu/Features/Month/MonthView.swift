@@ -20,7 +20,7 @@ struct MonthView: View {
         let current = MonthKey(DayKey(Date(), calendar: calendar))
         let entries = records.map {
             LedgerEntry(amount: $0.amount, isIncome: $0.isIncome, categoryID: $0.categoryID,
-                        day: DayKey($0.occurredAt, calendar: calendar), currency: $0.currency)
+                        day: $0.day(in: calendar), currency: $0.currency)
         }
         // Tháng xa nhất có ghi chép: không lùi về những tháng trống trước khi dùng app.
         let earliest = entries.map(\.day).min().map { MonthKey($0) } ?? current

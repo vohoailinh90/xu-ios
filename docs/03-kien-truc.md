@@ -119,10 +119,11 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
   nên bấm sau nửa đêm hay ở múi giờ khác vẫn chốt đúng ngày. Ngày đã nhắc rồi (đã đặt mà không còn trong danh sách chờ của iOS) thì đổi giờ nhắc cũng không nhắc lại.
 - Ngày/tháng/năm luôn theo lịch Gregorian giữ múi giờ (`Calendar.gregorianSameTimeZone`): `DayKey`, câu nhập, cuối tháng
   của ngân sách, tuần — kể cả khi máy đặt lịch Nhật (năm Reiwa) hay lịch Hồi giáo.
-- **Chưa xử lý: đổi múi giờ.** Ngày của một khoản là `occurredAt` đọc theo múi giờ **hiện tại** của máy, ở mọi chỗ:
-  danh sách theo ngày, thẻ "Hôm nay", tuần, tháng, thói quen, khoản quen, widget. Khoản ghi 23:30 ngày 31/8 ở Việt Nam,
-  mở ở Nhật (nhanh hơn 2 giờ) sẽ thành 01:30 ngày 1/9 — sang ngày khác, có khi sang tháng khác. Người Việt đi lại
-  Việt Nam ↔ Nhật gặp đúng chuyện này. Hướng sửa (PR riêng, cho cả app một lúc để các màn không lệch nhau): lưu ngày
-  lịch (hoặc múi giờ) lúc ghi vào `TransactionRecord` — trường mới, có giá trị mặc định nên SwiftData tự chuyển dữ liệu;
-  khoản cũ không có thì vẫn đọc theo múi giờ hiện tại — rồi mọi chỗ lấy ngày qua một hàm chung.
+- **Ngày của một khoản là ngày lịch lúc ghi**, không phải `occurredAt` đọc lại theo múi giờ hiện tại: khoản ghi 23:30
+  ngày 31/8 ở Việt Nam, mở ở Nhật (nhanh hơn 2 giờ) vẫn là ngày 31/8, không trôi sang 1/9 hay sang tháng 9.
+  `TransactionRecord.storedDay` chốt ngày lúc ghi (và lúc sửa ngày); mọi màn lấy ngày qua `TransactionRecord.day(in:)`:
+  danh sách theo ngày, thẻ "Hôm nay", tuần, tháng, thói quen, khoản quen, lời mời Pro, widget. Trường thêm sau bản đầu,
+  có giá trị mặc định (rỗng) nên SwiftData tự chuyển dữ liệu; khoản cũ để rỗng thì vẫn đọc theo múi giờ hiện tại.
+  `occurredAt` vẫn là thời điểm thật, dùng để sắp xếp trong ngày. CSV: cột ngày là ngày đã chốt (khớp với app),
+  cột cuối là thời điểm thật (ISO 8601).
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.
