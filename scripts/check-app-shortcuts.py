@@ -3,8 +3,8 @@
 
 - Câu gốc trong App/Xu/XuShortcuts.swift phải trùng đúng tập khoá trong App/Xu/AppShortcuts.xcstrings.
 - Mỗi câu có bản dịch en và ja đã dịch ("translated"), và câu nào cũng chứa ${applicationName}.
-- Với --bundle <Xu.app>: en.lproj/ja.lproj/AppShortcuts.strings trong bản build có đúng tập khoá đó, giá trị
-  nào cũng chứa ${applicationName}.
+- Với --bundle <Xu.app>: en.lproj/ja.lproj/AppShortcuts.strings trong bản build có đúng tập khoá đó, và mỗi giá trị
+  đúng bằng bản dịch của ngôn ngữ đó trong catalog (không phải câu gốc hay bản cũ).
 
 Chạy: python3 scripts/check-app-shortcuts.py [--bundle path/to/Xu.app]
 """
@@ -28,23 +28,28 @@ def source_phrases():
     return phrases
 
 
-def check_catalog(phrases, errors):
-    catalog = json.loads((ROOT / "App/Xu/AppShortcuts.xcstrings").read_text(encoding="utf-8"))
-    strings = catalog.get("strings", {})
+def load_catalog():
+    return json.loads((ROOT / "App/Xu/AppShortcuts.xcstrings").read_text(encoding="utf-8")).get("strings", {})
+
+
+def translation(strings, phrase, language):
+    return strings.get(phrase, {}).get("localizations", {}).get(language, {}).get("stringUnit", {})
+
+
+def check_catalog(strings, phrases, errors):
     if set(strings) != set(phrases):
         errors.append(f"AppShortcuts.xcstrings có khoá {sorted(strings)}, câu gốc trong XuShortcuts là {sorted(phrases)}")
     for phrase in phrases:
         if PLACEHOLDER not in phrase:
             errors.append(f"Câu gốc thiếu {PLACEHOLDER}: {phrase!r}")
-        localizations = strings.get(phrase, {}).get("localizations", {})
         for language in LANGUAGES:
-            unit = localizations.get(language, {}).get("stringUnit", {})
+            unit = translation(strings, phrase, language)
             value = unit.get("value", "")
             if unit.get("state") != "translated" or PLACEHOLDER not in value:
                 errors.append(f"{language}: thiếu bản dịch (hoặc thiếu {PLACEHOLDER}) cho {phrase!r}")
 
 
-def check_bundle(app, phrases, errors):
+def check_bundle(app, strings, phrases, errors):
     for language in LANGUAGES:
         path = pathlib.Path(app) / f"{language}.lproj" / "AppShortcuts.strings"
         converted = subprocess.run(["plutil", "-convert", "json", "-o", "-", str(path)],
@@ -56,18 +61,20 @@ def check_bundle(app, phrases, errors):
         if set(table) != set(phrases):
             errors.append(f"{path}: khoá {sorted(table)} khác câu gốc {sorted(phrases)}")
         for key, value in table.items():
-            if PLACEHOLDER not in value:
-                errors.append(f"{path}: bản dịch của {key!r} thiếu {PLACEHOLDER}: {value!r}")
+            expected = translation(strings, key, language).get("value")
+            if value != expected:
+                errors.append(f"{path}: {key!r} là {value!r}, catalog ghi {expected!r}")
 
 
 def main(argv):
     phrases = source_phrases()
+    strings = load_catalog()
     errors = []
     if not phrases:
         errors.append("Không tìm thấy câu lệnh nào trong XuShortcuts.swift")
-    check_catalog(phrases, errors)
+    check_catalog(strings, phrases, errors)
     if len(argv) == 3 and argv[1] == "--bundle":
-        check_bundle(argv[2], phrases, errors)
+        check_bundle(argv[2], strings, phrases, errors)
     elif len(argv) != 1:
         errors.append("Cách dùng: check-app-shortcuts.py [--bundle path/to/Xu.app]")
     for error in errors:
