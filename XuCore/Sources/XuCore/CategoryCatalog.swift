@@ -213,7 +213,8 @@ public struct CategoryMatcher: Sendable {
         }
         // Cụm dài nhất thắng, dài bằng nhau thì danh mục đứng trước thắng. Âm tiết nhiều nghĩa ("ca", "trung"…)
         // chỉ tính khi ghi chú gõ không dấu, hoặc có đúng dạng có dấu của nghĩa đó.
-        let accented = Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased())
+        // Chỉ đổi về chữ thường + nửa khổ, giữ dấu: "ｃａ" (bàn phím Nhật) vẫn là gõ không dấu.
+        let accented = Self.normalize(TextFolding.foldWidth(note))
         let hasDiacritics = " " + accented + " " != padded
         let accentedWords = Set(accented.split(separator: " ").map(String.init))
         var best: (length: Int, category: CategoryDefinition)?

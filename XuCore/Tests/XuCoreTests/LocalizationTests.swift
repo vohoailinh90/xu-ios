@@ -125,6 +125,7 @@ final class LocalizationTests: XCTestCase {
     func testFoldingKeepsKanaAndNarrowsWidth() {
         XCTAssertEqual(TextFolding.fold("バス"), "バス", "Không bỏ dấu ゛ của kana")
         XCTAssertEqual(TextFolding.fold("ＡＢＣ１２３"), "abc123")
+        XCTAssertEqual(TextFolding.foldWidth("ＴＵＩ Túi ＣÁ"), "tui túi cá", "Nửa khổ, chữ thường, giữ dấu")
         XCTAssertEqual(TextFolding.fold("￥３５０"), "¥350")
         XCTAssertEqual(TextFolding.fold("Cà Phê Đá"), "ca phe da")
         let text = "コーヒー３５０円"

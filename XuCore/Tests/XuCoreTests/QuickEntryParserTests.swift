@@ -165,6 +165,10 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertEqual(parse("son 300k").categoryID, "shopping")
         XCTAssertEqual(parse("son dưỡng 150k").categoryID, "shopping")
         XCTAssertNotEqual(parse("trả Sơn 200k").categoryID, "shopping", "\"Sơn\" là tên người")
+        // Chữ toàn khổ của bàn phím Nhật không phải dấu tiếng Việt: vẫn khớp như gõ không dấu.
+        XCTAssertEqual(parse("ｃａ 50k").categoryID, "groceries")
+        XCTAssertEqual(parse("ｓｏｎ 300k").categoryID, "shopping")
+        XCTAssertEqual(parse("ｔｕｉ 200k").categoryID, "shopping")
     }
 
     func testIncome() {
