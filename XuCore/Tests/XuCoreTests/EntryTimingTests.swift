@@ -49,6 +49,9 @@ final class EntryTimingTests: XCTestCase {
         XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "phở 45k", to: "ラーメン980"))
         XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "ラーメン980", to: "寿司1200"), "Hai câu tiếng Nhật khác nhau")
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "r", to: "ら"), "Romaji đang soạn thành kana")
+        XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "家賃1200"), "Số đổi thì không phải IME")
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "電車980"))
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "せんえん", to: "千円"), "Số chữ Hán không tính là đổi số")
     }
 
     func testRoundTripsThroughJSON() throws {

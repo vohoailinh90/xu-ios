@@ -35,8 +35,9 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
     /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
     /// Bộ gõ tiếng Nhật (IME) đổi chữ đang soạn sang chữ Hán/katakana cũng thay cả cụm ("きのう" → "昨日"):
-    /// phần bị thay chỉ gồm chữ đang soạn (hiragana, "ー", chữ/số Latin khi gõ romaji) và phần mới có chữ Nhật/Hán
-    /// thì không tính là câu mới. Phần bị thay có katakana, chữ Hán hay chữ Việt ("ラーメン980" → "寿司1200") là câu mới.
+    /// phần bị thay chỉ gồm chữ đang soạn (hiragana, "ー", chữ/số Latin khi gõ romaji), phần mới có chữ Nhật/Hán và
+    /// các chữ số giữ nguyên (IME không đổi số tiền) thì không tính là câu mới. Phần bị thay có katakana, chữ Hán hay
+    /// chữ Việt ("ラーメン980" → "寿司1200"), hoặc số đổi ("でんしゃ980" → "家賃1200") là câu mới.
     public static func startsNewSentence(from old: String, to new: String) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
@@ -48,10 +49,16 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         let replaced = a[prefix..<(a.count - suffix)]
         let inserted = b[prefix..<(b.count - suffix)]
         if !replaced.isEmpty, replaced.allSatisfy(isBeingComposed),
-           inserted.contains(where: { TextFolding.containsCJK(String($0)) }) {
+           inserted.contains(where: { TextFolding.containsCJK(String($0)) }),
+           asciiDigits(replaced) == asciiDigits(inserted) {
             return false
         }
         return (prefix + suffix) * 2 < a.count
+    }
+
+    /// Các chữ số 0–9 (đã đổi về nửa khổ) theo thứ tự. Số viết bằng chữ Hán ("千") không tính.
+    private static func asciiDigits(_ characters: ArraySlice<Character>) -> [Character] {
+        characters.map { TextFolding.fold($0) }.filter { $0.isASCII && $0.isNumber }
     }
 
     /// Ký tự có thể đang nằm trong vùng soạn của IME tiếng Nhật: hiragana, "ー", chữ/số Latin (nửa hoặc toàn khổ).
