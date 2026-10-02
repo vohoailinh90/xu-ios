@@ -24,7 +24,7 @@ Các đường dữ liệu đi qua hệ thống của Apple (Xu không nhận g�
 
 - **Mua/khôi phục Xu Pro (StoreKit 2):** Apple xử lý thanh toán. Xu chỉ đọc quyền đã mua (`Transaction.currentEntitlements`)
   và giá hiển thị (`Product.displayPrice`). Xu không nhận thông tin thẻ hay tài khoản Apple.
-- **Phím tắt / tự động hoá Apple Pay:** người dùng tự cài. iOS chuyển cho Xu câu nhập, hoặc số tiền + tên cửa hàng, ngay trên máy.
+- **Phím tắt / tự động hoá Apple Pay:** người dùng tự cài. iOS chuyển cho Xu câu nhập, hoặc số tiền (kèm mã loại tiền) + tên cửa hàng (`LogPaymentIntent`), ngay trên máy.
   Gọi bằng giọng nói qua Siri thì việc nhận dạng giọng nói là của Apple — cần kiểm tra cách diễn đạt nếu App Review hỏi.
 - **Xuất CSV:** người dùng tự chọn nơi gửi tệp qua bảng chia sẻ. Đây là hành động của người dùng, không phải Xu thu thập.
 - **Sao lưu iPhone (iCloud Backup / máy tính):** dữ liệu Xu có thể nằm trong bản sao lưu như mọi app. Do Apple và

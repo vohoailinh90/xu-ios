@@ -482,9 +482,9 @@ public enum L10n: String, CaseIterable, Sendable {
                           ja: "データはこのiPhoneの中にあります。")
         case .privacyOnDevice:
             LocalizedText(
-                vi: "Các khoản bạn ghi (cả câu gốc bạn gõ), khoản quen, thói quen, cài đặt và thời gian ghi đều lưu trên máy, dùng chung với widget của Xu. Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này đi đâu.",
-                en: "Your entries (including the text you typed), quick picks, habits, settings and entry times are stored on this device and shared with Xu's widgets. Xu has no server, needs no account and doesn't send this data anywhere.",
-                ja: "記録(入力した文そのものを含む)、いつもの、習慣、設定、記録にかかった時間はすべてこの端末に保存され、Xuのウィジェットと共有されます。Xuにはサーバーがなく、アカウントも不要で、これらのデータをどこにも送信しません。")
+                vi: "Các khoản bạn ghi (cả câu gốc bạn gõ), khoản quen, thói quen, cài đặt và thời gian ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị. Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này đi đâu.",
+                en: "Your entries (including the text you typed), quick picks, habits, settings and entry times are stored on this device; Xu's widgets read the parts they display. Xu has no server, needs no account and doesn't send this data anywhere.",
+                ja: "記録(入力した文そのものを含む)、いつもの、習慣、設定、記録にかかった時間はすべてこの端末に保存されます。Xuのウィジェットは表示に必要な部分だけを読み取ります。Xuにはサーバーがなく、アカウントも不要で、これらのデータをどこにも送信しません。")
         case .privacyNoTracking:
             LocalizedText(vi: "Không quảng cáo, không theo dõi, không công cụ phân tích.", en: "No ads, no tracking, no analytics.",
                           ja: "広告、トラッキング、アクセス解析はありません。")
@@ -495,9 +495,9 @@ public enum L10n: String, CaseIterable, Sendable {
                 ja: "Xu Proの購入・復元の支払いはAppleが処理します。XuはApp Storeに購入済みかどうかを確認するだけで、カード情報やApple Accountの情報は受け取りません。")
         case .privacyShortcuts:
             LocalizedText(
-                vi: "Phím tắt và tự động hoá Apple Pay do bạn tự cài chỉ chuyển cho Xu câu bạn nhập, hoặc số tiền và tên cửa hàng, ngay trên máy.",
-                en: "Shortcuts and Apple Pay automations you set up pass Xu only the sentence you typed, or the amount and merchant name, on the device.",
-                ja: "ご自身で設定したショートカットやApple Payのオートメーションは、入力した文、または金額と店舗名だけを端末内でXuに渡します。")
+                vi: "Phím tắt và tự động hoá Apple Pay do bạn tự cài chỉ chuyển cho Xu câu bạn nhập, hoặc số tiền (kèm loại tiền) và tên cửa hàng, ngay trên máy.",
+                en: "Shortcuts and Apple Pay automations you set up pass Xu only the sentence you typed, or the amount (with its currency) and merchant name, on the device.",
+                ja: "ご自身で設定したショートカットやApple Payのオートメーションは、入力した文、または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。")
         case .privacyNotifications:
             LocalizedText(vi: "Nhắc chốt ngày là thông báo đặt lịch ngay trên máy, không qua máy chủ nào.",
                           en: "The evening reminder is a notification scheduled on the device, not sent from a server.",

@@ -13,7 +13,8 @@ Cập nhật: 02/10/2026 · Updated: October 2, 2026 · 更新日: 2026年10月2
 Xu là app ghi chi tiêu trên iPhone do [tên nhà phát triển — cần điền] làm. Tóm gọn: **dữ liệu của bạn nằm trên iPhone của bạn.**
 
 **Xu lưu gì, ở đâu.** Các khoản bạn ghi (số tiền, loại tiền, danh mục, ghi chú, ngày, cả câu gốc bạn gõ), khoản quen,
-thói quen, cài đặt và thời gian bạn ghi mỗi khoản đều lưu trên máy, dùng chung giữa app và widget của Xu.
+thói quen, cài đặt và thời gian bạn ghi mỗi khoản đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị
+(như các khoản đã ghi, khoản quen, ngôn ngữ).
 Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này cho chúng tôi hay bất kỳ ai.
 
 **Không quảng cáo, không theo dõi, không phân tích.** Xu không dùng mã quảng cáo, không theo dõi bạn qua app hay
@@ -23,7 +24,7 @@ website khác và không dùng công cụ phân tích hay SDK của bên thứ b
 Xu không nhận thông tin thẻ hay tài khoản Apple của bạn. Việc Apple xử lý dữ liệu thanh toán theo chính sách của Apple.
 
 **Phím tắt và Apple Pay.** Nếu bạn tự cài Phím tắt hoặc tự động hoá Apple Pay, iOS chỉ chuyển cho Xu câu bạn nhập,
-hoặc số tiền và tên cửa hàng, ngay trên máy.
+hoặc số tiền (kèm loại tiền) và tên cửa hàng, ngay trên máy.
 
 **Thông báo.** Nhắc chốt ngày buổi tối là thông báo đặt lịch ngay trên máy, không gửi từ máy chủ.
 
@@ -45,7 +46,8 @@ sách này và thông tin trên App Store trước khi phát hành tính năng �
 Xu is an expense-logging app for iPhone made by [developer name — to fill in]. In short: **your data stays on your iPhone.**
 
 **What Xu stores, and where.** Your entries (amount, currency, category, note, date, and the text you typed), quick picks,
-habits, settings and how long each entry took are stored on the device and shared between the Xu app and its widgets.
+habits, settings and how long each entry took are stored on this device; Xu's widgets read the parts they display
+(such as your entries, quick picks and language).
 Xu has no server, needs no account and doesn't send this data to us or anyone else.
 
 **No ads, no tracking, no analytics.** Xu has no ad identifiers, doesn't track you across other apps or websites, and uses
@@ -55,7 +57,7 @@ no analytics tools or third-party SDKs.
 for the displayed price; Xu never receives your card or Apple Account details. Apple processes payment data under Apple's own policies.
 
 **Shortcuts and Apple Pay.** If you set up a shortcut or an Apple Pay automation, iOS passes Xu only the sentence you typed,
-or the amount and merchant name, on the device.
+or the amount (with its currency) and merchant name, on the device.
 
 **Notifications.** The evening reminder is a notification scheduled on the device, not sent from a server.
 
@@ -77,7 +79,7 @@ and the App Store information before releasing it.
 Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録アプリです。要点: **データはあなたのiPhoneの中にあります。**
 
 **保存するデータと場所。** 記録(金額、通貨、カテゴリ、メモ、日付、入力した文そのもの)、いつもの、習慣、設定、
-記録にかかった時間は端末内に保存され、XuアプリとXuのウィジェットで共有されます。Xuにはサーバーがなく、
+記録にかかった時間はこの端末内に保存されます。Xuのウィジェットは表示に必要な部分(記録、いつもの、言語など)だけを読み取ります。Xuにはサーバーがなく、
 アカウントも不要で、これらのデータを当方や第三者に送信しません。
 
 **広告・トラッキング・アクセス解析なし。** 広告識別子を使わず、他社のアプリやWebサイトをまたいだトラッキングも行いません。
@@ -87,7 +89,7 @@ Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録ア�
 カード情報やApple Accountの情報は受け取りません。支払い情報はAppleのポリシーに従って扱われます。
 
 **ショートカットとApple Pay。** ご自身でショートカットやApple Payのオートメーションを設定した場合、iOSは入力した文、
-または金額と店舗名だけを端末内でXuに渡します。
+または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。
 
 **通知。** 夜の締めリマインダーは端末内で予約される通知で、サーバーから送られるものではありません。
 
