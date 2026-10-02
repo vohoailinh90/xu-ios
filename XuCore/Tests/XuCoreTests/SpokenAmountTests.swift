@@ -102,6 +102,10 @@ final class SpokenAmountTests: XCTestCase {
         XCTAssertEqual(symptom.note, "thuốc trị một triệu chứng")
         XCTAssertFalse(symptom.hasMultipleAmounts)
         XCTAssertEqual(parse("hai yên xe 300k").amount, 300_000)
+        let gift = parse("quà cho một triệu phú 50k")
+        XCTAssertEqual(gift.amount, 50_000)
+        XCTAssertEqual(gift.note, "quà cho một triệu phú")
+        XCTAssertNil(parse("một triệu đô").amount)            // đô-la: Xu không có loại tiền này
         XCTAssertEqual(parse("năm mươi nghìn đồng hồ").note, "đồng hồ")
         XCTAssertEqual(parse("hai củ khoai 10k").amount, 10_000)   // "củ" ở đây là củ khoai
         XCTAssertEqual(parse("hai củ khoai 10k").note, "hai củ khoai")
@@ -116,9 +120,23 @@ final class SpokenAmountTests: XCTestCase {
         XCTAssertEqual(parse("thứ hai năm mươi nghìn").amount, 50_000)
         // Số bằng chữ là số có đơn vị: thắng số trần, và tách được như số gõ tay.
         XCTAssertEqual(parse("trà sữa 2 ly bốn mươi nghìn").amount, 40_000)
-        let parts = parser.split("cà phê 35k và bánh hai mươi nghìn", now: now)
+        let parts = parser.split("cà phê ba mươi lăm nghìn và bánh hai mươi nghìn", now: now)
         XCTAssertEqual(parts.map(\.amount), [35_000, 20_000])
         XCTAssertEqual(parts.map(\.note), ["cà phê", "bánh"])
+        // Câu đã có số gõ kèm đơn vị: giữ nguyên như trước, chữ số bằng chữ ở lại trong ghi chú.
+        let typed = parse("cà phê 35k và bánh hai mươi nghìn")
+        XCTAssertEqual(typed.amount, 35_000)
+        XCTAssertFalse(typed.hasMultipleAmounts)
+        XCTAssertEqual(typed.note, "cà phê và bánh hai mươi nghìn")
+    }
+
+    /// "+mười triệu" là khoản thu như "+10tr".
+    func testPlusSignMeansIncome() {
+        let r = parse("+mười triệu")
+        XCTAssertEqual(r.amount, 10_000_000)
+        XCTAssertTrue(r.isIncome)
+        XCTAssertEqual(r.note, "")
+        XCTAssertFalse(parse("mười triệu").isIncome)
     }
 
     func testCapitalizedFromDictation() {

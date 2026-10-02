@@ -225,13 +225,15 @@ public struct QuickEntryParser: Sendable {
                                          isPlus: Self.group(m, 1, in: rest) == "+", range: range))
         }
 
-        // Số bằng chữ (đọc chính tả): chỉ chữ cái nên không chồng lên các số ở trên; luôn có đơn vị.
+        // Số bằng chữ (đọc chính tả): chỉ chữ cái nên không chồng lên các số ở trên; luôn có đơn vị. Chỉ đọc khi câu chưa
+        // có số tiền gõ bằng chữ số kèm đơn vị: câu gõ tay giữ nguyên kết quả cũ, và chữ như "một triệu phú",
+        // "ba nghìn bước" trong ghi chú không thành số tiền thứ hai.
         let chars = Array(text)
-        if let original, original.count == chars.count {
+        if let original, original.count == chars.count, !found.contains(where: \.hasUnit) {
             for hit in SpokenAmounts.find(original: original, masked: chars, marketCurrency: options.market.currency)
             where hit.value > 0 {
                 found.append(AmountCandidate(value: Self.int64(hit.value), currency: hit.currency, hasUnit: true,
-                                             isPlus: false, range: hit.range))
+                                             isPlus: hit.isPlus, range: hit.range))
             }
         }
         return found.sorted { $0.range.lowerBound < $1.range.lowerBound }

@@ -54,9 +54,12 @@ thay vì số (máy viết số hay chữ tuỳ phiên bản iOS — cần kiể
 - Phải có đơn vị (nghìn/ngàn, triệu, yên; `đồng` sau nghìn/triệu) và chữ số **có dấu** như máy đọc chính tả viết ra.
   Không dấu (`ba muoi nghin`) thì để nguyên: `bay` có thể là bay, `nam` là năm hay nam — người gõ tay thì gõ số.
 - Không đoán bừa: `ba ly`, `năm nay` (không có đơn vị), `hai củ khoai` (`củ` không nhận), `hai đồng hồ` (`đồng` đứng
-  một mình không nhận) không phải số tiền. Từ ghép không phải đơn vị: `triệu chứng`, `yên tâm`, `yên xe`, `đồng hồ`…
-  (`SpokenAmounts.compounds`).
-- Số bằng chữ là số có đơn vị: thắng số trần, và tách được như số gõ tay (`cà phê 35k và bánh hai mươi nghìn`).
+  một mình không nhận) không phải số tiền. Từ ghép không phải đơn vị: `triệu chứng`, `triệu phú`, `yên tâm`, `yên xe`,
+  `đồng hồ`… (`SpokenAmounts.compounds`); `triệu đô` là đô-la, không nhận.
+- Câu đã có số tiền gõ bằng chữ số kèm đơn vị thì **không** đọc số bằng chữ: câu gõ tay giữ nguyên kết quả cũ
+  (`quà cho một triệu phú 50k` → 50.000). Có `+` sát trước thì là khoản thu, như `+10tr`: `+mười triệu`.
+- Số bằng chữ là số có đơn vị: thắng số trần, và tách được như số gõ tay
+  (`cà phê ba mươi lăm nghìn và bánh hai mươi nghìn`).
 
 ### Tách nhiều khoản (E8, từ 2026-10-02)
 

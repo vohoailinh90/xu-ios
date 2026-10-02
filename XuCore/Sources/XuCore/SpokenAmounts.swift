@@ -10,6 +10,8 @@ enum SpokenAmounts {
     struct Hit {
         let value: Decimal
         let currency: Currency
+        /// Có "+" ngay trước ("+mười triệu"): khoản thu, như "+10tr". Vùng gồm cả dấu.
+        let isPlus: Bool
         let range: Range<Int>
     }
 
@@ -53,8 +55,14 @@ enum SpokenAmounts {
             var k = 0
             while k < words.count {
                 if let found = phrase(words, from: k) {
-                    hits.append(Hit(value: found.value, currency: found.currency ?? marketCurrency,
-                                    range: run[k].range.lowerBound..<run[found.next - 1].range.upperBound))
+                    var range = run[k].range.lowerBound..<run[found.next - 1].range.upperBound
+                    // Dấu "+" sát trước, như regex số gõ tay: trước dấu không phải chữ hay số.
+                    let sign = range.lowerBound - 1
+                    let isPlus = sign >= 0 && masked[sign] == "+"
+                        && (sign == 0 || !(masked[sign - 1].isLetter || masked[sign - 1].isNumber))
+                    if isPlus { range = sign..<range.upperBound }
+                    hits.append(Hit(value: found.value, currency: found.currency ?? marketCurrency, isPlus: isPlus,
+                                    range: range))
                     k = found.next
                 } else {
                     k += 1
@@ -64,11 +72,13 @@ enum SpokenAmounts {
         return hits
     }
 
-    /// Từ ghép không phải đơn vị: "triệu chứng", "yên tâm", "yên xe", "đồng hồ"…
+    /// Từ ghép không phải đơn vị: "triệu chứng", "triệu phú", "yên tâm", "yên xe", "đồng hồ"… Danh sách không thể đủ,
+    /// nên còn một lớp chặn nữa: câu đã có số tiền gõ bằng chữ số thì không đọc số bằng chữ (`findAmounts`).
+    /// "triệu đô" là đô-la, Xu không có loại tiền này: không nhận.
     static let compounds: [String: Set<String>] = [
-        "triệu": ["chứng", "tập", "hồi"],
-        "yên": ["tâm", "xe", "bình", "ổn", "lặng"],
-        "đồng": ["hồ", "phục", "nghiệp", "ý", "bào", "chí", "hương"]
+        "triệu": ["chứng", "phú", "tập", "hồi", "đô"],
+        "yên": ["tâm", "tĩnh", "bình", "ổn", "lặng", "ả", "ấm", "lòng", "giấc", "vị", "xe", "ngựa"],
+        "đồng": ["hồ", "đội", "phục", "nghiệp", "ý", "bào", "chí", "hương", "thời", "tình", "hành", "xu", "bằng", "ruộng"]
     ]
 
     /// Đơn vị ở `words[i]`, trừ khi nó là chữ đầu của một từ ghép với chữ đứng sau.
