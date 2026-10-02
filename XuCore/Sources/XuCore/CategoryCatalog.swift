@@ -15,7 +15,7 @@ public struct CategoryDefinition: Identifiable, Hashable, Sendable {
     /// Từ khóa đã gấp (chữ thường, không dấu, nửa khổ). Có thể nhiều âm tiết.
     public let keywords: [String]
     /// Từ khóa so khớp **có dấu** (chữ thường), cho âm tiết mà bỏ dấu thì trùng nghĩa:
-    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui". Chỉ dùng khi không có từ khoá đã gấp nào khớp.
+    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui". Thi chung với từ khoá đã gấp theo độ dài.
     /// Gõ không dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
     public let accentedKeywords: [String]
 
@@ -46,7 +46,7 @@ public enum CategoryCatalog {
     ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
         CategoryDefinition(id: "food", names: LocalizedText(vi: "Ăn uống", en: "Food", ja: "食事"), emoji: "🍜", keywords: [
-            "an", "an sang", "an trua", "an toi", "an vat", "com", "com tam", "pho", "bun", "bun bo",
+            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "com", "com tam", "pho", "bun", "bun bo",
             "mi", "mien", "hu tieu", "banh mi", "banh cuon", "chao", "xoi", "lau", "nuong", "do an",
             "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood",
             // English
@@ -205,23 +205,35 @@ public struct CategoryMatcher: Sendable {
            let category = catalog.first(where: { $0.id == hit }) {
             return category
         }
-        let defaults = catalog.flatMap { category in category.keywords.map { ($0, category.id) } }
-        let accented = catalog.flatMap { category in category.accentedKeywords.map { ($0, category.id) } }
+        // Từ khoá đã gấp so với ghi chú đã gấp, từ có dấu so với ghi chú giữ dấu; hai loại thi chung:
+        // cụm dài hơn thắng ("cà phê" thắng "cá"), dài bằng nhau thì danh mục đứng trước thắng ("mua túi đi học" →
+        // mua sắm). Ngữ cảnh cần thắng thì thêm cụm vào danh mục đó ("an trung" → "ăn trứng" là ăn uống).
         let accentedPadded = " " + Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased()) + " "
-        // Từ có dấu chỉ là phương án cuối, khi không có từ khoá nào khác khớp: "cá 50k", "trứng 30k" → đi chợ.
-        // Có từ khác thì từ đó quyết, kể cả ngắn hơn: "ăn trứng", "ăn cá" là ăn uống; "mua cà phê" là đồ uống.
-        guard let hit = longestMatch(in: padded, candidates: defaults)
-                ?? longestMatch(in: accentedPadded, candidates: accented) else { return nil }
-        return catalog.first(where: { $0.id == hit })
+        var best: (length: Int, category: CategoryDefinition)?
+        for category in catalog {
+            for keyword in category.keywords where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
+                best = (keyword.count, category)
+            }
+            for keyword in category.accentedKeywords
+            where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: accentedPadded) {
+                best = (keyword.count, category)
+            }
+        }
+        return best?.category
     }
 
     private func longestMatch(in padded: String, candidates: [(String, String)]) -> String? {
         var best: (length: Int, id: String)?
-        for (keyword, id) in candidates where !keyword.isEmpty && keyword.count > (best?.length ?? 0) {
-            let hit = TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
-            if hit { best = (keyword.count, id) }
+        for (keyword, id) in candidates where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
+            best = (keyword.count, id)
         }
         return best?.id
+    }
+
+    /// Chữ Nhật so khớp chuỗi con; chữ khác so khớp nguyên cụm (có khoảng trắng hai bên).
+    private static func contains(_ keyword: String, in padded: String) -> Bool {
+        guard !keyword.isEmpty else { return false }
+        return TextFolding.containsCJK(keyword) ? padded.contains(keyword) : padded.contains(" " + keyword + " ")
     }
 
     /// Thay dấu câu bằng khoảng trắng và gộp khoảng trắng liên tiếp.
