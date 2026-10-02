@@ -56,7 +56,7 @@ dài 103 ký tự / 123 byte, quá giới hạn 100 byte, và lặp "chi tiêu" 
 | Số ngày ghi chép / người dùng / 30 ngày | > 15 |
 | Tỷ lệ đoán đúng danh mục | > 80% |
 | Chuyển đổi Free → Pro | 3–5% |
-| Đánh giá App Store | ≥ 4,7 (hỏi đánh giá bằng `requestReview` sau lần chốt ngày thứ 5) |
+| Đánh giá App Store | ≥ 4,7 (hỏi đánh giá bằng `requestReview` sau lần chốt ngày thứ 5 — `ReviewPrompt`: một lần, khi tự chốt ngày trong màn Thói quen; iOS tự quyết có hiện hay không) |
 
 ## Rủi ro
 

@@ -23,6 +23,8 @@ struct HomeView: View {
     @State private var showChips = false
     @State private var editing: TransactionRecord?
     @State private var showPaywall = false
+    /// Ô nhập nhanh còn chữ chưa lưu.
+    @State private var hasDraft = false
 
     var body: some View {
         NavigationStack {
@@ -104,10 +106,10 @@ struct HomeView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                QuickEntryBar(focusTrigger: focusTrigger)
+                QuickEntryBar(focusTrigger: focusTrigger, hasDraft: $hasDraft)
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
-            .sheet(isPresented: $showHabits) { HabitsView() }
+            .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft) }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .sheet(isPresented: $showChips) {
                 NavigationStack {

@@ -7,6 +7,9 @@ import XuCore
 struct QuickEntryBar: View {
     /// Tăng giá trị này (ví dụ khi mở từ widget `xu://new`) để focus lại ô nhập.
     var focusTrigger: Int = 0
+    /// Ô nhập đang có chữ chưa lưu — để màn khác không chen hộp thoại vào giữa lúc đang ghi (ví dụ hỏi đánh giá).
+    /// Chỉ cập nhật khi chuyển giữa rỗng và có chữ, không phải mỗi lần gõ.
+    @Binding var hasDraft: Bool
 
     @Environment(\.modelContext) private var context
     @Query private var learned: [LearnedKeyword]
@@ -72,6 +75,8 @@ struct QuickEntryBar: View {
         .onChange(of: focusTrigger) { focused = true }
         .onChange(of: text) { oldText, newText in
             errorMessage = nil
+            let draft = !newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if hasDraft != draft { hasDraft = draft }
             // Xoá hết ô nhập hay thay bằng câu khác là bỏ câu cũ: danh mục đã chọn tay không được dính sang câu sau
             // (và không được học sai), thời gian ghi đo lại từ đầu.
             if newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

@@ -1,11 +1,17 @@
 import SwiftUI
 import SwiftData
+import StoreKit
 import XuCore
 
 /// Thói quen tài chính (docs/05): chốt ngày, sức mạnh thói quen không reset về 0, chuỗi mềm, ngày nghỉ.
 struct HabitsView: View {
+    /// `false` khi ô nhập nhanh còn khoản đang gõ dở: không hỏi đánh giá lúc đó (để lần chốt sau).
+    var canAskForReview = true
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage(AppSettings.Key.reviewRequested, store: AppSettings.defaults) private var reviewRequested = false
     @Query(filter: #Predicate<MoneyHabit> { $0.isArchived == false }, sort: \MoneyHabit.createdAt)
     private var habits: [MoneyHabit]
     @Query private var closures: [DayClosure]
@@ -28,7 +34,8 @@ struct HabitsView: View {
                 Section {
                     let isClosed = closedDays.contains(today)
                     Button {
-                        try? Ledger.setDayClosed(today, closed: !isClosed, in: context)
+                        guard (try? Ledger.setDayClosed(today, closed: !isClosed, in: context)) != nil else { return }
+                        if !isClosed { askForReviewIfDue(closedDays: closedDays.count + 1) }
                     } label: {
                         Label(language.t(isClosed ? .dayClosed : .closeDay),
                               systemImage: isClosed ? "checkmark.circle.fill" : "moon.stars")
@@ -100,6 +107,15 @@ struct HabitsView: View {
             context.insert(HabitCheckIn(day: today, isRest: rest, habit: habit))
         }
         try? context.save()
+    }
+
+    /// Hỏi đánh giá một lần, ngay sau khi người dùng tự chốt ngày thứ 5 (docs/07) — không bao giờ lúc đang ghi:
+    /// còn khoản gõ dở trong ô nhập thì chưa hỏi, cũng chưa tính là đã hỏi.
+    private func askForReviewIfDue(closedDays: Int) {
+        guard canAskForReview,
+              ReviewPrompt.shouldAsk(closedDays: closedDays, alreadyAsked: reviewRequested) else { return }
+        reviewRequested = true
+        requestReview()
     }
 
     private func add(_ template: HabitTemplate) {
