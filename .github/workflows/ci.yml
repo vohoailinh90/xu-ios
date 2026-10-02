@@ -45,4 +45,11 @@ jobs:
             -project Xu.xcodeproj -scheme Xu \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
+      - name: Kiểm tra privacy manifest có trong app và widget
+        run: |
+          app=build/Build/Products/Debug-iphonesimulator/Xu.app
+          for manifest in "$app/PrivacyInfo.xcprivacy" "$app/PlugIns/XuWidgets.appex/PrivacyInfo.xcprivacy"; do
+            plutil -lint "$manifest"
+          done

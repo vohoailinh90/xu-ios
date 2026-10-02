@@ -84,6 +84,13 @@ struct SettingsView: View {
                                         "\(timings.count)"))
                     }
                 }
+                Section {
+                    NavigationLink {
+                        PrivacyView()
+                    } label: {
+                        Label(language.t(.privacyTitle), systemImage: "hand.raised")
+                    }
+                }
             }
             .navigationTitle(language.t(.settings))
             .sheet(isPresented: $showPaywall) { PaywallView() }

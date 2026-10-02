@@ -42,7 +42,7 @@
 | Tiền | `Int64` theo đơn vị nhỏ nhất + mã tiền tệ | VND không có số lẻ; không dùng `Double` cho tiền. Đã có VND và JPY (2026-10-01, `docs/08`); không quy đổi tỷ giá. |
 | Ngôn ngữ giao diện | Bảng chuỗi `L10n` trong `XuCore` (vi/en/ja), chọn trong app | Đổi ngay không cần mở lại app; widget/Phím tắt đọc cùng lựa chọn qua App Group; test được bằng `swift test`. Xem `docs/08`. |
 | Mua hàng | StoreKit 2, non-consumable "Xu Pro" | Mua một lần, không cần server. `ProStore` (app) nghe giao dịch, lưu bản sao `isPro` vào App Group cho widget; giới hạn Free ở `ProPlan` (XuCore). Giá lấy từ App Store, không ghi cứng. |
-| Phân tích | TelemetryDeck hoặc tự đếm cục bộ | Ưu tiên công cụ tôn trọng quyền riêng tư; không gửi nội dung giao dịch. |
+| Phân tích | Chỉ đếm cục bộ (ví dụ `EntryTimingLog`) | Hiện không gửi gì ra khỏi máy (`docs/09`, App Privacy "Data Not Collected"). Muốn thêm công cụ như TelemetryDeck thì ghi quyết định vào `docs/09` trước và sửa privacy manifest, App Privacy, chính sách; không bao giờ gửi nội dung giao dịch. |
 
 ## Mô hình dữ liệu (SwiftData)
 

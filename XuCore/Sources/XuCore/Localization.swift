@@ -121,6 +121,9 @@ public enum L10n: String, CaseIterable, Sendable {
     case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proAlwaysFree, proBuy, proRestore, proOwned
     case proPriceUnavailable, proHabitLimit, proWidgetNote
     case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
+    // Quyền riêng tư (docs/09) — sửa ở đây thì sửa cả docs/privacy-policy.md
+    case privacyTitle, privacyHeadline, privacyOnDevice, privacyNoTracking, privacyPurchases, privacyShortcuts
+    case privacyNotifications, privacyExport, privacyDelete, privacyUpdated
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
@@ -471,6 +474,45 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Bản miễn phí: widget hiện {0} khoản quen đầu tiên.",
                           en: "Free version: the widget shows the first {0} quick picks.",
                           ja: "無料版: ウィジェットには上から{0}件を表示します。")
+
+        case .privacyTitle:
+            LocalizedText(vi: "Quyền riêng tư", en: "Privacy", ja: "プライバシー")
+        case .privacyHeadline:
+            LocalizedText(vi: "Dữ liệu của bạn nằm trên iPhone này.", en: "Your data stays on this iPhone.",
+                          ja: "データはこのiPhoneの中にあります。")
+        case .privacyOnDevice:
+            LocalizedText(
+                vi: "Các khoản bạn ghi (cả câu gốc bạn gõ), khoản quen, thói quen, cài đặt và thời gian ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị. Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này đi đâu.",
+                en: "Your entries (including the text you typed), quick picks, habits, settings and entry times are stored on this device; Xu's widgets read the parts they display. Xu has no server, needs no account and doesn't send this data anywhere.",
+                ja: "記録(入力した文そのものを含む)、いつもの、習慣、設定、記録にかかった時間はすべてこの端末に保存されます。Xuのウィジェットは表示に必要な部分だけを読み取ります。Xuにはサーバーがなく、アカウントも不要で、これらのデータをどこにも送信しません。")
+        case .privacyNoTracking:
+            LocalizedText(vi: "Không quảng cáo, không theo dõi, không công cụ phân tích.", en: "No ads, no tracking, no analytics.",
+                          ja: "広告、トラッキング、アクセス解析はありません。")
+        case .privacyPurchases:
+            LocalizedText(
+                vi: "Mua hay khôi phục Xu Pro là do Apple xử lý thanh toán. Xu chỉ hỏi App Store xem bạn đã mua chưa và không nhận thông tin thẻ hay tài khoản Apple của bạn.",
+                en: "Apple handles the payment when you buy or restore Xu Pro. Xu only asks the App Store whether you own it and never receives your card or Apple Account details.",
+                ja: "Xu Proの購入・復元の支払いはAppleが処理します。XuはApp Storeに購入済みかどうかを確認するだけで、カード情報やApple Accountの情報は受け取りません。")
+        case .privacyShortcuts:
+            LocalizedText(
+                vi: "Phím tắt và tự động hoá Apple Pay do bạn tự cài chỉ chuyển cho Xu câu bạn nhập, hoặc số tiền (kèm loại tiền) và tên cửa hàng, ngay trên máy.",
+                en: "Shortcuts and Apple Pay automations you set up pass Xu only the sentence you typed, or the amount (with its currency) and merchant name, on the device.",
+                ja: "ご自身で設定したショートカットやApple Payのオートメーションは、入力した文、または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。")
+        case .privacyNotifications:
+            LocalizedText(vi: "Nhắc chốt ngày là thông báo đặt lịch ngay trên máy, không qua máy chủ nào.",
+                          en: "The evening reminder is a notification scheduled on the device, not sent from a server.",
+                          ja: "夜の締めリマインダーは端末内で予約される通知で、サーバーを経由しません。")
+        case .privacyExport:
+            LocalizedText(vi: "Xuất CSV bất cứ lúc nào, miễn phí. Tệp đi đâu là do bạn chọn trong bảng chia sẻ.",
+                          en: "Export CSV any time, for free. You choose where the file goes in the share sheet.",
+                          ja: "CSVはいつでも無料で書き出せます。ファイルの送り先は共有シートであなたが選びます。")
+        case .privacyDelete:
+            LocalizedText(
+                vi: "Xoá từng khoản ngay trong danh sách. Xoá app là xoá dữ liệu Xu khỏi máy này. Nếu bạn bật sao lưu iPhone (iCloud hoặc máy tính), dữ liệu Xu có thể nằm trong bản sao lưu đó như mọi app khác.",
+                en: "Delete any entry from the list. Deleting the app removes Xu's data from this device. If you back up your iPhone (to iCloud or a computer), Xu's data may be included in that backup like any other app's.",
+                ja: "記録は一覧からいつでも削除できます。アプリを削除すると、この端末からXuのデータが消えます。iPhoneのバックアップ(iCloudまたはコンピュータ)を有効にしている場合、ほかのアプリと同様にXuのデータも含まれることがあります。")
+        case .privacyUpdated:
+            LocalizedText(vi: "Cập nhật: 02/10/2026", en: "Updated: October 2, 2026", ja: "更新日: 2026年10月2日")
 
         case .csvHeader:
             LocalizedText(vi: "ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon",

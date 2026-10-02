@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy manifest cho app Xu và widget (cùng một tệp, đóng vào cả hai bundle — xem project.yml).
+  Xu không theo dõi, không thu thập dữ liệu (docs/09-quyen-rieng-tu.md).
+  API cần lý do: UserDefaults — CA92.1 (cài đặt riêng của app/widget), 1C8F.1 (App Group dùng chung app ↔ widget).
+  Mã lý do lấy theo tài liệu "Describing use of required reason API" của Apple — cần kiểm tra bản mới nhất trước khi nộp.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+				<string>1C8F.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
