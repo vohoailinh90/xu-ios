@@ -109,16 +109,14 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 - Tránh từ khoá một chữ Hán nằm trong từ khác: `本` có trong `日本`, `パン` có trong `パンツ`. Dùng `本屋`, `パン屋`.
 - Test `testNoKeywordInTwoCategories` chặn một từ khoá nằm ở hai danh mục; `testKeywordsAreWrittenFolded` bắt từ khoá viết
   chưa ở dạng đã gấp (sẽ không bao giờ khớp).
-- Tiếng Việt: không dùng một âm tiết mà bỏ dấu thành từ khác nghĩa — `tui` (túi/tui = tôi), `ca` (cá/cả), `trung`
-  (trứng/trung tâm), `mung` (mừng/mùng 1), `son` (son/Sơn)… Hai cách thay:
-  - cụm đã gấp rõ nghĩa: `tui xach`, `trung ga`, `mung cuoi`, `son moi`. Coi chừng cụm cũng trùng: `mua ca` khớp cả
-    "mua cà phê" lẫn "mua cả sách";
-  - từ **so khớp chính xác, giữ dấu** trong `accentedKeywords`: `cá`, `trứng`, `túi`, `mừng`, `son` — so trên ghi chú giữ dấu,
-    nên "cá 50k" → đi chợ mà "cả hội" thì không; "son 300k" → mua sắm mà "Sơn" thì không. Gõ sai dấu ("ca 50k") thì ra
-    "Khác", sửa một chạm là Xu học.
-  Hai loại thi chung như mọi từ khoá: cụm dài hơn thắng ("cà phê" thắng "cá"), dài bằng nhau thì danh mục đứng trước
-  thắng ("mua túi đi học" → mua sắm). Muốn ngữ cảnh thắng thì thêm cụm: `an trung`, `an ca` cho "ăn trứng", "ăn cá".
-  Danh sách âm tiết/cụm cấm nằm trong `testAmbiguousSyllablesAreNotKeywords`.
+- Tiếng Việt: không thêm từ khoá một âm tiết mà bỏ dấu thành từ khác nghĩa (bé/be, chợ/cho, bạn/bán, trà/trả…).
+  Các âm tiết đã có từ trước mà nhiều nghĩa — `ca` (cá, cà / cả), `trung` (trứng / trung tâm, trung thu), `tui` (túi / tui = tôi),
+  `mung` (mừng / mùng 1), `son` (son / Sơn) — khai trong `CategoryCatalog.ambiguousSyllables` kèm các dạng có dấu được tính:
+  ghi chú gõ có dấu thì chỉ khớp đúng các dạng đó ("cá 50k", "cà chua" → đi chợ; "cả nhà", "trung tâm", "tui ăn",
+  "mùng 1", "Sơn" thì không). Ghi chú gõ **không dấu** thì không phân biệt được nên vẫn khớp như cũ.
+  Mọi từ khoá khác giữ nguyên như trước; chỉ thêm cụm rõ nghĩa (`nuoc mam`, `giay ve sinh`, `tieng anh`, `an trung`…).
+  Coi chừng cụm cũng trùng: `mua ca` khớp cả "mua cà phê" lẫn "mua cả sách" — danh sách cấm nằm trong
+  `testAmbiguousSyllablesAreNotKeywords`.
 
 ## Việc tiếp theo cho parser
 

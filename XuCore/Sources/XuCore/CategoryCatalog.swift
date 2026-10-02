@@ -14,20 +14,15 @@ public struct CategoryDefinition: Identifiable, Hashable, Sendable {
     public let isDiscretionary: Bool
     /// Từ khóa đã gấp (chữ thường, không dấu, nửa khổ). Có thể nhiều âm tiết.
     public let keywords: [String]
-    /// Từ khóa so khớp **chính xác, giữ dấu** (chữ thường), cho âm tiết mà bỏ dấu thì trùng nghĩa:
-    /// "cá" ≠ "cả", "trứng" ≠ "trung tâm", "túi" ≠ "tui", và "son" (mỹ phẩm) ≠ "Sơn" (tên người).
-    /// Thi chung với từ khoá đã gấp theo độ dài. Gõ sai dấu thì không khớp — thà để "Khác" còn hơn xếp nhầm.
-    public let accentedKeywords: [String]
 
     public init(id: String, names: LocalizedText, emoji: String, kind: CategoryKind = .expense,
-                isDiscretionary: Bool = false, keywords: [String], accentedKeywords: [String] = []) {
+                isDiscretionary: Bool = false, keywords: [String]) {
         self.id = id
         self.names = names
         self.emoji = emoji
         self.kind = kind
         self.isDiscretionary = isDiscretionary
         self.keywords = keywords.map { TextFolding.fold($0) }
-        self.accentedKeywords = accentedKeywords.map { $0.precomposedStringWithCanonicalMapping.lowercased() }
     }
 
     public func name(in language: AppLanguage) -> String { names[language] }
@@ -38,15 +33,14 @@ public enum CategoryCatalog {
     public static let otherIncomeID = "income.other"
 
     /// Danh mục mặc định. Lưu ý khi thêm từ khóa (xem docs/04):
-    /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả,
-    ///   túi/tui, cá/cả, trứng/trung tâm, mừng/mùng, son/Sơn). Dùng cụm hai âm tiết ("tui xach", "son moi"),
-    ///   hoặc đưa từ có dấu vào `accentedKeywords` ("cá", "trứng"). Cụm đã gấp cũng có thể trùng: "mua ca" khớp
-    ///   cả "mua cà phê" lẫn "mua cả sách". Test `testAmbiguousSyllablesAreNotKeywords` giữ danh sách này.
+    /// - Tiếng Việt: tránh từ một âm tiết dễ trùng nghĩa sau khi bỏ dấu (bé/be, chợ/cho, bạn/bán, trà/trả).
+    ///   Âm tiết đã có sẵn mà nhiều nghĩa (cá/cả, trứng/trung tâm, túi/tui…) phải khai trong `ambiguousSyllables`.
+    ///   Thêm cụm dài cũng có thể trùng: "mua ca" khớp cả "mua cà phê" lẫn "mua cả sách".
     /// - Tiếng Nhật được so khớp **chuỗi con** (không có khoảng trắng giữa từ), nên tránh từ một chữ Hán
     ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
         CategoryDefinition(id: "food", names: LocalizedText(vi: "Ăn uống", en: "Food", ja: "食事"), emoji: "🍜", keywords: [
-            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "ca ri", "banh trung thu", "com", "com tam", "pho", "bun", "bun bo",
+            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "banh trung thu", "com", "com tam", "pho", "bun", "bun bo",
             "mi", "mien", "hu tieu", "banh mi", "banh cuon", "chao", "xoi", "lau", "nuong", "do an",
             "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood",
             // English
@@ -60,7 +54,7 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
                            emoji: "🛒", keywords: [
-            "di cho", "sieu thi", "rau", "thit", "trung ga", "trung vit", "ca chua", "ca rot", "ca tim", "ca phao",
+            "di cho", "sieu thi", "rau", "thit", "ca", "trung",
             "gao", "trai cay", "nuoc mam", "nuoc tuong", "dau an", "giay ve sinh", "bot giat", "winmart",
             "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven",
             // Người Việt ở Nhật hay gõ chữ Latin
@@ -71,7 +65,7 @@ public enum CategoryCatalog {
             "コンビニ", "セブン", "ローソン", "ファミマ", "ファミリーマート", "ミニストップ", "スーパー",
             "イオン", "業務スーパー", "西友", "イトーヨーカドー", "マックスバリュ", "八百屋", "食料品", "食材", "野菜",
             "お米", "日用品"
-        ], accentedKeywords: ["cá", "trứng"]),
+        ]),
         CategoryDefinition(id: "drinks", names: LocalizedText(vi: "Cà phê & đồ uống", en: "Coffee & drinks", ja: "カフェ・飲み物"),
                            emoji: "☕", isDiscretionary: true, keywords: [
             "ca phe", "cafe", "cf", "cafe sua", "bac xiu", "tra sua", "ts", "tra da", "tra chanh",
@@ -106,14 +100,14 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "shopping", names: LocalizedText(vi: "Mua sắm", en: "Shopping", ja: "買い物"),
                            emoji: "🛍️", isDiscretionary: true, keywords: [
-            "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui xach",
-            "balo", "my pham", "son moi", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
+            "shopee", "lazada", "tiki", "tiktok shop", "quan ao", "ao", "quan jean", "giay", "dep", "tui",
+            "balo", "my pham", "son", "mua sam", "uniqlo", "zara", "do gia dung", "daiso", "donki", "don quijote",
             // English
             "amazon", "rakuten", "clothes", "shoes", "shopping", "ikea", "mercari",
             // 日本語
             "楽天", "ユニクロ", "ダイソー", "100均", "百均", "100円ショップ", "セリア", "無印", "ニトリ",
             "ドンキ", "キホーテ", "メルカリ", "百貨店", "デパート", "洋服", "服", "靴", "パンツ", "化粧品", "買い物"
-        ], accentedKeywords: ["túi", "son"]),
+        ]),
         CategoryDefinition(id: "entertainment", names: LocalizedText(vi: "Giải trí", en: "Entertainment", ja: "娯楽"),
                            emoji: "🎬", isDiscretionary: true, keywords: [
             "phim", "xem phim", "cgv", "lotte cinema", "game", "karaoke", "netflix", "spotify",
@@ -133,14 +127,14 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "family", names: LocalizedText(vi: "Gia đình & quà", en: "Family & gifts", ja: "家族・贈り物"),
                            emoji: "🎁", keywords: [
-            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung cuoi", "tien mung", "mung tuoi",
+            "qua", "sinh nhat", "dam cuoi", "dam gio", "bieu", "li xi", "lixi", "mung",
             "gui ve nha", "gui me", "gui bo",
             "gui tien ve", "gui tien ve nha", "chuyen tien ve", "chuyen tien ve nha",
             // English
             "gift", "present", "birthday", "wedding", "send home", "remittance",
             // 日本語
             "仕送り", "送金", "実家", "プレゼント", "お土産", "誕生日", "結婚式", "お祝い", "ご祝儀"
-        ], accentedKeywords: ["mừng"]),
+        ]),
         CategoryDefinition(id: "education", names: LocalizedText(vi: "Học tập", en: "Learning", ja: "学び"),
                            emoji: "📚", keywords: [
             "hoc phi", "sach", "khoa hoc", "hoc", "udemy", "ielts", "toeic", "jlpt", "tieng anh", "tieng nhat",
@@ -167,6 +161,18 @@ public enum CategoryCatalog {
             "thu nhap", "nhan tien", "hoan tien", "duoc cho", "duoc tang", "tien lai", "freelance",
             "income", "refund", "cashback", "収入", "臨時収入", "返金"
         ])
+    ]
+
+    /// Từ khoá một âm tiết mà bỏ dấu thì nhiều nghĩa → các dạng có dấu được tính là khớp.
+    /// Ghi chú gõ có dấu thì chỉ khớp đúng các dạng này: "cá", "cà chua" là đi chợ, còn "cả nhà", "trung tâm",
+    /// "tui ăn" (tui = tôi), "mùng 1", "Sơn" (tên người) thì không. Ghi chú gõ không dấu thì không phân biệt được,
+    /// nên vẫn khớp như mọi từ khoá.
+    public static let ambiguousSyllables: [String: Set<String>] = [
+        "ca": ["cá", "cà"],
+        "trung": ["trứng"],
+        "tui": ["túi"],
+        "mung": ["mừng"],
+        "son": ["son"]
     ]
 
     private static let byID: [String: CategoryDefinition] =
@@ -205,17 +211,18 @@ public struct CategoryMatcher: Sendable {
            let category = catalog.first(where: { $0.id == hit }) {
             return category
         }
-        // Từ khoá đã gấp so với ghi chú đã gấp, từ có dấu so với ghi chú giữ dấu; hai loại thi chung:
-        // cụm dài hơn thắng ("cà phê" thắng "cá"), dài bằng nhau thì danh mục đứng trước thắng ("mua túi đi học" →
-        // mua sắm). Ngữ cảnh cần thắng thì thêm cụm vào danh mục đó ("an trung" → "ăn trứng" là ăn uống).
-        let accentedPadded = " " + Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased()) + " "
+        // Cụm dài nhất thắng, dài bằng nhau thì danh mục đứng trước thắng. Âm tiết nhiều nghĩa ("ca", "trung"…)
+        // chỉ tính khi ghi chú gõ không dấu, hoặc có đúng dạng có dấu của nghĩa đó.
+        let accented = Self.normalize(note.precomposedStringWithCanonicalMapping.lowercased())
+        let hasDiacritics = " " + accented + " " != padded
+        let accentedWords = Set(accented.split(separator: " ").map(String.init))
         var best: (length: Int, category: CategoryDefinition)?
         for category in catalog {
             for keyword in category.keywords where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
-                best = (keyword.count, category)
-            }
-            for keyword in category.accentedKeywords
-            where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: accentedPadded) {
+                if hasDiacritics, let senses = CategoryCatalog.ambiguousSyllables[keyword],
+                   senses.isDisjoint(with: accentedWords) {
+                    continue
+                }
                 best = (keyword.count, category)
             }
         }

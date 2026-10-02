@@ -48,7 +48,7 @@ final class LocalizationTests: XCTestCase {
     func testNoKeywordInTwoCategories() {
         var owner: [String: String] = [:]
         for category in CategoryCatalog.defaults {
-            for keyword in category.keywords + category.accentedKeywords {
+            for keyword in category.keywords {
                 if let other = owner[keyword] {
                     XCTFail("Từ khóa \"\(keyword)\" có ở cả \(other) và \(category.id)")
                 }
@@ -67,24 +67,20 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
-    /// Từ khoá so khớp chính xác: viết thường, đã chuẩn hoá. Từ không dấu chỉ được ở đây khi bản có dấu là nghĩa khác
-    /// ("son" ≠ "Sơn"); còn lại thì để vào `keywords`.
-    func testAccentedKeywordsAreExactForms() {
-        let plainOnPurpose: Set<String> = ["son"]
-        for category in CategoryCatalog.defaults {
-            for keyword in category.accentedKeywords {
-                XCTAssertEqual(CategoryMatcher.normalize(keyword.lowercased()), keyword, "\(category.id): \"\(keyword)\"")
-                if TextFolding.fold(keyword) == keyword {
-                    XCTAssertTrue(plainOnPurpose.contains(keyword), "\(category.id): \"\(keyword)\" không có dấu, để vào keywords")
-                }
+    /// Âm tiết nhiều nghĩa khai trong `ambiguousSyllables` phải là từ khoá thật, và mỗi nghĩa gấp lại đúng âm tiết đó.
+    func testAmbiguousSyllablesAreDeclaredCorrectly() {
+        let all = Set(CategoryCatalog.defaults.flatMap(\.keywords))
+        for (syllable, senses) in CategoryCatalog.ambiguousSyllables {
+            XCTAssertTrue(all.contains(syllable), "\"\(syllable)\" không còn là từ khoá")
+            for sense in senses {
+                XCTAssertEqual(TextFolding.fold(sense), syllable, "\"\(sense)\" không gấp thành \"\(syllable)\"")
             }
         }
     }
 
-    /// Một âm tiết mà bỏ dấu thì thành từ khác nghĩa: dễ xếp nhầm danh mục (docs/04).
+    /// Một âm tiết (hay cụm) mà bỏ dấu thì thành từ khác nghĩa, chưa khai nghĩa: không được làm từ khoá (docs/04).
     func testAmbiguousSyllablesAreNotKeywords() {
-        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "tui", "ca", "trung", "mung", "son", "mon", "sat",
-                                      "mua ca", "ca hoi", "vi trung"]
+        let ambiguous: Set<String> = ["be", "cho", "ban", "tra", "mon", "sat", "mua ca", "ca hoi", "vi trung"]
         for category in CategoryCatalog.defaults {
             for keyword in category.keywords where ambiguous.contains(keyword) {
                 XCTFail("\(category.id): \"\(keyword)\" trùng nghĩa khi bỏ dấu, dùng cụm dài hơn")
