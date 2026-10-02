@@ -19,14 +19,20 @@ final class ProStore {
     private(set) var isWorking = false
     /// Kết quả của lần mua/khôi phục gần nhất cần báo cho người dùng (nil = không có gì để báo).
     private(set) var notice: Notice?
-    /// Có giao dịch mua đang chờ duyệt (Hỏi mua, xác minh thanh toán). Là trạng thái, không phải kết quả một lần:
-    /// lưu lại qua các lần mở app (`AppSettings.proPendingSince`), hết khi đã có quyền Xu Pro (duyệt xong,
+    /// Lúc bắt đầu chờ duyệt giao dịch mua (Hỏi mua, xác minh thanh toán); nil = không chờ. Là trạng thái, không phải
+    /// kết quả một lần: lưu qua các lần mở app (`AppSettings.proPendingSince`), hết khi đã có quyền Xu Pro (duyệt xong,
     /// `Transaction.updates` báo về) — mở lại paywall hay khôi phục không xoá.
-    private(set) var isPurchasePending = ProStore.pendingIsFresh()
+    private(set) var pendingSince: Date? = AppSettings.proPendingSince
 
     /// Xu không biết được yêu cầu chờ duyệt bị từ chối hay hết hạn (không có giao dịch nào báo về), nên sau bấy lâu
     /// thì thôi báo "đang chờ" để không treo mãi. Người dùng vẫn mua lại được bất cứ lúc nào.
-    nonisolated static let pendingNoticeLifetime: TimeInterval = 24 * 60 * 60
+    static let pendingNoticeLifetime: TimeInterval = 24 * 60 * 60
+
+    /// Còn báo "đang chờ duyệt" vào lúc `now` không. Tính theo thời gian mỗi lần hỏi, nên tự hết hạn cả khi app đang mở.
+    func isPurchasePending(at now: Date = Date()) -> Bool {
+        guard let pendingSince else { return false }
+        return now.timeIntervalSince(pendingSince) < Self.pendingNoticeLifetime
+    }
 
     enum Notice: Equatable {
         /// Mạng, App Store lỗi hoặc giao dịch không xác minh được: chưa mua, thử lại được.
@@ -108,7 +114,7 @@ final class ProStore {
         let unverified = await refreshEntitlement()
         // Có giao dịch nhưng không xác minh được là lỗi, không phải "chưa mua". Đang chờ duyệt thì cũng không phải
         // "chưa mua": thông báo chờ duyệt vẫn hiện.
-        if !isPro, !isPurchasePending { notice = unverified ? .restoreFailed : .nothingToRestore }
+        if !isPro, !isPurchasePending() { notice = unverified ? .restoreFailed : .nothingToRestore }
     }
 
     /// Mở paywall thì bỏ kết quả mua/khôi phục của lần trước, để không thấy kết quả cũ. Trạng thái chờ duyệt giữ nguyên.
@@ -135,8 +141,6 @@ final class ProStore {
         if owned {
             notice = nil
             setPurchasePending(false)
-        } else {
-            isPurchasePending = Self.pendingIsFresh()
         }
         if AppSettings.isPro != owned {
             AppSettings.isPro = owned
@@ -146,12 +150,7 @@ final class ProStore {
     }
 
     private func setPurchasePending(_ pending: Bool) {
-        isPurchasePending = pending
-        AppSettings.proPendingSince = pending ? Date() : nil
-    }
-
-    private nonisolated static func pendingIsFresh(now: Date = Date()) -> Bool {
-        guard let since = AppSettings.proPendingSince else { return false }
-        return now.timeIntervalSince(since) < pendingNoticeLifetime
+        pendingSince = pending ? Date() : nil
+        AppSettings.proPendingSince = pendingSince
     }
 }

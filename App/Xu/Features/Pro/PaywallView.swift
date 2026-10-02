@@ -46,8 +46,11 @@ struct PaywallView: View {
                     }
                 } footer: {
                     VStack(alignment: .leading, spacing: 4) {
-                        if store.isPurchasePending {
-                            Text(language.t(.proPurchasePending))
+                        // Vẽ lại mỗi phút để "đang chờ duyệt" tự ẩn khi hết hạn báo, cả khi paywall đang mở.
+                        TimelineView(.everyMinute) { context in
+                            if store.isPurchasePending(at: context.date) {
+                                Text(language.t(.proPurchasePending))
+                            }
                         }
                         if let notice = store.notice {
                             Text(language.t(Self.text(for: notice)))
