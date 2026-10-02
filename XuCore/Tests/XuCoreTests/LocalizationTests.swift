@@ -31,7 +31,8 @@ final class LocalizationTests: XCTestCase {
 
     func testCSVHeaderHasSameColumnsInEveryLanguage() {
         let counts = AppLanguage.allCases.map { $0.t(.csvHeader).split(separator: ",").count }
-        XCTAssertEqual(Set(counts), [7])
+        // Phải bằng số cột `CSVFile` ghi ra: ngày, loại, số tiền, đơn vị, danh mục, ghi chú, nguồn, thời điểm.
+        XCTAssertEqual(Set(counts), [8])
     }
 
     func testEveryCategoryAndHabitHasNames() {
