@@ -115,7 +115,7 @@ public enum L10n: String, CaseIterable, Sendable {
     // Cài đặt
     case language, languageFooter, market, marketFooter
     case budgetHeader, budgetPlaceholder, budgetFooter, smallNumbersToggle
-    case fasterEntry, tipWidget, tipActionButton, tipApplePay, entryTimingSummary
+    case fasterEntry, tipWidget, tipActionButton, tipControl, tipApplePay, entryTimingSummary, controlLogExpense
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
@@ -393,6 +393,12 @@ public enum L10n: String, CaseIterable, Sendable {
         case .tipWidget:
             LocalizedText(vi: "Thêm widget Xu ra màn hình chính", en: "Add the Xu widget to your Home Screen",
                           ja: "ホーム画面にXuのウィジェットを追加")
+        case .tipControl:
+            LocalizedText(vi: "Thêm nút \"Ghi chi tiêu\" của Xu vào Trung tâm điều khiển hoặc màn hình khoá (iOS 18)",
+                          en: "Add Xu's \"Log expense\" control to Control Center or the Lock Screen (iOS 18)",
+                          ja: "Xuの「支出を記録」をコントロールセンターやロック画面に追加(iOS 18)")
+        case .controlLogExpense:
+            LocalizedText(vi: "Ghi chi tiêu", en: "Log expense", ja: "支出を記録")
         case .tipActionButton:
             LocalizedText(
                 vi: "Gán \"Ghi chi tiêu\" vào Action Button (Cài đặt › Nút Tác vụ › Phím tắt)",

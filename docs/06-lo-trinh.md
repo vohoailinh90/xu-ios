@@ -58,6 +58,9 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 - Đã làm sớm (2026-10-02): tách nhiều khoản trong một câu (E8, `docs/04`) — nút gợi ý trên thẻ xem trước, Enter vẫn lưu một khoản.
   Biểu đồ tháng (O4): màn "Theo tháng" (nút 📊 trên Home), chi theo danh mục bằng tiền của nơi chi tiêu, tiền khác chỉ
   vào tổng; bản Free xem tháng này, Xu Pro xem lại các tháng trước (`docs/02`), chạm "tháng trước" mới mở paywall.
+  Control Center control (W4, iOS 18): nút "Ghi chi tiêu" cho Trung tâm điều khiển / màn hình khoá / Nút Tác vụ, chạm là mở
+  Xu với con trỏ trong ô ghi (`QuickEntryControl`, `OpenQuickEntryIntent`); gợi ý trong Cài đặt › Nhập nhanh hơn.
+  Cần thử trên máy thật iOS 18: thêm nút, chạm khi app đang đóng và khi app đang mở một màn khác.
 
 ## v1.2
 - Đa tiền tệ cho người Việt ở nước ngoài · Mục tiêu gửi tiền về nhà · Apple Watch · Thử thách + Live Activity
