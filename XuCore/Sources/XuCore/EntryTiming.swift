@@ -93,9 +93,10 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         return (prefix, suffix)
     }
 
-    /// Các từ, tách ở khoảng trắng và dấu câu ("cơm, gà" → cơm, gà). Kana, kanji, "ー" đều là chữ.
+    /// Các từ, tách ở khoảng trắng và dấu câu ("cơm, gà" → cơm, gà). Emoji và ký hiệu vẫn là từ ("🍔" → "🚕" là đổi
+    /// ghi chú); kana, kanji, "ー" là chữ.
     private static func words(_ text: [Character]) -> Set<String> {
-        Set(text.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map { String($0) })
+        Set(text.split(whereSeparator: { $0.isWhitespace || $0.isPunctuation }).map { String($0) })
     }
 
     /// Cách đọc hiragana của chữ số/đơn vị Hán mà IME đổi ra, dài trước ngắn sau ("ろっぴゃく" → "六百").
