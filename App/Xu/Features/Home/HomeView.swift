@@ -127,18 +127,21 @@ struct HomeView: View {
             }
             .sheet(item: $editing) { TransactionEditor(record: $0) }
         }
+        // Widget (`xu://new`) và "Ghi thêm" trên thông báo chốt ngày cùng một đường: đường ghi không bao giờ bị che.
         .onOpenURL { url in
-            if url.host == "new" { focusTrigger += 1 }
+            if url.host == "new" { startLogging() }
         }
-        .onChange(of: focusRequest) {
-            // "Ghi thêm" trên thông báo chốt ngày: đóng mọi sheet đang che ô nhập rồi focus.
-            showSettings = false
-            showHabits = false
-            editing = nil
-            showChips = false
-            showPaywall = false
-            focusTrigger += 1
-        }
+        .onChange(of: focusRequest) { startLogging() }
+    }
+
+    /// Đóng mọi sheet đang che ô nhập (cả paywall) rồi focus.
+    private func startLogging() {
+        showSettings = false
+        showHabits = false
+        editing = nil
+        showChips = false
+        showPaywall = false
+        focusTrigger += 1
     }
 
     /// Onboarding chỉ hiện lần mở đầu; xong hoặc bỏ qua thì không hiện lại.
