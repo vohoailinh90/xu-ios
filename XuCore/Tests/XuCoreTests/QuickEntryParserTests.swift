@@ -136,7 +136,6 @@ final class QuickEntryParserTests: XCTestCase {
 
     /// Từ trùng nghĩa khi bỏ dấu không kéo khoản chi sang danh mục sai.
     func testCategoriesWithAmbiguousSyllables() {
-        XCTAssertEqual(parse("tui ăn 45k").categoryID, "food", "\"tui\" (tôi) không phải \"túi\"")
         XCTAssertEqual(parse("túi xách 500k").categoryID, "shopping")
         XCTAssertEqual(parse("trung tâm tiếng Anh 2tr").categoryID, "education", "\"trung tâm\" không phải \"trứng\"")
         XCTAssertEqual(parse("trứng gà 30k").categoryID, "groceries")
@@ -169,6 +168,9 @@ final class QuickEntryParserTests: XCTestCase {
         XCTAssertEqual(parse("ｃａ 50k").categoryID, "groceries")
         XCTAssertEqual(parse("ｓｏｎ 300k").categoryID, "shopping")
         XCTAssertEqual(parse("ｔｕｉ 200k").categoryID, "shopping")
+        // Quên dấu một từ: âm tiết gõ không dấu vẫn khớp như cũ.
+        XCTAssertEqual(parse("trung gà 30k").categoryID, "groceries")
+        XCTAssertEqual(parse("tui xách 500k").categoryID, "shopping")
     }
 
     func testIncome() {

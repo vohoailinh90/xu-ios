@@ -111,9 +111,10 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
   chưa ở dạng đã gấp (sẽ không bao giờ khớp).
 - Tiếng Việt: không thêm từ khoá một âm tiết mà bỏ dấu thành từ khác nghĩa (bé/be, chợ/cho, bạn/bán, trà/trả…).
   Các âm tiết đã có từ trước mà nhiều nghĩa — `ca` (cá, cà / cả), `trung` (trứng / trung tâm, trung thu), `tui` (túi / tui = tôi),
-  `mung` (mừng / mùng 1), `son` (son / Sơn) — khai trong `CategoryCatalog.ambiguousSyllables` kèm các dạng có dấu được tính:
-  ghi chú gõ có dấu thì chỉ khớp đúng các dạng đó ("cá 50k", "cà chua" → đi chợ; "cả nhà", "trung tâm", "tui ăn",
-  "mùng 1", "Sơn" thì không). Ghi chú gõ **không dấu** thì không phân biệt được nên vẫn khớp như cũ.
+  `mung` (mừng / mùng 1), `son` (son / Sơn) — khai trong `CategoryCatalog.ambiguousSyllables` kèm các dạng có dấu được tính.
+  Xét **từng âm tiết**: gõ đúng dạng đó ("cá 50k", "cà chua") hoặc gõ không dấu ("ca", "trung gà", "tui xách") thì khớp như cũ;
+  gõ bằng dạng có dấu khác nghĩa ("cả nhà", "mùng 1", "Sơn") thì không. "tui" không dấu vừa là "túi" vừa là "tui" (tôi)
+  nên vẫn khớp mua sắm như trước — không đoán được.
   Mọi từ khoá khác giữ nguyên như trước; chỉ thêm cụm rõ nghĩa (`nuoc mam`, `giay ve sinh`, `tieng anh`, `an trung`…).
   Coi chừng cụm cũng trùng: `mua ca` khớp cả "mua cà phê" lẫn "mua cả sách" — danh sách cấm nằm trong
   `testAmbiguousSyllablesAreNotKeywords`.

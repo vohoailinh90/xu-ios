@@ -164,9 +164,8 @@ public enum CategoryCatalog {
     ]
 
     /// Từ khoá một âm tiết mà bỏ dấu thì nhiều nghĩa → các dạng có dấu được tính là khớp.
-    /// Ghi chú gõ có dấu thì chỉ khớp đúng các dạng này: "cá", "cà chua" là đi chợ, còn "cả nhà", "trung tâm",
-    /// "tui ăn" (tui = tôi), "mùng 1", "Sơn" (tên người) thì không. Ghi chú gõ không dấu thì không phân biệt được,
-    /// nên vẫn khớp như mọi từ khoá.
+    /// Xét từng âm tiết: gõ đúng dạng này ("cá", "cà chua") hoặc gõ không dấu ("ca", "trung gà") thì khớp như mọi từ khoá;
+    /// gõ bằng dạng có dấu khác nghĩa ("cả nhà", "mùng 1", "Sơn") thì không.
     public static let ambiguousSyllables: [String: Set<String>] = [
         "ca": ["cá", "cà"],
         "trung": ["trứng"],
@@ -211,18 +210,16 @@ public struct CategoryMatcher: Sendable {
            let category = catalog.first(where: { $0.id == hit }) {
             return category
         }
-        // Cụm dài nhất thắng, dài bằng nhau thì danh mục đứng trước thắng. Âm tiết nhiều nghĩa ("ca", "trung"…)
-        // chỉ tính khi ghi chú gõ không dấu, hoặc có đúng dạng có dấu của nghĩa đó.
-        // Chỉ đổi về chữ thường + nửa khổ, giữ dấu: "ｃａ" (bàn phím Nhật) vẫn là gõ không dấu.
-        let accented = Self.normalize(TextFolding.foldWidth(note))
-        let hasDiacritics = " " + accented + " " != padded
-        let accentedWords = Set(accented.split(separator: " ").map(String.init))
+        // Cụm dài nhất thắng, dài bằng nhau thì danh mục đứng trước thắng.
+        // Bản giữ dấu chỉ đổi về chữ thường + nửa khổ: "ｃａ" (bàn phím Nhật) vẫn là gõ không dấu.
+        let accentedWords = Self.normalize(TextFolding.foldWidth(note)).split(separator: " ").map(String.init)
         var best: (length: Int, category: CategoryDefinition)?
         for category in catalog {
             for keyword in category.keywords where keyword.count > (best?.length ?? 0) && Self.contains(keyword, in: padded) {
-                if hasDiacritics, let senses = CategoryCatalog.ambiguousSyllables[keyword],
-                   senses.isDisjoint(with: accentedWords) {
-                    continue
+                if let senses = CategoryCatalog.ambiguousSyllables[keyword] {
+                    // Loại khi mọi lần âm tiết này xuất hiện đều gõ bằng dạng có dấu khác nghĩa ("cả", "mùng", "Sơn").
+                    let forms = accentedWords.filter { TextFolding.fold($0) == keyword }
+                    if !forms.isEmpty, !forms.contains(where: { $0 == keyword || senses.contains($0) }) { continue }
                 }
                 best = (keyword.count, category)
             }
