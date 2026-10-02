@@ -11,6 +11,8 @@ struct HabitsView: View {
     @Query private var closures: [DayClosure]
     @Query private var records: [TransactionRecord]
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
+    @State private var showPaywall = false
+    private let store = ProStore.shared
 
     var body: some View {
         let calendar = Calendar.current
@@ -52,19 +54,31 @@ struct HabitsView: View {
 
                 let available = HabitTemplate.allCases.filter { template in !habits.contains { $0.template == template } }
                 if !available.isEmpty {
-                    Section {
-                        Menu {
-                            ForEach(available, id: \.self) { template in
-                                Button(template.emoji + " " + template.title(in: language)) { add(template) }
+                    if ProPlan.canAddHabit(activeHabits: habits.count, isPro: store.isPro) {
+                        Section {
+                            Menu {
+                                ForEach(available, id: \.self) { template in
+                                    Button(template.emoji + " " + template.title(in: language)) { add(template) }
+                                }
+                            } label: {
+                                Label(language.t(.addHabit), systemImage: "plus")
                             }
-                        } label: {
-                            Label(language.t(.addHabit), systemImage: "plus")
+                        }
+                    } else {
+                        // Bản miễn phí đã đủ thói quen: nói rõ, cho chọn bỏ bớt hoặc xem Xu Pro. Thói quen cũ không bị tắt.
+                        Section {
+                            Button { showPaywall = true } label: {
+                                Label(language.t(.addHabit), systemImage: "plus")
+                            }
+                        } footer: {
+                            Text(language.t(.proHabitLimit, "\(ProPlan.freeHabitLimit)"))
                         }
                     }
                 }
             }
             .navigationTitle(language.t(.habitsTitle))
             .toolbar { Button(language.t(.done)) { dismiss() } }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 

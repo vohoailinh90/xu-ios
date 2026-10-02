@@ -9,6 +9,7 @@ struct XuApp: App {
 
     init() {
         AppSettings.registerDefaults()
+        ProStore.shared.start()
         SampleData.seedQuickChipsIfNeeded()
         SampleData.seedHabitsIfNeeded()
     }
@@ -18,7 +19,10 @@ struct XuApp: App {
             HomeView()
                 .onChange(of: scenePhase) {
                     // Mỗi lần quay lại app: nạp thêm lịch nhắc chốt ngày cho các ngày tới.
-                    if scenePhase == .active { ReminderScheduler.refresh() }
+                    guard scenePhase == .active else { return }
+                    ReminderScheduler.refresh()
+                    // Hoàn tiền, mua trên máy khác: cập nhật quyền Xu Pro mỗi lần quay lại app.
+                    Task { await ProStore.shared.refreshEntitlement() }
                 }
         }
         .modelContainer(SharedStore.container)
