@@ -77,7 +77,7 @@ struct QuickEntryBar: View {
             if newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 categoryOverride = nil
                 typingStartedAt = nil
-            } else if typingStartedAt == nil || EntryTimingLog.startsNewSentence(from: oldText, to: newText) {
+            } else if typingStartedAt == nil || EntryTimingLog.startsNewSentence(from: oldText, to: newText, parser: parser) {
                 if typingStartedAt != nil { categoryOverride = nil }
                 typingStartedAt = Date()
             }

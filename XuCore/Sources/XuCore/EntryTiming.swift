@@ -31,9 +31,12 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         if let index = samples.lastIndex(of: seconds) { samples.remove(at: index) }
     }
 
-    /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu: từ rỗng sang có chữ, hoặc câu cũ bị thay gần hết
-    /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
-    /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
+    /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu (và bỏ danh mục đã chọn tay cho câu cũ):
+    /// - từ rỗng sang có chữ;
+    /// - câu cũ bị thay gần hết (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa;
+    /// - một phần câu bị thay và ghi chú đổi hẳn, không còn từ nào chung ("phở 45k" → "grab 45k").
+    /// Sửa số tiền, sửa hay thêm một từ ("cơm gà" → "cơm vịt"), thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
+    /// `parser` là parser của ô nhập (cùng nơi chi tiêu), để tách ghi chú và đọc số tiền.
     /// Bộ gõ tiếng Nhật (IME) đổi chữ đang soạn sang chữ Hán/katakana cũng thay cả cụm ("きのう" → "昨日"). Thay đổi chỉ
     /// được coi là IME chuyển đổi (không phải câu mới) khi:
     /// - phần bị thay chỉ gồm chữ đang soạn (hiragana, "ー", chữ/số Latin khi gõ romaji), phần mới có chữ Nhật/Hán;
@@ -50,7 +53,7 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// `TextField` không cho biết, còn thay ô nhập nhanh bằng UIKit là đổi lớn ở đúng chỗ phải giữ quy tắc 2 giây.
     /// Chọn không đo lại trong trường hợp hiếm này để mọi câu tiếng Nhật gõ bằng IME không bị đo thiếu. Danh mục chọn
     /// tay vẫn hiện trên thẻ xem trước nên người dùng thấy trước khi lưu, và trung vị ít bị lệch bởi vài lần đo.
-    public static func startsNewSentence(from old: String, to new: String) -> Bool {
+    public static func startsNewSentence(from old: String, to new: String, parser: QuickEntryParser) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
         guard !a.isEmpty else { return true }
@@ -65,15 +68,21 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
            inserted.allSatisfy({ isJapanese($0) || isBeingComposed($0) || $0.isWhitespace }),
            isSubsequence(asciiLetters(inserted), of: asciiLetters(replaced)) {
             let before = String(a[..<prefix]) + numeralReadingsAsKanji(String(replaced)) + String(a[(a.count - suffix)...])
-            let parsedBefore = imeParser.parse(before), parsedAfter = imeParser.parse(new)
+            let parsedBefore = parser.parse(before), parsedAfter = parser.parse(new)
             if parsedBefore.amount == parsedAfter.amount, parsedBefore.currency == parsedAfter.currency { return false }
         }
-        return (prefix + suffix) * 2 < a.count
+        if (prefix + suffix) * 2 < a.count { return true }
+        // Giữ phần lớn ký tự nhưng thay hẳn ghi chú: khoản khác. Chỉ xét khi có thay (không phải gõ thêm hay xoá),
+        // nên gõ từng chữ không phải đọc lại câu.
+        guard !replaced.isEmpty, !inserted.isEmpty else { return false }
+        let wordsBefore = noteWords(parser.parse(old).note), wordsAfter = noteWords(parser.parse(new).note)
+        return !wordsBefore.isEmpty && !wordsAfter.isEmpty && wordsBefore.isDisjoint(with: wordsAfter)
     }
 
-    /// Parser chỉ dùng để so số tiền trước/sau khi IME chuyển đổi. Cùng một parser cho cả hai phía nên tuỳ chọn
-    /// của người dùng không ảnh hưởng tới kết quả so sánh.
-    private static let imeParser = QuickEntryParser(options: .init(smallNumbersAreThousands: false, market: .japan))
+    /// Các từ của ghi chú đã gấp (bỏ dấu, chữ thường): "Cà phê" và "ca phe" là cùng từ.
+    private static func noteWords(_ note: String) -> Set<String> {
+        Set(TextFolding.fold(note).split(whereSeparator: \.isWhitespace).map(String.init))
+    }
 
     /// Cách đọc hiragana của chữ số/đơn vị Hán mà IME đổi ra, dài trước ngắn sau ("ろっぴゃく" → "六百").
     /// Không có các cách đọc một chữ dễ trùng như "し", "く", "よ".
