@@ -44,6 +44,10 @@ struct PaywallView: View {
                         Button(language.t(.proRestore)) { Task { await store.restore() } }
                             .disabled(store.isWorking)
                     }
+                } footer: {
+                    if let notice = store.notice {
+                        Text(language.t(Self.text(for: notice)))
+                    }
                 }
             }
             .toolbar {
@@ -52,6 +56,16 @@ struct PaywallView: View {
                 }
             }
             .task { if store.product == nil { await store.loadProduct() } }
+            .onDisappear { store.clearNotice() }
+        }
+    }
+
+    private static func text(for notice: ProStore.Notice) -> L10n {
+        switch notice {
+        case .purchaseFailed: .proPurchaseFailed
+        case .purchasePending: .proPurchasePending
+        case .restoreFailed: .proRestoreFailed
+        case .nothingToRestore: .proNothingToRestore
         }
     }
 }

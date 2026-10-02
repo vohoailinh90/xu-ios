@@ -120,6 +120,7 @@ public enum L10n: String, CaseIterable, Sendable {
     // Xu Pro
     case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proAlwaysFree, proBuy, proRestore, proOwned
     case proPriceUnavailable, proHabitLimit, proWidgetNote
+    case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
@@ -446,6 +447,22 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Chưa tải được giá. Kiểm tra kết nối rồi thử lại.",
                           en: "Couldn't load the price. Check your connection and try again.",
                           ja: "価格を読み込めませんでした。接続を確認してもう一度お試しください。")
+        case .proPurchaseFailed:
+            LocalizedText(vi: "Chưa mua được. Kiểm tra kết nối rồi thử lại.",
+                          en: "The purchase didn't go through. Check your connection and try again.",
+                          ja: "購入できませんでした。接続を確認してもう一度お試しください。")
+        case .proPurchasePending:
+            LocalizedText(vi: "Giao dịch đang chờ duyệt. Khi được duyệt, Xu Pro sẽ tự mở khoá.",
+                          en: "Your purchase is waiting for approval. Xu Pro will unlock automatically once it's approved.",
+                          ja: "購入は承認待ちです。承認されるとXu Proが自動で使えるようになります。")
+        case .proRestoreFailed:
+            LocalizedText(vi: "Chưa khôi phục được. Kiểm tra kết nối và tài khoản Apple rồi thử lại.",
+                          en: "Couldn't restore. Check your connection and Apple Account, then try again.",
+                          ja: "復元できませんでした。接続とApple Accountを確認してもう一度お試しください。")
+        case .proNothingToRestore:
+            LocalizedText(vi: "Tài khoản Apple này chưa mua Xu Pro.",
+                          en: "This Apple Account hasn't purchased Xu Pro.",
+                          ja: "このApple AccountではXu Proは購入されていません。")
         case .proHabitLimit:
             LocalizedText(vi: "Bản miễn phí theo dõi {0} thói quen cùng lúc. Bỏ bớt một thói quen hoặc mở Xu Pro để thêm.",
                           en: "The free version tracks {0} habits at a time. Remove one or get Xu Pro to add more.",

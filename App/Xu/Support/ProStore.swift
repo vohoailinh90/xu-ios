@@ -17,6 +17,18 @@ final class ProStore {
     private(set) var isPro: Bool = AppSettings.isPro
     private(set) var loadFailed = false
     private(set) var isWorking = false
+    /// Kết quả của lần mua/khôi phục gần nhất cần báo cho người dùng (nil = không có gì để báo).
+    private(set) var notice: Notice?
+
+    enum Notice: Equatable {
+        /// Mạng, App Store lỗi hoặc giao dịch không xác minh được: chưa mua, thử lại được.
+        case purchaseFailed
+        /// Đang chờ duyệt (Hỏi mua, xác minh thanh toán). Duyệt xong `Transaction.updates` sẽ tự mở khoá.
+        case purchasePending
+        case restoreFailed
+        /// Khôi phục xong nhưng tài khoản Apple này chưa mua Xu Pro.
+        case nothingToRestore
+    }
 
     @ObservationIgnored private var updates: Task<Void, Never>?
 
@@ -51,20 +63,49 @@ final class ProStore {
     func purchase() async {
         guard let product, !isWorking else { return }
         isWorking = true
+        notice = nil
         defer { isWorking = false }
-        guard let result = try? await product.purchase() else { return }
-        if case .success(let verification) = result, case .verified(let transaction) = verification {
-            await transaction.finish()
-            await refreshEntitlement()
+        do {
+            switch try await product.purchase() {
+            case .success(.verified(let transaction)):
+                await transaction.finish()
+                await refreshEntitlement()
+            case .success(.unverified):
+                notice = .purchaseFailed
+            case .pending:
+                notice = .purchasePending
+            case .userCancelled:
+                break
+            @unknown default:
+                notice = .purchaseFailed
+            }
+        } catch StoreKitError.userCancelled {
+            // Người dùng tự huỷ: không có gì để báo.
+        } catch {
+            notice = .purchaseFailed
         }
     }
 
     func restore() async {
         guard !isWorking else { return }
         isWorking = true
+        notice = nil
         defer { isWorking = false }
-        try? await AppStore.sync()
+        do {
+            try await AppStore.sync()
+        } catch StoreKitError.userCancelled {
+            return
+        } catch {
+            notice = .restoreFailed
+            return
+        }
         await refreshEntitlement()
+        if !isPro { notice = .nothingToRestore }
+    }
+
+    /// Đóng paywall thì thôi báo, để lần mở sau không thấy thông báo cũ.
+    func clearNotice() {
+        notice = nil
     }
 
     func refreshEntitlement() async {
