@@ -39,8 +39,11 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 
 ## M4 — Hoàn thiện & TestFlight (tuần 6)
 - [x] #app Onboarding 3 màn
-- [ ] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch.
-  Làm cùng lúc giới hạn Free trong `docs/02` (2 thói quen, 2 nút widget) — hiện app **chưa áp giới hạn nào**.
+- [x] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch; giới hạn Free trong `docs/02`: 2 thói quen
+  (thói quen cũ không bị tắt), 2 nút widget. Cần làm trước TestFlight: tạo sản phẩm non-consumable `com.example.xu.pro`
+  (đổi theo bundle ID) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
+  Chưa khoá: Apple Pay automation (`docs/02` xếp vào Pro, nhưng đó cũng là một đường ghi — luật "không khoá việc ghi"; cần quyết),
+  lời mời Pro sau 7 ngày liền (`docs/07`).
 - [ ] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);

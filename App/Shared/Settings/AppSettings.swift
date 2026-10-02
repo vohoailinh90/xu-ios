@@ -18,6 +18,8 @@ enum AppSettings {
         static let chipsCustomized = "chipsCustomized"
         /// `EntryTimingLog` dạng JSON — thời gian ghi, chỉ trên máy.
         static let entryTimings = "entryTimings"
+        /// Bản sao trạng thái Xu Pro cho widget (tiến trình riêng). Nguồn thật là StoreKit, `ProStore` cập nhật lại mỗi lần mở app.
+        static let isPro = "isPro"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -37,6 +39,11 @@ enum AppSettings {
                 .flatMap { try? JSONDecoder().decode(EntryTimingLog.self, from: $0) } ?? EntryTimingLog()
         }
         set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.entryTimings) }
+    }
+
+    static var isPro: Bool {
+        get { defaults.bool(forKey: Key.isPro) }
+        set { defaults.set(newValue, forKey: Key.isPro) }
     }
 
     static func requestFocus() {

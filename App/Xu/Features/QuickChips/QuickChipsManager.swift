@@ -36,7 +36,12 @@ struct QuickChipsManager: View {
                     }
                 }
             } footer: {
-                Text(language.t(isFull ? .chipLimitReached : .chipsFooter, "\(ChipSuggester.maxPinned)"))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(language.t(isFull ? .chipLimitReached : .chipsFooter, "\(ChipSuggester.maxPinned)"))
+                    if !ProStore.shared.isPro {
+                        Text(language.t(.proWidgetNote, "\(ProPlan.freeWidgetChipLimit)"))
+                    }
+                }
             }
 
             if !suggestions.isEmpty, !isFull {

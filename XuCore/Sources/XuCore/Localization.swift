@@ -117,6 +117,9 @@ public enum L10n: String, CaseIterable, Sendable {
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
+    // Xu Pro
+    case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proAlwaysFree, proBuy, proRestore, proOwned
+    case proPriceUnavailable, proHabitLimit, proWidgetNote
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
@@ -412,6 +415,45 @@ public enum L10n: String, CaseIterable, Sendable {
                 ja: "ウォレットに追加したカードのみ対象です。ショートカットAppの項目名はiOSのバージョンによって少し異なる場合があります。金額は取引の通貨(ドンまたは円)で記録し、通貨が渡されない場合は{0}で記録します。一覧からいつでも修正できます。")
         case .openShortcuts:
             LocalizedText(vi: "Mở app Phím tắt", en: "Open Shortcuts", ja: "ショートカットAppを開く")
+
+        case .proTitle:
+            LocalizedText(vi: "Xu Pro", en: "Xu Pro", ja: "Xu Pro")
+        case .proSubtitle:
+            LocalizedText(vi: "Mua một lần, dùng mãi. Không thuê bao.", en: "Pay once, keep it forever. No subscription.",
+                          ja: "一度の購入でずっと使えます。サブスクなし。")
+        case .proBenefitHabits:
+            // {0} giới hạn bản miễn phí
+            LocalizedText(vi: "Theo dõi bao nhiêu thói quen cũng được (bản miễn phí: {0})",
+                          en: "Track as many habits as you like (free: {0})",
+                          ja: "習慣をいくつでも続けられます(無料版: {0}つ)")
+        case .proBenefitWidget:
+            // {0} số nút với Pro · {1} số nút bản miễn phí
+            LocalizedText(vi: "Widget hiện tới {0} khoản quen (bản miễn phí: {1})",
+                          en: "The widget shows up to {0} quick picks (free: {1})",
+                          ja: "ウィジェットにいつものを最大{0}件表示(無料版: {1}件)")
+        case .proAlwaysFree:
+            LocalizedText(vi: "Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.",
+                          en: "Logging, quick picks in the app, Shortcuts and CSV export are always free.",
+                          ja: "記録、アプリ内のいつもの、ショートカット、CSV書き出しはずっと無料です。")
+        case .proBuy:
+            // {0} giá do App Store trả về
+            LocalizedText(vi: "Mua {0}", en: "Buy for {0}", ja: "{0}で購入")
+        case .proRestore:
+            LocalizedText(vi: "Khôi phục giao dịch đã mua", en: "Restore purchase", ja: "購入を復元")
+        case .proOwned:
+            LocalizedText(vi: "Đã mở khoá Xu Pro ✓", en: "Xu Pro unlocked ✓", ja: "Xu Pro 利用中 ✓")
+        case .proPriceUnavailable:
+            LocalizedText(vi: "Chưa tải được giá. Kiểm tra kết nối rồi thử lại.",
+                          en: "Couldn't load the price. Check your connection and try again.",
+                          ja: "価格を読み込めませんでした。接続を確認してもう一度お試しください。")
+        case .proHabitLimit:
+            LocalizedText(vi: "Bản miễn phí theo dõi {0} thói quen cùng lúc. Bỏ bớt một thói quen hoặc mở Xu Pro để thêm.",
+                          en: "The free version tracks {0} habits at a time. Remove one or get Xu Pro to add more.",
+                          ja: "無料版で同時に続けられる習慣は{0}つまでです。1つ外すか、Xu Proで追加できます。")
+        case .proWidgetNote:
+            LocalizedText(vi: "Bản miễn phí: widget hiện {0} khoản quen đầu tiên.",
+                          en: "Free version: the widget shows the first {0} quick picks.",
+                          ja: "無料版: ウィジェットには上から{0}件を表示します。")
 
         case .csvHeader:
             LocalizedText(vi: "ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon",

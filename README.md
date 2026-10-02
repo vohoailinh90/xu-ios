@@ -103,6 +103,7 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | Màn Thói quen, chốt ngày, nhắc buổi tối (thông báo có nút) | `App/Xu/Features/Habits/`, `App/Xu/Support/ReminderScheduler.swift` | Khung |
 | Onboarding 3 màn (ngôn ngữ, nơi chi tiêu, câu đầu tiên → ngân sách → thói quen) | `App/Xu/Features/Onboarding/` | Khung |
 | Shortcuts / Action Button / Apple Pay | `App/Shared/Intents/` | Khung |
+| Xu Pro (StoreKit 2, mua một lần), giới hạn Free: 2 thói quen, 2 nút widget | `App/Xu/Support/ProStore.swift`, `App/Xu/Features/Pro/`, `XuCore/Sources/XuCore/ProPlan.swift` | Có test / Khung |
 | Đo thời gian ghi (trung vị, chỉ trên máy) | `XuCore/Sources/XuCore/EntryTiming.swift`, Cài đặt | Có test / Khung |
 | Khoản quen: gợi ý từ khoản lặp lại, ghim/bỏ ghim, sắp xếp | `XuCore/Sources/XuCore/ChipSuggester.swift`, `App/Xu/Features/QuickChips/` | Có test / Khung |
 | Widget khoản quen + màn hình khóa | `App/XuWidgets/` | Khung |

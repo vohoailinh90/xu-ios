@@ -59,7 +59,8 @@ struct XuTimelineProvider: TimelineProvider {
         let spent = ((try? context.fetch(todayDescriptor)) ?? []).reduce(0) { $0 + $1.amount }
 
         var chipDescriptor = FetchDescriptor<QuickChip>(sortBy: [SortDescriptor(\.sortOrder)])
-        chipDescriptor.fetchLimit = 4
+        // Bản miễn phí hiện 2 nút; Xu Pro dùng hết chỗ của widget vừa (docs/02).
+        chipDescriptor.fetchLimit = ProPlan.widgetChipLimit(isPro: AppSettings.isPro)
         let chips = ((try? context.fetch(chipDescriptor)) ?? []).map {
             ChipSnapshot(id: $0.id, title: $0.title, emoji: $0.emoji, amount: $0.amount, currency: $0.currency)
         }

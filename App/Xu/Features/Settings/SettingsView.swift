@@ -12,10 +12,17 @@ struct SettingsView: View {
     @AppStorage(AppSettings.Key.reminderMinutes, store: AppSettings.defaults)
     private var reminderMinutes = AppSettings.defaultReminderMinutes
     @State private var reminderDenied = false
+    @State private var showPaywall = false
+    private let store = ProStore.shared
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button { showPaywall = true } label: {
+                        Label(language.t(store.isPro ? .proOwned : .proTitle), systemImage: "sparkles")
+                    }
+                }
                 Section {
                     Picker(language.t(.language), selection: $language) {
                         ForEach(AppLanguage.allCases) { Text($0.nativeName).tag($0) }
@@ -79,6 +86,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(language.t(.settings))
+            .sheet(isPresented: $showPaywall) { PaywallView() }
             .toolbar { Button(language.t(.done)) { dismiss() } }
             .onChange(of: language) { PreferenceChanges.apply() }
             .onChange(of: market) { PreferenceChanges.apply() }
