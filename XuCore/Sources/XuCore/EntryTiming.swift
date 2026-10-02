@@ -34,18 +34,37 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu: từ rỗng sang có chữ, hoặc câu cũ bị thay gần hết
     /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
     /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
-    /// Cả câu cũ lẫn câu mới đều có chữ Nhật/Hán thì không xét "thay cả câu": bộ gõ (IME) đổi "きのう" thành "昨日"
-    /// cũng thay cả cụm đang soạn. Một bên không có chữ Nhật/Hán ("ラーメン980" → "cà phê 35k") thì không phải IME.
+    /// Bộ gõ tiếng Nhật (IME) đổi chữ đang soạn sang chữ Hán/katakana cũng thay cả cụm ("きのう" → "昨日"):
+    /// phần bị thay chỉ gồm chữ đang soạn (hiragana, "ー", chữ/số Latin khi gõ romaji) và phần mới có chữ Nhật/Hán
+    /// thì không tính là câu mới. Phần bị thay có katakana, chữ Hán hay chữ Việt ("ラーメン980" → "寿司1200") là câu mới.
     public static func startsNewSentence(from old: String, to new: String) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
         guard !a.isEmpty else { return true }
-        guard !(TextFolding.containsCJK(old) && TextFolding.containsCJK(new)) else { return false }
         var prefix = 0
         while prefix < min(a.count, b.count), a[prefix] == b[prefix] { prefix += 1 }
         var suffix = 0
         while suffix < min(a.count, b.count) - prefix, a[a.count - 1 - suffix] == b[b.count - 1 - suffix] { suffix += 1 }
+        let replaced = a[prefix..<(a.count - suffix)]
+        let inserted = b[prefix..<(b.count - suffix)]
+        if !replaced.isEmpty, replaced.allSatisfy(isBeingComposed),
+           inserted.contains(where: { TextFolding.containsCJK(String($0)) }) {
+            return false
+        }
         return (prefix + suffix) * 2 < a.count
+    }
+
+    /// Ký tự có thể đang nằm trong vùng soạn của IME tiếng Nhật: hiragana, "ー", chữ/số Latin (nửa hoặc toàn khổ).
+    private static func isBeingComposed(_ character: Character) -> Bool {
+        guard character.unicodeScalars.count == 1, let value = character.unicodeScalars.first?.value else { return false }
+        switch value {
+        case 0x3040...0x309F, 0x30FC,                  // hiragana, ー
+             0x30...0x39, 0x41...0x5A, 0x61...0x7A,     // 0-9, A-Z, a-z
+             0xFF10...0xFF19, 0xFF21...0xFF3A, 0xFF41...0xFF5A: // toàn khổ
+            return true
+        default:
+            return false
+        }
     }
 
     public var count: Int { samples.count }
