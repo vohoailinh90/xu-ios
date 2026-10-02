@@ -46,7 +46,7 @@ public enum CategoryCatalog {
     ///   nằm trong từ khác: "本" có trong "日本", "パン" có trong "パンツ". Dùng từ dài hơn: "本屋", "パン屋".
     public static let defaults: [CategoryDefinition] = [
         CategoryDefinition(id: "food", names: LocalizedText(vi: "Ăn uống", en: "Food", ja: "食事"), emoji: "🍜", keywords: [
-            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "com", "com tam", "pho", "bun", "bun bo",
+            "an", "an sang", "an trua", "an toi", "an vat", "an trung", "an ca", "ca ri", "banh trung thu", "com", "com tam", "pho", "bun", "bun bo",
             "mi", "mien", "hu tieu", "banh mi", "banh cuon", "chao", "xoi", "lau", "nuong", "do an",
             "quan an", "nha hang", "kfc", "lotteria", "pizza", "grabfood", "shopeefood",
             // English
@@ -60,7 +60,7 @@ public enum CategoryCatalog {
         ]),
         CategoryDefinition(id: "groceries", names: LocalizedText(vi: "Đi chợ", en: "Groceries", ja: "食料品・日用品"),
                            emoji: "🛒", keywords: [
-            "di cho", "sieu thi", "rau", "thit", "trung ga", "trung vit",
+            "di cho", "sieu thi", "rau", "thit", "trung ga", "trung vit", "ca chua", "ca rot", "ca tim", "ca phao",
             "gao", "trai cay", "nuoc mam", "nuoc tuong", "dau an", "giay ve sinh", "bot giat", "winmart",
             "bach hoa xanh", "coopmart", "lotte mart", "aeon", "circle k", "gs25", "7-eleven",
             // Người Việt ở Nhật hay gõ chữ Latin
