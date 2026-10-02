@@ -99,6 +99,8 @@ public enum L10n: String, CaseIterable, Sendable {
     case onboardingBudgetTitle, onboardingHabitTitle, onboardingHabitHint, next, skip, getStarted
     // Nhìn lại tuần
     case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
+    // Theo tháng
+    case monthTitle, monthSpent, monthEmpty, monthPrevious, monthNext, monthProHistory
     // Sửa giao dịch
     case editEntry, noteField, amountField, currencyField, incomeToggle, categoryField, dateField, cancel, deleteEntry
     // Khoản quen
@@ -118,7 +120,8 @@ public enum L10n: String, CaseIterable, Sendable {
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
     // Xu Pro
-    case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proAlwaysFree, proBuy, proRestore, proOwned
+    case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proBenefitMonths, proAlwaysFree, proBuy, proRestore
+    case proOwned
     case proPriceUnavailable, proHabitLimit, proWidgetNote, proInviteTitle, proInviteBody, proInviteOpen, proInviteLater
     case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
     // Quyền riêng tư (docs/09) — sửa ở đây thì sửa cả docs/privacy-policy.md
@@ -229,6 +232,22 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Nhìn lại tuần này", en: "This week", ja: "今週のふり返り")
         case .weekSpent:
             LocalizedText(vi: "Tuần này đã tiêu {0}", en: "Spent this week: {0}", ja: "今週の支出 {0}")
+        case .monthTitle:
+            LocalizedText(vi: "Theo tháng", en: "By month", ja: "月ごと")
+        case .monthSpent:
+            // {0} tổng chi trong tháng, mỗi loại tiền một số
+            LocalizedText(vi: "Đã tiêu {0}", en: "Spent: {0}", ja: "支出 {0}")
+        case .monthEmpty:
+            LocalizedText(vi: "Tháng này chưa có khoản chi nào.", en: "No spending logged in this month.",
+                          ja: "この月の支出はまだありません。")
+        case .monthPrevious:
+            LocalizedText(vi: "Tháng trước", en: "Previous month", ja: "前の月")
+        case .monthNext:
+            LocalizedText(vi: "Tháng sau", en: "Next month", ja: "次の月")
+        case .monthProHistory:
+            LocalizedText(vi: "Xem lại biểu đồ các tháng trước với Xu Pro. Danh sách giao dịch và CSV luôn có đủ mọi tháng.",
+                          en: "See charts for earlier months with Xu Pro. The list and CSV export always include every month.",
+                          ja: "前の月のグラフはXu Proで見られます。取引一覧とCSVにはいつでもすべての月が入っています。")
         case .weekTop:
             LocalizedText(vi: "Nhiều nhất: {0}", en: "Most on: {0}", ja: "いちばん多いのは {0}")
         case .weekNoSpend:
@@ -441,6 +460,10 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Widget hiện tới {0} khoản quen (bản miễn phí: {1})",
                           en: "The widget shows up to {0} quick picks (free: {1})",
                           ja: "ウィジェットにいつものを最大{0}件表示(無料版: {1}件)")
+        case .proBenefitMonths:
+            LocalizedText(vi: "Biểu đồ theo danh mục của các tháng trước (bản miễn phí: tháng này)",
+                          en: "Category charts for earlier months (free: this month)",
+                          ja: "前の月のカテゴリ別グラフ(無料版: 今月のみ)")
         case .proAlwaysFree:
             LocalizedText(vi: "Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.",
                           en: "Logging, quick picks in the app, Shortcuts and CSV export are always free.",

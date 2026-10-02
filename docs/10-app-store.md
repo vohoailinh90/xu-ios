@@ -9,7 +9,7 @@
 ## Nguyên tắc
 
 - Chỉ nói những gì app **đã làm được** (README, `docs/06`). Chưa có thì không nhắc: đọc ảnh hoá đơn, đồng bộ iCloud,
-  biểu đồ tháng, danh mục tuỳ chỉnh…
+  danh mục tuỳ chỉnh…
 - Không hứa "2 giây" hay con số tốc độ nào cho tới khi có trung vị thật từ TestFlight (`EntryTimingLog`, `docs/01`).
   Khi có số đo thì mới cân nhắc tên kiểu "Xu – Ghi chi tiêu 2 giây" (`docs/07`).
 - Không ghi giá Xu Pro: App Store tự hiện giá theo từng nước (`docs/07`).
@@ -45,7 +45,7 @@
 
 ■ 続けられる仕組み
 ・月の予算から「今日あといくら使えるか」を表示
-・夜の締めリマインダー、習慣の強さ、週のふりかえり
+・夜の締めリマインダー、習慣の強さ、週のふりかえり、月ごとのカテゴリ別グラフ
 ・責めない言葉づかい。使いすぎても赤字で叱りません
 
 ■ プライバシー
@@ -57,7 +57,7 @@
 日本で使うなら円、ベトナムで使うならドン。表示言語は日本語・英語・ベトナム語から選べます。
 
 ■ Xu Pro(買い切り・サブスクなし)
-用意された5つの習慣をすべて同時に続けられ、ウィジェットに「いつもの」を最大4件表示。記録・アプリ内の「いつもの」・ショートカット・CSV書き出しはずっと無料です。
+用意された5つの習慣をすべて同時に続けられ、ウィジェットに「いつもの」を最大4件表示。前の月のグラフもふり返れます。記録・アプリ内の「いつもの」・ショートカット・CSV書き出しはずっと無料です。
 ```
 
 ## English
@@ -86,7 +86,7 @@ QUICK LOGGING
 
 HABITS THAT STICK
 • See how much you can still spend today, based on your monthly budget
-• Evening day-close reminder, habit strength, weekly look-back
+• Evening day-close reminder, habit strength, weekly look-back, monthly category chart
 • No guilt: no red warnings when you overspend
 
 PRIVATE BY DESIGN
@@ -98,7 +98,7 @@ YEN AND DONG
 Use yen in Japan or dong in Vietnam. Choose Vietnamese, English or Japanese for the app.
 
 XU PRO — PAY ONCE, NO SUBSCRIPTION
-Track all 5 built-in habits at once and show up to 4 quick picks on the widget. Logging, quick picks in the app, Shortcuts and CSV export are always free.
+Track all 5 built-in habits at once, show up to 4 quick picks on the widget, and see charts for earlier months. Logging, quick picks in the app, Shortcuts and CSV export are always free.
 ```
 
 ## Tiếng Việt
@@ -127,7 +127,7 @@ GHI NHANH
 
 THÓI QUEN, KHÔNG TỘI LỖI
 • Biết hôm nay còn được tiêu bao nhiêu theo ngân sách tháng
-• Nhắc chốt ngày buổi tối, sức mạnh thói quen, nhìn lại tuần
+• Nhắc chốt ngày buổi tối, sức mạnh thói quen, nhìn lại tuần, biểu đồ chi tiêu theo tháng
 • Không trách móc, không màu đỏ khi tiêu quá
 
 RIÊNG TƯ
@@ -139,7 +139,7 @@ RIÊNG TƯ
 Ở Việt Nam ghi bằng đồng, ở Nhật ghi bằng yên. Giao diện tiếng Việt, tiếng Anh hoặc tiếng Nhật.
 
 XU PRO — MUA MỘT LẦN, KHÔNG THUÊ BAO
-Theo dõi cả 5 thói quen có sẵn cùng lúc, widget hiện tới 4 khoản quen. Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.
+Theo dõi cả 5 thói quen có sẵn cùng lúc, widget hiện tới 4 khoản quen, xem lại biểu đồ các tháng trước. Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.
 ```
 
 ## Ảnh chụp màn hình

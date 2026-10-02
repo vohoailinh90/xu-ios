@@ -18,6 +18,12 @@ public enum ProPlan {
     public static func widgetChipLimit(isPro: Bool) -> Int {
         isPro ? widgetChipCapacity : freeWidgetChipLimit
     }
+
+    /// Màn "Tháng này" (biểu đồ theo danh mục): bản Free xem tháng hiện tại, Xu Pro xem lại các tháng trước (docs/02).
+    /// Danh sách giao dịch và CSV vẫn đủ mọi tháng cho tất cả mọi người.
+    public static func canViewMonth(_ month: MonthKey, current: MonthKey, isPro: Bool) -> Bool {
+        isPro || month >= current
+    }
 }
 
 /// Lời mời Xu Pro (docs/07): đúng một lần, sau 7 ngày dùng liên tục. Không phải paywall: là một thẻ trên Home,

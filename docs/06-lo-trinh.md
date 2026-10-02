@@ -56,6 +56,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 ## v1.1 (sau ra mắt)
 - Đồng bộ iCloud · OCR chuyển khoản · Tách nhiều khoản · Số bằng chữ (giọng nói) · Face ID · Danh mục tùy chỉnh · Biểu đồ tháng · Control Center control
 - Đã làm sớm (2026-10-02): tách nhiều khoản trong một câu (E8, `docs/04`) — nút gợi ý trên thẻ xem trước, Enter vẫn lưu một khoản.
+  Biểu đồ tháng (O4): màn "Theo tháng" (nút 📊 trên Home), chi theo danh mục bằng tiền của nơi chi tiêu, tiền khác chỉ
+  vào tổng; bản Free xem tháng này, Xu Pro xem lại các tháng trước (`docs/02`), chạm "tháng trước" mới mở paywall.
 
 ## v1.2
 - Đa tiền tệ cho người Việt ở nước ngoài · Mục tiêu gửi tiền về nhà · Apple Watch · Thử thách + Live Activity

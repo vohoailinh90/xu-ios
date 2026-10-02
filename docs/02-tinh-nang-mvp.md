@@ -106,7 +106,7 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Thẻ "còn được tiêu", danh sách, xuất CSV | ✅ | ✅ |
 | Khoản quen trên widget | 2 nút | 8 nút |
 | Thói quen | 2 | Không giới hạn + thử thách |
-| Tổng kết tuần, biểu đồ | Tuần hiện tại | Toàn bộ lịch sử |
+| Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử (biểu đồ tháng: các tháng trước — đã làm; tuần cũ: chưa) |
 | OCR chuyển khoản, Apple Pay automation | — | ✅ |
 | Danh mục tùy chỉnh, Face ID, icon app, giao diện | — | ✅ |
 

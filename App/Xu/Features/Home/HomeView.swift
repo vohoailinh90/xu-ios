@@ -21,6 +21,7 @@ struct HomeView: View {
     @State private var showSettings = false
     @State private var showHabits = false
     @State private var showChips = false
+    @State private var showMonth = false
     @State private var editing: TransactionRecord?
     @State private var showPaywall = false
     /// Ô nhập nhanh còn chữ chưa lưu.
@@ -100,6 +101,10 @@ struct HomeView: View {
                     Button { showHabits = true } label: { Image(systemName: "leaf") }
                         .accessibilityLabel(language.t(.habitsTitle))
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showMonth = true } label: { Image(systemName: "chart.bar.xaxis") }
+                        .accessibilityLabel(language.t(.monthTitle))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSettings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel(language.t(.settings))
@@ -111,6 +116,7 @@ struct HomeView: View {
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft) }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showMonth) { MonthView() }
             .sheet(isPresented: $showChips) {
                 NavigationStack {
                     QuickChipsManager()
@@ -142,6 +148,7 @@ struct HomeView: View {
         showHabits = false
         editing = nil
         showChips = false
+        showMonth = false
         showPaywall = false
         focusTrigger += 1
     }
