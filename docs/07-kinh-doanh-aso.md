@@ -25,10 +25,8 @@ Tên hiển thị trên App Store nên kèm từ khóa: *"Xu – Ghi chi tiêu 2
 
 ## ASO (tối ưu App Store)
 
-**Từ khóa tiếng Việt** (trường Keywords 100 ký tự, phân tách bằng dấu phẩy, không lặp lại từ đã có trong tên):
-`quản lý chi tiêu,sổ thu chi,ghi chép,tiết kiệm,ngân sách,thói quen,tài chính cá nhân,chi tiêu hàng ngày`
-
-**Tiếng Anh** (cho bản địa hóa quốc tế): `expense tracker, spending, budget, money habit, quick log, no bank`
+Tên, phụ đề, từ khoá, mô tả đủ 3 thứ tiếng (vi/en/ja): xem `docs/10-app-store.md`. (Dãy từ khoá tiếng Việt cũ ở đây
+dài 103 ký tự / 123 byte, quá giới hạn 100 byte, và lặp "chi tiêu" đã có trong tên — đã thay ở `docs/10`.)
 
 **Ảnh chụp màn hình** — mỗi ảnh một thông điệp, chữ lớn:
 1. "Gõ 'cà phê 35k'. Xong." (cảnh ô nhập + thẻ xem trước)
