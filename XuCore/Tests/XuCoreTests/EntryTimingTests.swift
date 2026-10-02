@@ -52,6 +52,15 @@ final class EntryTimingTests: XCTestCase {
         XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "家賃1200"), "Số đổi thì không phải IME")
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "電車980"))
         XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "せんえん", to: "千円"), "Số chữ Hán không tính là đổi số")
+        XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "やちん980", to: "家賃980万"), "万 không có cách đọc trong câu cũ")
+        XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "給料+980"), "Thêm dấu + là đổi thành thu")
+        XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "でんしゃ980", to: "電車980k"), "Thêm chữ Latin")
+        XCTAssertTrue(EntryTimingLog.startsNewSentence(from: "やちん", to: "家賃千円"))
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "やちん8まん", to: "家賃8万"))
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "さんぜんえん", to: "三千円"))
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "ひゃくえん", to: "百円"))
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "らーめん980", to: "ラーメン９８０"), "Số đổi sang toàn khổ")
+        XCTAssertFalse(EntryTimingLog.startsNewSentence(from: "昨日 らーめん980", to: "昨日 ラーメン980"))
     }
 
     func testRoundTripsThroughJSON() throws {
