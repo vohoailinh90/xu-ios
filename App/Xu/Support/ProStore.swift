@@ -99,8 +99,9 @@ final class ProStore {
             notice = .restoreFailed
             return
         }
-        await refreshEntitlement()
-        if !isPro { notice = .nothingToRestore }
+        let unverified = await refreshEntitlement()
+        // Có giao dịch nhưng không xác minh được là lỗi, không phải "chưa mua".
+        if !isPro { notice = unverified ? .restoreFailed : .nothingToRestore }
     }
 
     /// Đóng paywall thì thôi báo, để lần mở sau không thấy thông báo cũ.
@@ -108,18 +109,27 @@ final class ProStore {
         notice = nil
     }
 
-    func refreshEntitlement() async {
+    /// Đọc lại quyền Xu Pro từ StoreKit. Trả về `true` nếu có giao dịch Xu Pro không xác minh được, để báo lỗi
+    /// thay vì nói người dùng chưa mua.
+    @discardableResult
+    func refreshEntitlement() async -> Bool {
         var owned = false
+        var unverified = false
         for await result in StoreKit.Transaction.currentEntitlements {
             if case .verified(let transaction) = result, transaction.productID == Self.productID,
                transaction.revocationDate == nil {
                 owned = true
+            } else if case .unverified(let transaction, _) = result, transaction.productID == Self.productID {
+                unverified = true
             }
         }
         isPro = owned
+        // Đã mở khoá (kể cả giao dịch chờ duyệt vừa được duyệt qua Transaction.updates): thôi báo lỗi hay "đang chờ".
+        if owned { notice = nil }
         if AppSettings.isPro != owned {
             AppSettings.isPro = owned
             WidgetCenter.shared.reloadAllTimelines()
         }
+        return unverified
     }
 }
