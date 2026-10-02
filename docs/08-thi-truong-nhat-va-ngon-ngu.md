@@ -54,7 +54,8 @@ String Catalog chỉ còn dùng cho chuỗi **hệ thống tự đọc theo ngô
   và tham số của tác vụ đã dịch trong `App/Shared/Localizable.xcstrings`. Còn phải thử trên máy thật đặt Siri tiếng Nhật
   (cách đọc tên "Xu" bằng giọng nói tiếng Nhật cũng cần kiểm tra).
 - Bản dịch tiếng Anh/Nhật do AI viết — cần người bản ngữ đọc lại trước TestFlight.
-- App Store: mô tả, từ khoá, ảnh chụp tiếng Nhật/Anh; giá Xu Pro ở Nhật theo bảng giá App Store — **cần kiểm tra**.
+- App Store: bản nháp tên, phụ đề, từ khoá, mô tả, chữ trên ảnh chụp tiếng Nhật/Anh/Việt ở `docs/10-app-store.md`
+  (cần người bản ngữ Nhật đọc lại); giá Xu Pro ở Nhật theo bảng giá App Store — **cần kiểm tra**.
   Danh sách ngôn ngữ hiện trên App Store lấy từ bản địa hoá trong gói app — kiểm tra sau lần tải lên đầu tiên là có đủ 3 ngôn ngữ.
 - Pháp lý ở Nhật: luật bảo vệ thông tin cá nhân (個人情報保護法), nghĩa vụ hiển thị khi bán hàng trực tuyến (特定商取引法)
   khi bán Xu Pro, quy định mới về nền tảng app trên điện thoại — **cần kiểm tra văn bản mới nhất**, đây không phải tư vấn pháp lý.
