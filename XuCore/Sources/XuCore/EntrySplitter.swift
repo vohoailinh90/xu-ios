@@ -9,10 +9,11 @@ extension QuickEntryParser {
     /// - Ngày tìm một lần cho cả câu và dùng chung: "hôm qua cà phê 35k bánh 20k" → cả hai khoản là hôm qua.
     /// - Mỗi số tiền tường minh là một khoản. Số trần ("2 ly") ở lại trong ghi chú như ở `parse`.
     /// - Chữ nằm giữa hai số tiền thuộc về khoản nào:
-    ///   - có dấu ngăn (`,` `;` `、` `。` `+` `&`, chữ `và` `với` `and` `と` đứng riêng, hay `と` sát ngay sau số tiền mà
-    ///     sau nó không phải hiragana: "350円とパン200円") thì cắt ở đó, bỏ dấu ngăn;
-    ///   - không có thì theo cách gõ của cả câu: có chữ trước số tiền đầu tiên ("cà phê 35k bánh 20k") thì chữ đi
-    ///     với số đứng sau nó; câu mở đầu bằng số tiền ("35k cà phê 20k bánh") thì chữ đi với số đứng trước nó.
+    ///   - có dấu câu ngăn (`,` `;` `、` `。` `+` `&`) thì cắt ở đó, bỏ dấu ngăn: "ăn trưa 45k với bạn, grab 20k";
+    ///   - không có dấu câu thì cắt ở chữ nối: `và` `and` `と` đứng riêng, hay `と` sát ngay sau số tiền mà sau nó là
+    ///     katakana/chữ Hán ("350円とパン") hoặc một từ khoá danh mục ("350円とお茶");
+    ///   - không có cả hai thì theo cách gõ của cả câu: có chữ trước số tiền đầu tiên ("cà phê 35k bánh 20k") thì chữ
+    ///     đi với số đứng sau nó; câu mở đầu bằng số tiền ("35k cà phê 20k bánh") thì chữ đi với số đứng trước nó.
     /// - Khoản không nhận ra danh mục thì lấy danh mục khoản chi của cả câu — cái thẻ xem trước đang hiện, nên người
     ///   dùng đã chọn tay thì truyền vào `fallbackCategoryID`: "tip" trong "ăn trưa 45k tip 5k" vẫn là ăn uống.
     ///   Khoản thu chỉ khi khoản đó có "+" hoặc từ khoá thu nhập: danh mục thu nhập không lan sang khoản khác.
@@ -33,7 +34,7 @@ extension QuickEntryParser {
         var ends: [Int] = []
         for (left, right) in zip(amounts, amounts.dropFirst()) {
             let gap = left.range.upperBound..<right.range.lowerBound
-            let cut = Self.separator(in: gap, original: analysis.original, folded: chars, last: !notesFirst)
+            let cut = separator(in: gap, original: analysis.original, folded: chars, last: !notesFirst)
                 ?? (notesFirst ? gap.lowerBound..<gap.lowerBound : gap.upperBound..<gap.upperBound)
             ends.append(cut.lowerBound)
             starts.append(cut.upperBound)
@@ -57,36 +58,38 @@ extension QuickEntryParser {
     /// Dấu câu ngăn hai khoản (trên bản đã gấp: "，" → ",", "＋" → "+").
     static let separatorCharacters: Set<Character> = [",", ";", "、", "。", "+", "&"]
     /// Chữ nối hai khoản, chỉ khi đứng riêng. So trên chữ thường **giữ dấu**: "và" là nối, còn "va" có thể là
-    /// "vá" gõ không dấu ("vá xe 30k"), nên không cắt.
-    static let connectorWords: Set<String> = ["và", "với", "and", "と", "&", "+"]
+    /// "vá" gõ không dấu ("vá xe 30k"), nên không cắt. "với" thường là "cùng với" ("ăn trưa với bạn"), không phải nối.
+    static let connectorWords: Set<String> = ["và", "and", "と", "&", "+"]
 
-    /// Vùng dấu ngăn đầu tiên (hoặc cuối cùng, nếu `last`) trong khoảng giữa hai số tiền.
-    static func separator(in gap: Range<Int>, original: [Character], folded: [Character],
-                          last: Bool) -> Range<Int>? {
-        var found: [Range<Int>] = []
+    /// Chỗ cắt trong khoảng giữa hai số tiền: dấu câu trước, không có mới tới chữ nối. Lấy chỗ đầu tiên, hoặc chỗ cuối
+    /// cùng nếu `last`.
+    func separator(in gap: Range<Int>, original: [Character], folded: [Character], last: Bool) -> Range<Int>? {
+        var marks: [Range<Int>] = []
+        var words: [Range<Int>] = []
         var wordStart: Int?
         for i in gap.lowerBound...gap.upperBound {
-            let isBreak = i == gap.upperBound || folded[i].isWhitespace
-            if isBreak {
-                if let start = wordStart {
-                    let word = String(original[start..<i]).lowercased()
-                    if connectorWords.contains(word) { found.append(start..<i) }
-                    wordStart = nil
+            if i == gap.upperBound || folded[i].isWhitespace {
+                if let start = wordStart, Self.connectorWords.contains(String(original[start..<i]).lowercased()) {
+                    words.append(start..<i)
                 }
-                if i < gap.upperBound, folded[i].isNewline { found.append(i..<i + 1) }
-                continue
-            }
-            if separatorCharacters.contains(folded[i]) {
-                found.append(i..<i + 1)
+                wordStart = nil
+                if i < gap.upperBound, folded[i].isNewline { marks.append(i..<i + 1) }
+            } else if Self.separatorCharacters.contains(folded[i]) {
+                marks.append(i..<i + 1)
             } else if wordStart == nil {
                 wordStart = i
             }
         }
-        // "350円とパン200円": と sát ngay sau số tiền là "và", trừ khi sau nó là hiragana ("350円とんかつ").
-        if !gap.isEmpty, folded[gap.lowerBound] == "と", !isHiragana(folded[gap.lowerBound + 1]) {
-            found.append(gap.lowerBound..<gap.lowerBound + 1)
+        // と sát ngay sau số tiền là "và" khi sau nó là katakana/chữ Hán ("350円とパン") hoặc mở đầu một từ khoá danh mục
+        // ("350円とお茶", "とうどん"). Còn lại thì thà để sót trợ từ còn hơn cắt mất chữ: "とんかつ", "とうふ".
+        if !gap.isEmpty, folded[gap.lowerBound] == "と" {
+            let rest = String(folded[(gap.lowerBound + 1)..<gap.upperBound])
+            if !Self.isHiragana(folded[gap.lowerBound + 1])
+                || (matcher.startsWithJapaneseKeyword(rest) && !matcher.startsWithJapaneseKeyword("と" + rest)) {
+                words.append(gap.lowerBound..<gap.lowerBound + 1)
+            }
         }
-        found.sort { $0.lowerBound < $1.lowerBound }
+        let found = (marks.isEmpty ? words : marks).sorted { $0.lowerBound < $1.lowerBound }
         return last ? found.last : found.first
     }
 

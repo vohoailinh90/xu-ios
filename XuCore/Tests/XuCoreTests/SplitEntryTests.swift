@@ -50,6 +50,9 @@ final class SplitEntryTests: XCTestCase {
         XCTAssertEqual(notes(split("cà phê 35k + bánh 20k")), ["cà phê", "bánh"])
         XCTAssertEqual(notes(split("cà phê 35k, và bánh 20k")), ["cà phê", "bánh"])
         XCTAssertEqual(notes(split("cà phê 35k bánh 20k nước 10k")), ["cà phê", "bánh", "nước"])
+        // Dấu câu thắng chữ nối; "với" là "cùng với", không cắt.
+        XCTAssertEqual(notes(split("ăn trưa 45k với bạn, grab 20k")), ["ăn trưa với bạn", "grab"])
+        XCTAssertEqual(notes(split("ăn trưa 45k và cà phê với bạn, grab 20k")), ["ăn trưa và cà phê với bạn", "grab"])
     }
 
     /// "va" không dấu có thể là "vá": không cắt mất chữ của người dùng.
@@ -122,8 +125,12 @@ final class SplitEntryTests: XCTestCase {
         XCTAssertEqual(amounts(parts), [350, 200])
         XCTAssertEqual(notes(parts), ["コーヒー", "パン"])
         XCTAssertEqual(parts.map(\.currency), [.jpy, .jpy])
-        // と là đầu chữ とんかつ (sau nó là hiragana), không phải "và".
+        // と trước một từ khoá danh mục là "và"; と là chữ đầu của từ (とんかつ, とうふ) thì giữ.
+        XCTAssertEqual(notes(japan.split("コーヒー350円とお茶200円", now: now)), ["コーヒー", "お茶"])
+        XCTAssertEqual(notes(japan.split("ラーメン980円とうどん500円", now: now)), ["ラーメン", "うどん"])
+        XCTAssertEqual(notes(japan.split("コーヒー350円とおにぎり150円", now: now)), ["コーヒー", "おにぎり"])
         XCTAssertEqual(notes(japan.split("ラーメン980円とんかつ900円", now: now)), ["ラーメン", "とんかつ"])
+        XCTAssertEqual(notes(japan.split("ラーメン980円とうふ200円", now: now)), ["ラーメン", "とうふ"])
         XCTAssertEqual(notes(japan.split("コーヒー350円、パン200円", now: now)), ["コーヒー", "パン"])
         XCTAssertEqual(notes(japan.split("lunch 1200円 and coffee 400円", now: now)), ["lunch", "coffee"])
     }

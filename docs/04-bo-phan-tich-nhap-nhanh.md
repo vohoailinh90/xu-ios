@@ -53,11 +53,15 @@ Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một
 | `コーヒー350円とパン200円` | コーヒー 350 yên · パン 200 yên |
 
 - Mỗi số tiền có đơn vị là một khoản; số trần (`2 ly`) ở lại trong ghi chú. Ngày tìm một lần, dùng chung cho mọi khoản.
-- Chữ giữa hai số tiền thuộc khoản nào: có dấu ngăn thì cắt ở đó — `,` `;` `、` `。` `+` `&`, chữ `và` `với` `and` `と`
-  đứng riêng, hoặc `と` sát ngay sau số tiền mà sau nó không phải hiragana (`350円とパン`, còn `980円とんかつ` thì không).
-  Không có dấu ngăn thì theo cách gõ cả câu: có chữ trước số tiền đầu tiên → chữ đi với số đứng sau nó; câu mở đầu bằng
-  số tiền → chữ đi với số đứng trước nó.
-- `va` không dấu **không** là dấu ngăn: có thể là "vá" (`gui xe 5k va xe 30k` → "gui xe" · "va xe").
+- Chữ giữa hai số tiền thuộc khoản nào, theo thứ tự:
+  1. có dấu câu ngăn (`,` `;` `、` `。` `+` `&`) thì cắt ở đó: `ăn trưa 45k với bạn, grab 20k` → "ăn trưa với bạn" · "grab";
+  2. không có thì cắt ở chữ nối: `và` `and` `と` đứng riêng, hoặc `と` sát ngay sau số tiền mà sau nó là katakana/chữ Hán
+     (`350円とパン`) hay mở đầu một từ khoá danh mục (`350円とお茶`, `とうどん`, `とおにぎり`). `と` là chữ đầu của từ thì
+     giữ — thà để sót trợ từ còn hơn cắt mất chữ: `980円とんかつ`, `とうふ`;
+  3. không có cả hai thì theo cách gõ cả câu: có chữ trước số tiền đầu tiên → chữ đi với số đứng sau nó; câu mở đầu
+     bằng số tiền → chữ đi với số đứng trước nó.
+- `va` không dấu **không** là chữ nối: có thể là "vá" (`gui xe 5k va xe 30k` → "gui xe" · "va xe").
+  `với` cũng không: thường là "cùng với" ("ăn trưa với bạn").
 - Khoản không nhận ra danh mục lấy danh mục khoản chi của cả câu — cái thẻ xem trước đang hiện, kể cả khi người dùng
   đã chọn tay (`fallbackCategoryID`): "tip" vẫn là Ăn uống.
   Khoản thu chỉ khi khoản đó có `+` hoặc từ khoá thu nhập; danh mục thu nhập của cả câu không lan sang khoản khác.
