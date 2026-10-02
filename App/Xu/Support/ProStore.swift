@@ -19,12 +19,13 @@ final class ProStore {
     private(set) var isWorking = false
     /// Kết quả của lần mua/khôi phục gần nhất cần báo cho người dùng (nil = không có gì để báo).
     private(set) var notice: Notice?
+    /// Có giao dịch mua đang chờ duyệt (Hỏi mua, xác minh thanh toán). Là trạng thái, không phải kết quả một lần:
+    /// chỉ hết khi đã có quyền Xu Pro (duyệt xong, `Transaction.updates` báo về) — mở lại paywall hay khôi phục không xoá.
+    private(set) var isPurchasePending = false
 
     enum Notice: Equatable {
         /// Mạng, App Store lỗi hoặc giao dịch không xác minh được: chưa mua, thử lại được.
         case purchaseFailed
-        /// Đang chờ duyệt (Hỏi mua, xác minh thanh toán). Duyệt xong `Transaction.updates` sẽ tự mở khoá.
-        case purchasePending
         case restoreFailed
         /// Khôi phục xong nhưng tài khoản Apple này chưa mua Xu Pro.
         case nothingToRestore
@@ -73,7 +74,7 @@ final class ProStore {
             case .success(.unverified):
                 notice = .purchaseFailed
             case .pending:
-                notice = .purchasePending
+                isPurchasePending = true
             case .userCancelled:
                 break
             @unknown default:
@@ -100,14 +101,14 @@ final class ProStore {
             return
         }
         let unverified = await refreshEntitlement()
-        // Có giao dịch nhưng không xác minh được là lỗi, không phải "chưa mua".
-        if !isPro { notice = unverified ? .restoreFailed : .nothingToRestore }
+        // Có giao dịch nhưng không xác minh được là lỗi, không phải "chưa mua". Đang chờ duyệt thì cũng không phải
+        // "chưa mua": thông báo chờ duyệt vẫn hiện.
+        if !isPro, !isPurchasePending { notice = unverified ? .restoreFailed : .nothingToRestore }
     }
 
-    /// Mở paywall thì bỏ các kết quả đã xong của lần trước, để không thấy kết quả cũ. Giữ "đang chờ duyệt": giao dịch
-    /// vẫn chờ thật, tới khi được duyệt (`refreshEntitlement` xoá) hoặc người dùng mua lại.
-    func clearStaleNotice() {
-        if notice != .purchasePending { notice = nil }
+    /// Mở paywall thì bỏ kết quả mua/khôi phục của lần trước, để không thấy kết quả cũ. Trạng thái chờ duyệt giữ nguyên.
+    func clearNotice() {
+        notice = nil
     }
 
     /// Đọc lại quyền Xu Pro từ StoreKit. Trả về `true` nếu có giao dịch Xu Pro không xác minh được, để báo lỗi
@@ -126,7 +127,10 @@ final class ProStore {
         }
         isPro = owned
         // Đã mở khoá (kể cả giao dịch chờ duyệt vừa được duyệt qua Transaction.updates): thôi báo lỗi hay "đang chờ".
-        if owned { notice = nil }
+        if owned {
+            notice = nil
+            isPurchasePending = false
+        }
         if AppSettings.isPro != owned {
             AppSettings.isPro = owned
             WidgetCenter.shared.reloadAllTimelines()

@@ -45,8 +45,13 @@ struct PaywallView: View {
                             .disabled(store.isWorking)
                     }
                 } footer: {
-                    if let notice = store.notice {
-                        Text(language.t(Self.text(for: notice)))
+                    VStack(alignment: .leading, spacing: 4) {
+                        if store.isPurchasePending {
+                            Text(language.t(.proPurchasePending))
+                        }
+                        if let notice = store.notice {
+                            Text(language.t(Self.text(for: notice)))
+                        }
                     }
                 }
             }
@@ -58,15 +63,14 @@ struct PaywallView: View {
             .task { if store.product == nil { await store.loadProduct() } }
             // Xoá lúc mở, không phải lúc đóng: mua/khôi phục có thể xong sau khi người dùng đã đóng paywall,
             // kết quả muộn đó không được hiện ở lần mở sau. Mở lại khi thao tác còn chạy thì vẫn thấy kết quả của nó;
-            // giao dịch đang chờ duyệt thì vẫn báo.
-            .onAppear { store.clearStaleNotice() }
+            // giao dịch đang chờ duyệt là trạng thái riêng nên vẫn báo.
+            .onAppear { store.clearNotice() }
         }
     }
 
     private static func text(for notice: ProStore.Notice) -> L10n {
         switch notice {
         case .purchaseFailed: .proPurchaseFailed
-        case .purchasePending: .proPurchasePending
         case .restoreFailed: .proRestoreFailed
         case .nothingToRestore: .proNothingToRestore
         }
