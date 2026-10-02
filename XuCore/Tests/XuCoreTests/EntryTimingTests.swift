@@ -90,6 +90,8 @@ final class EntryTimingTests: XCTestCase {
         XCTAssertFalse(isNew("cà phê. 35k", "cà phê sữa 35k"))
         XCTAssertTrue(isNew("🍔 45k", "🚕 45k"), "Ghi chú chỉ có emoji")
         XCTAssertFalse(isNew("🍔 burger 45k", "🍔 burger 50k"))
+        XCTAssertTrue(isNew("💳 phở 45k", "💳 taxi 45k"), "Emoji chung không che việc đổi chữ")
+        XCTAssertFalse(isNew("💳 grba 45k", "💳 grab 45k"))
         XCTAssertFalse(isNew("ラーメン・餃子 980", "ラーメン・炒飯 980"), "Dấu câu tiếng Nhật")
         XCTAssertFalse(isNew("strabucks 60k", "starbucks 60k"))
         XCTAssertTrue(isNew("bún 45k", "bánh 45k"))
