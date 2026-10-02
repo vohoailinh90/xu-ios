@@ -19,7 +19,8 @@ struct PaywallView: View {
                     .padding(.vertical, 4)
                 }
                 Section {
-                    Label(language.t(.proBenefitHabits, "\(ProPlan.freeHabitLimit)"), systemImage: "leaf")
+                    Label(language.t(.proBenefitHabits, "\(HabitTemplate.allCases.count)", "\(ProPlan.freeHabitLimit)"),
+                          systemImage: "leaf")
                     Label(language.t(.proBenefitWidget, "\(ProPlan.widgetChipCapacity)", "\(ProPlan.freeWidgetChipLimit)"),
                           systemImage: "square.grid.2x2")
                 } footer: {

@@ -426,10 +426,10 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Mua một lần, dùng mãi. Không thuê bao.", en: "Pay once, keep it forever. No subscription.",
                           ja: "一度の購入でずっと使えます。サブスクなし。")
         case .proBenefitHabits:
-            // {0} giới hạn bản miễn phí
-            LocalizedText(vi: "Theo dõi bao nhiêu thói quen cũng được (bản miễn phí: {0})",
-                          en: "Track as many habits as you like (free: {0})",
-                          ja: "習慣をいくつでも続けられます(無料版: {0}つ)")
+            // {0} số thói quen có sẵn (HabitTemplate) · {1} giới hạn bản miễn phí
+            LocalizedText(vi: "Theo dõi cả {0} thói quen có sẵn cùng lúc (bản miễn phí: {1})",
+                          en: "Track all {0} built-in habits at once (free: {1})",
+                          ja: "用意された{0}つの習慣をすべて同時に続けられます(無料版: {1}つ)")
         case .proBenefitWidget:
             // {0} số nút với Pro · {1} số nút bản miễn phí
             LocalizedText(vi: "Widget hiện tới {0} khoản quen (bản miễn phí: {1})",

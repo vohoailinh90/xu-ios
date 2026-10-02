@@ -26,7 +26,7 @@ Tên hiển thị trên App Store nên kèm từ khóa: *"Xu – Ghi chi tiêu 2
 ## ASO (tối ưu App Store)
 
 Tên, phụ đề, từ khoá, mô tả đủ 3 thứ tiếng (vi/en/ja): xem `docs/10-app-store.md`. (Dãy từ khoá tiếng Việt cũ ở đây
-dài 103 ký tự, quá giới hạn 100, và lặp "chi tiêu" đã có trong tên — đã thay ở `docs/10`.)
+dài 103 ký tự / 123 byte, quá giới hạn 100 byte, và lặp "chi tiêu" đã có trong tên — đã thay ở `docs/10`.)
 
 **Ảnh chụp màn hình** — mỗi ảnh một thông điệp, chữ lớn:
 1. "Gõ 'cà phê 35k'. Xong." (cảnh ô nhập + thẻ xem trước)
