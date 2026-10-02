@@ -34,12 +34,13 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
     /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu: từ rỗng sang có chữ, hoặc câu cũ bị thay gần hết
     /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
     /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
-    /// Có chữ Nhật/Hán thì không xét "thay cả câu": bộ gõ (IME) đổi "きのう" thành "昨日" cũng thay cả cụm đang soạn.
+    /// Cả câu cũ lẫn câu mới đều có chữ Nhật/Hán thì không xét "thay cả câu": bộ gõ (IME) đổi "きのう" thành "昨日"
+    /// cũng thay cả cụm đang soạn. Một bên không có chữ Nhật/Hán ("ラーメン980" → "cà phê 35k") thì không phải IME.
     public static func startsNewSentence(from old: String, to new: String) -> Bool {
         guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         let a = Array(old), b = Array(new)
         guard !a.isEmpty else { return true }
-        guard !TextFolding.containsCJK(old), !TextFolding.containsCJK(new) else { return false }
+        guard !(TextFolding.containsCJK(old) && TextFolding.containsCJK(new)) else { return false }
         var prefix = 0
         while prefix < min(a.count, b.count), a[prefix] == b[prefix] { prefix += 1 }
         var suffix = 0
