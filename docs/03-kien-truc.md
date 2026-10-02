@@ -124,5 +124,6 @@ Parser chạy trên mỗi lần gõ phím nên phải nhanh: mục tiêu < 1 ms 
   `TransactionRecord.storedDay` chốt ngày lúc ghi (và lúc sửa ngày); mọi màn lấy ngày qua `TransactionRecord.day(in:)`:
   danh sách theo ngày, thẻ "Hôm nay", tuần, tháng, thói quen, khoản quen, lời mời Pro, widget. Trường thêm sau bản đầu,
   có giá trị mặc định (rỗng) nên SwiftData tự chuyển dữ liệu; khoản cũ để rỗng thì vẫn đọc theo múi giờ hiện tại.
-  `occurredAt` vẫn là thời điểm thật, dùng để sắp xếp trong ngày và trong CSV.
+  `occurredAt` vẫn là thời điểm thật, dùng để sắp xếp trong ngày. CSV: cột ngày là ngày đã chốt (khớp với app),
+  cột cuối là thời điểm thật (ISO 8601).
 - Mỗi PR thay đổi parser phải thêm test case tương ứng.

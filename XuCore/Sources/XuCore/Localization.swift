@@ -557,9 +557,10 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Cập nhật: 02/10/2026", en: "Updated: October 2, 2026", ja: "更新日: 2026年10月2日")
 
         case .csvHeader:
-            LocalizedText(vi: "ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon",
-                          en: "date,type,amount,currency,category,note,source",
-                          ja: "日付,種類,金額,通貨,カテゴリ,メモ,入力方法")
+            // ngày (ngày lịch như trong app) … thời điểm ghi (ISO 8601, kèm lệch múi giờ của máy lúc xuất)
+            LocalizedText(vi: "ngay,loai,so_tien,don_vi,danh_muc,ghi_chu,nguon,thoi_diem",
+                          en: "date,type,amount,currency,category,note,source,timestamp",
+                          ja: "日付,種類,金額,通貨,カテゴリ,メモ,入力方法,日時")
         case .csvIncome:
             LocalizedText(vi: "thu", en: "income", ja: "収入")
         case .csvExpense:

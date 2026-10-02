@@ -10,19 +10,21 @@ struct CSVFile: Transferable {
     @MainActor
     init(records: [TransactionRecord], language: AppLanguage) {
         let iso = ISO8601DateFormatter()
-        // Mặc định formatter xuất giờ UTC: khoản ghi lúc 00:30 ở Việt Nam sẽ mang ngày hôm trước.
-        // Dùng múi giờ của máy để cột ngày đúng ngày lịch như trong app (vd 2026-10-01T00:30:00+07:00).
+        // Mặc định formatter xuất giờ UTC; dùng múi giờ của máy để thời điểm dễ đọc (vd 2026-10-01T00:30:00+07:00).
         iso.timeZone = .current
         var lines = [language.t(.csvHeader)]
         for r in records {
             let fields = [
-                iso.string(from: r.occurredAt),
+                // Cột ngày là ngày lịch đã chốt lúc ghi, đúng như trong app kể cả sau khi đổi múi giờ (docs/03).
+                // Thời điểm thật để ở cột cuối.
+                r.day().description,
                 language.t(r.isIncome ? .csvIncome : .csvExpense),
                 String(r.amount),
                 r.currencyCode,
                 r.category.name(in: language),
                 r.note,
-                r.sourceRaw
+                r.sourceRaw,
+                iso.string(from: r.occurredAt)
             ].map(Self.escape)
             lines.append(fields.joined(separator: ","))
         }
