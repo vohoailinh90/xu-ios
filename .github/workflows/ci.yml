@@ -53,9 +53,6 @@ jobs:
           for manifest in "$app/PrivacyInfo.xcprivacy" "$app/PlugIns/XuWidgets.appex/PrivacyInfo.xcprivacy"; do
             plutil -lint "$manifest"
           done
-      - name: Kiểm tra câu lệnh Siri có bản tiếng Anh và tiếng Nhật
-        run: |
-          app=build/Build/Products/Debug-iphonesimulator/Xu.app
-          for lang in en ja; do
-            plutil -lint "$app/$lang.lproj/AppShortcuts.strings"
-          done
+      - name: Kiểm tra câu lệnh Siri đủ bản dịch tiếng Anh và tiếng Nhật
+        # Đối chiếu câu gốc trong XuShortcuts, khoá trong AppShortcuts.xcstrings và bản build (en/ja.lproj).
+        run: python3 scripts/check-app-shortcuts.py --bundle build/Build/Products/Debug-iphonesimulator/Xu.app

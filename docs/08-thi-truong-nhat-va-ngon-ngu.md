@@ -49,7 +49,8 @@ String Catalog chỉ còn dùng cho chuỗi **hệ thống tự đọc theo ngô
   (chế độ hoá đơn Nhật). Ý tưởng và chấm điểm tính năng này làm ở App-idea-lab (luật 8), chưa có file tính năng.
 - Số viết bằng chữ Hán (千五百円), năm 令和, thứ trong ngoặc (月): đã hiểu từ 2026-10-02. Còn thiếu kiểu viết tắt trên hoá đơn (`R8.9.30`).
 - Siri tiếng Nhật: câu lệnh gốc tiếng Việt trong `XuShortcuts`, bản tiếng Anh/Nhật trong `App/Xu/AppShortcuts.xcstrings`
-  ("Xuで支出を記録", "Xuで家計簿をつける"); CI kiểm tra bản dịch có trong `en.lproj`/`ja.lproj` của app. Tên, câu hỏi
+  ("Xuで支出を記録", "Xuで家計簿をつける"); CI chạy `scripts/check-app-shortcuts.py`: mỗi câu gốc phải có bản dịch
+  en/ja và có mặt trong `en.lproj`/`ja.lproj` của bản build. Tên, câu hỏi
   và tham số của tác vụ đã dịch trong `App/Shared/Localizable.xcstrings`. Còn phải thử trên máy thật đặt Siri tiếng Nhật
   (cách đọc tên "Xu" bằng giọng nói tiếng Nhật cũng cần kiểm tra).
 - Bản dịch tiếng Anh/Nhật do AI viết — cần người bản ngữ đọc lại trước TestFlight.
