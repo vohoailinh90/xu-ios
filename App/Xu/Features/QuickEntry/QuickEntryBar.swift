@@ -70,13 +70,15 @@ struct QuickEntryBar: View {
         .animation(.snappy, value: toast)
         .onAppear { focused = true }
         .onChange(of: focusTrigger) { focused = true }
-        .onChange(of: text) {
+        .onChange(of: text) { oldText, newText in
             errorMessage = nil
-            // Xoá hết ô nhập là bỏ câu đó: danh mục đã chọn tay không được dính sang câu sau (và không được học sai).
-            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // Xoá hết ô nhập hay thay bằng câu khác là bỏ câu cũ: danh mục đã chọn tay không được dính sang câu sau
+            // (và không được học sai), thời gian ghi đo lại từ đầu.
+            if newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 categoryOverride = nil
                 typingStartedAt = nil
-            } else if typingStartedAt == nil {
+            } else if typingStartedAt == nil || EntryTimingLog.startsNewSentence(from: oldText, to: newText) {
+                if typingStartedAt != nil { categoryOverride = nil }
                 typingStartedAt = Date()
             }
         }
@@ -107,14 +109,12 @@ struct QuickEntryBar: View {
                 try Ledger.learn(note: result.note, categoryID: result.categoryID, in: context)
             }
             let record = try Ledger.save(result, rawInput: text, source: .quickText, in: context)
-            if let typingStartedAt {
-                AppSettings.entryTimings.record(Date().timeIntervalSince(typingStartedAt))
-            }
+            let timing = typingStartedAt.flatMap { AppSettings.entryTimings.record(Date().timeIntervalSince($0)) }
             typingStartedAt = nil
             toast = SavedToast(recordID: record.id, amount: record.amount, currency: record.currency,
                                isIncome: record.isIncome,
                                title: record.note.isEmpty ? record.category.name(in: language) : record.note,
-                               emoji: record.category.emoji)
+                               emoji: record.category.emoji, timing: timing)
             text = ""
             categoryOverride = nil
         } catch {
@@ -128,6 +128,8 @@ struct QuickEntryBar: View {
         if let record = try? context.fetch(FetchDescriptor<TransactionRecord>(
             predicate: #Predicate { $0.id == id })).first {
             try? Ledger.delete(record, in: context)
+            // Khoản không còn thì lần đo của nó cũng không tính.
+            if let timing = toast.timing { AppSettings.entryTimings.remove(timing) }
         }
         self.toast = nil
     }
@@ -140,6 +142,8 @@ struct SavedToast: Equatable {
     let isIncome: Bool
     let title: String
     let emoji: String
+    /// Lần đo thời gian ghi của khoản này (nếu có), để hoàn tác thì xoá luôn.
+    var timing: Double?
 }
 
 private struct ToastView: View {

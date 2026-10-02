@@ -17,10 +17,32 @@ public struct EntryTimingLog: Codable, Equatable, Sendable {
         self.samples = samples
     }
 
-    public mutating func record(_ seconds: Double) {
-        guard seconds > 0, seconds <= Self.abandonedAfter else { return }
+    /// Trả về số giây đã lưu (`nil` nếu bỏ qua), để gắn với lần lưu và xoá đi khi người dùng hoàn tác.
+    @discardableResult
+    public mutating func record(_ seconds: Double) -> Double? {
+        guard seconds > 0, seconds <= Self.abandonedAfter else { return nil }
         samples.append(seconds)
         if samples.count > Self.capacity { samples.removeFirst(samples.count - Self.capacity) }
+        return seconds
+    }
+
+    /// Hoàn tác khoản vừa lưu: bỏ lần đo của nó (lần gần nhất có đúng giá trị này).
+    public mutating func remove(_ seconds: Double) {
+        if let index = samples.lastIndex(of: seconds) { samples.remove(at: index) }
+    }
+
+    /// Ô nhập vừa chuyển sang một câu mới, cần đo lại từ đầu: từ rỗng sang có chữ, hoặc câu cũ bị thay gần hết
+    /// (chọn hết rồi gõ hay dán câu khác) — phần đầu và phần cuối còn giữ lại chưa tới một nửa câu cũ.
+    /// Sửa vài chữ, thêm, xoá ở đầu hay cuối câu thì vẫn là câu đang đo.
+    public static func startsNewSentence(from old: String, to new: String) -> Bool {
+        guard !new.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        let a = Array(old), b = Array(new)
+        guard !a.isEmpty else { return true }
+        var prefix = 0
+        while prefix < min(a.count, b.count), a[prefix] == b[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < min(a.count, b.count) - prefix, a[a.count - 1 - suffix] == b[b.count - 1 - suffix] { suffix += 1 }
+        return (prefix + suffix) * 2 < a.count
     }
 
     public var count: Int { samples.count }
