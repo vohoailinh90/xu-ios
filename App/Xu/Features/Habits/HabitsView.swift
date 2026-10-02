@@ -26,7 +26,7 @@ struct HabitsView: View {
         let closedDays = Set(closures.map(\.dayKey))
         let entries = records.map {
             LedgerEntry(amount: $0.amount, isIncome: $0.isIncome, categoryID: $0.categoryID,
-                        day: DayKey($0.occurredAt, calendar: calendar))
+                        day: $0.day(in: calendar))
         }
 
         NavigationStack {

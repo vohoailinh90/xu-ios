@@ -27,7 +27,8 @@ struct TransactionEditor: View {
         _currency = State(initialValue: record.currency)
         _isIncome = State(initialValue: record.isIncome)
         _categoryID = State(initialValue: record.categoryID)
-        _day = State(initialValue: record.occurredAt)
+        // Ngày đã chốt lúc ghi, không phải `occurredAt` đọc theo múi giờ hiện tại.
+        _day = State(initialValue: record.day().date(in: .current))
     }
 
     private var category: CategoryDefinition { CategoryCatalog.resolve(id: categoryID) }

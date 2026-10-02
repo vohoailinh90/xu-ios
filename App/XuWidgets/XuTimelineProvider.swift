@@ -52,9 +52,12 @@ struct XuTimelineProvider: TimelineProvider {
         let start = calendar.startOfDay(for: .now)
         // Cận trên: khoản ghi cho ngày tương lai (ví dụ "1/1/2030") không tính vào hôm nay, giống TodayCard.
         let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
+        // Ngày đã chốt lúc ghi (`TransactionRecord.day(in:)`); khoản cũ chưa có thì đọc `occurredAt` như trước.
+        let today = DayKey(.now, calendar: calendar).description
         let todayDescriptor = FetchDescriptor<TransactionRecord>(
             predicate: #Predicate {
-                $0.occurredAt >= start && $0.occurredAt < end && $0.isIncome == false && $0.currencyCode == currencyCode
+                $0.isIncome == false && $0.currencyCode == currencyCode
+                    && ($0.storedDay == today || ($0.storedDay == "" && $0.occurredAt >= start && $0.occurredAt < end))
             })
         let spent = ((try? context.fetch(todayDescriptor)) ?? []).reduce(0) { $0 + $1.amount }
 

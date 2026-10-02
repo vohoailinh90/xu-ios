@@ -54,7 +54,8 @@ enum Ledger {
             result.amount.map { amount in
                 TransactionRecord(amount: amount, currency: result.currency, isIncome: result.isIncome,
                                   categoryID: result.categoryID, note: result.note,
-                                  occurredAt: occurredAt(for: result.date), source: source, rawInput: rawInput)
+                                  occurredAt: occurredAt(for: result.date),
+                                  day: DayKey(result.date, calendar: .current), source: source, rawInput: rawInput)
             }
         }
         guard !records.isEmpty, records.count == results.count else { throw LedgerError.missingAmount }
@@ -79,13 +80,15 @@ enum Ledger {
         reloadWidgets()
     }
 
-    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ);
-    /// giữ nguyên ngày thì giữ nguyên giờ lúc ghi.
+    /// Sửa một giao dịch trong danh sách. Đổi sang ngày khác thì đặt giờ như khi ghi mới (12:00 hoặc bây giờ) và chốt
+    /// ngày mới theo múi giờ hiện tại; giữ nguyên ngày thì giữ nguyên giờ lúc ghi.
     static func update(_ record: TransactionRecord, amount: Int64, currency: Currency, isIncome: Bool,
                        categoryID: String, note: String, day: Date, in context: ModelContext) throws {
         guard amount > 0 else { throw LedgerError.missingAmount }
-        if !Calendar.current.isDate(day, inSameDayAs: record.occurredAt) {
+        let newDay = DayKey(day, calendar: .current)
+        if newDay != record.day() {
             record.occurredAt = occurredAt(for: day)
+            record.storedDay = newDay.description
         }
         record.amount = amount
         record.currencyCode = currency.code

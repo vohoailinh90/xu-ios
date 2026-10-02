@@ -163,7 +163,7 @@ struct HomeView: View {
     private var showProInvite: Bool {
         let cal = Calendar.current
         return ProInvite.isVisible(
-            usedDays: Set(records.map { DayKey($0.occurredAt, calendar: cal) }).union(closures.map(\.dayKey)),
+            usedDays: Set(records.map { $0.day(in: cal) }).union(closures.map(\.dayKey)),
             today: DayKey(Date(), calendar: cal), shownOn: DayKey(proInviteDay), dismissed: proInviteDismissed,
             isPro: ProStore.shared.isPro, calendar: cal)
     }
@@ -172,7 +172,7 @@ struct HomeView: View {
         let cal = Calendar.current
         let entries = records.map {
             LedgerEntry(amount: $0.amount, isIncome: $0.isIncome, categoryID: $0.categoryID,
-                        day: DayKey($0.occurredAt, calendar: cal), currency: $0.currency)
+                        day: $0.day(in: cal), currency: $0.currency)
         }
         return WeeklySummary.compute(entries: entries, closedDays: Set(closures.map(\.dayKey)),
                                      today: DayKey(Date(), calendar: cal), primary: market.currency, calendar: cal)
@@ -182,7 +182,7 @@ struct HomeView: View {
 
     private var groupedByDay: [DayGroup] {
         let cal = Calendar.current
-        let groups = Dictionary(grouping: records) { DayKey($0.occurredAt, calendar: cal) }
+        let groups = Dictionary(grouping: records) { $0.day(in: cal) }
         return groups.keys.sorted(by: >).map { day in
             let items = groups[day] ?? []
             return DayGroup(day: day,
@@ -206,8 +206,8 @@ private struct TodayCard: View {
         let cal = Calendar.current
         let today = DayKey(Date(), calendar: cal)
         let expenses = records.filter { !$0.isIncome && $0.currency == currency }
-        let spentToday = expenses.filter { cal.isDateInToday($0.occurredAt) }.reduce(0) { $0 + $1.amount }
-        let otherToday = records.filter { $0.currency != currency && cal.isDateInToday($0.occurredAt) }
+        let spentToday = expenses.filter { $0.day(in: cal) == today }.reduce(0) { $0 + $1.amount }
+        let otherToday = records.filter { $0.currency != currency && $0.day(in: cal) == today }
 
         VStack(alignment: .leading, spacing: 8) {
             Text(language.t(.spentToday)).font(.subheadline).foregroundStyle(.secondary)
@@ -242,7 +242,7 @@ private struct TodayCard: View {
         let flexible = Set(CategoryCatalog.defaults.filter(\.isDiscretionary).map(\.id))
         var before: Int64 = 0, todaySum: Int64 = 0
         for r in expenses where flexible.contains(r.categoryID) {
-            let day = DayKey(r.occurredAt, calendar: calendar)
+            let day = r.day(in: calendar)
             guard day.year == today.year, day.month == today.month else { continue }
             if day == today { todaySum += r.amount } else if day < today { before += r.amount }
         }

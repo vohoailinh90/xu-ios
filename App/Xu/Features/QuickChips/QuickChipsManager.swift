@@ -96,7 +96,7 @@ struct QuickChipsManager: View {
         ))) ?? []
         let entries = records.map {
             ChipSuggester.Entry(note: $0.note, amount: $0.amount, currency: $0.currency, categoryID: $0.categoryID,
-                                isIncome: $0.isIncome, day: DayKey($0.occurredAt, calendar: calendar))
+                                isIncome: $0.isIncome, day: $0.day(in: calendar))
         }
         let pinned = chips.map { ChipSuggester.Pinned(title: $0.title, amount: $0.amount, currency: $0.currency) }
         suggestions = ChipSuggester.suggest(entries: entries, pinned: pinned, today: today, calendar: calendar)

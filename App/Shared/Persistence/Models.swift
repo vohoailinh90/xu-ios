@@ -20,21 +20,33 @@ final class TransactionRecord {
     var categoryID: String = CategoryCatalog.otherExpenseID
     var note: String = ""
     var occurredAt: Date = Date()
+    /// Ngày lịch của khoản ("2026-08-31"), chốt theo múi giờ của máy lúc ghi hay lúc sửa ngày. Đi Việt Nam ↔ Nhật
+    /// thì khoản vẫn thuộc đúng ngày đã ghi, không trôi sang ngày (hay tháng) khác. Thêm sau bản đầu: khoản cũ để rỗng
+    /// và được đọc theo múi giờ hiện tại như trước. Luôn lấy ngày qua `day(in:)`.
+    var storedDay: String = ""
     var createdAt: Date = Date()
     var sourceRaw: String = EntrySource.manual.rawValue
     /// Câu gốc người dùng gõ. Chỉ lưu trên máy để cải thiện parser — không bao giờ gửi đi.
     var rawInput: String = ""
 
+    /// `day`: ngày lịch của khoản; bỏ trống thì lấy ngày của `occurredAt` theo múi giờ hiện tại.
     init(amount: Int64, currency: Currency = .vnd, isIncome: Bool, categoryID: String, note: String,
-         occurredAt: Date, source: EntrySource, rawInput: String = "") {
+         occurredAt: Date, day: DayKey? = nil, source: EntrySource, rawInput: String = "") {
         self.amount = amount
         self.currencyCode = currency.code
         self.isIncome = isIncome
         self.categoryID = categoryID
         self.note = note
         self.occurredAt = occurredAt
+        self.storedDay = (day ?? DayKey(occurredAt, calendar: .current)).description
         self.sourceRaw = source.rawValue
         self.rawInput = rawInput
+    }
+
+    /// Ngày của khoản — mọi màn (danh sách, Hôm nay, tuần, tháng, thói quen, widget) đều lấy ngày ở đây, không tự đọc
+    /// `occurredAt` theo múi giờ hiện tại.
+    func day(in calendar: Calendar = .current) -> DayKey {
+        DayKey(storedDay) ?? DayKey(occurredAt, calendar: calendar)
     }
 
     var source: EntrySource { EntrySource(rawValue: sourceRaw) ?? .manual }
