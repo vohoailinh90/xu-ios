@@ -19,3 +19,23 @@ public enum ProPlan {
         isPro ? widgetChipCapacity : freeWidgetChipLimit
     }
 }
+
+/// Lời mời Xu Pro (docs/07): đúng một lần, sau 7 ngày dùng liên tục. Không phải paywall: là một thẻ trên Home,
+/// chạm mới mở paywall, và không bao giờ bật ra giữa lúc đang ghi.
+public enum ProInvite {
+    public static let streakDays = 7
+
+    /// Thẻ mời có hiện hôm nay không.
+    /// - `usedDays`: ngày có ghi ít nhất một khoản hoặc đã chốt ngày (như thói quen "Ghi chép mỗi ngày").
+    ///   Chỉ xét 7 ngày **trước hôm nay**, nên ghi thêm hôm nay không làm thẻ bật ra giữa chừng.
+    ///   Chỉ được tính khi cần (người dùng Pro hay đã mời rồi thì không phải duyệt danh sách giao dịch).
+    /// - `shownOn`: ngày thẻ hiện lần đầu. Thẻ chỉ ở lại trong chính ngày đó; sang ngày khác là thôi.
+    /// - `dismissed`: đã chạm "Để sau" hoặc "Xem Xu Pro".
+    public static func isVisible(usedDays: @autoclosure () -> Set<DayKey>, today: DayKey, shownOn: DayKey?,
+                                 dismissed: Bool, isPro: Bool, calendar: Calendar) -> Bool {
+        guard !isPro, !dismissed else { return false }
+        if let shownOn { return shownOn == today }
+        let used = usedDays()
+        return (1...streakDays).allSatisfy { used.contains(today.adding(days: -$0, calendar: calendar)) }
+    }
+}

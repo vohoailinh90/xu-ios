@@ -11,6 +11,9 @@
 Lý do mua một lần: người dùng đang mệt mỏi với thuê bao, và đây là thông điệp marketing khác biệt so với YNAB/Copilot. Doanh thu một lần thấp hơn về lâu dài — bù lại bằng tỷ lệ chuyển đổi cao hơn và lan truyền tốt hơn. Có thể đánh giá lại sau 6 tháng dựa trên số liệu.
 
 **Thời điểm hiện paywall:** không bao giờ lúc đang ghi. Hiện khi người dùng chạm vào tính năng Pro, và một lần sau ngày thứ 7 dùng liên tục ("Bạn đã ghi chép 7 ngày liền 🎉 — mở khóa Pro để…").
+Cách làm (`ProInvite` trong XuCore): "dùng" = có ghi ít nhất một khoản hoặc đã chốt ngày, như thói quen "Ghi chép mỗi ngày".
+Thẻ mời (không phải paywall) hiện trên Home vào ngày sau 7 ngày liền, chỉ xét các ngày trước hôm nay để không bật ra giữa
+lúc đang ghi; ở lại hết ngày đó rồi thôi, "Để sau" là tắt hẳn. Người đã mua Pro không thấy.
 
 ## Đặt tên
 

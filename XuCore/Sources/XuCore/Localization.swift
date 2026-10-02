@@ -119,7 +119,7 @@ public enum L10n: String, CaseIterable, Sendable {
     case applePayNotes, openShortcuts
     // Xu Pro
     case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proAlwaysFree, proBuy, proRestore, proOwned
-    case proPriceUnavailable, proHabitLimit, proWidgetNote
+    case proPriceUnavailable, proHabitLimit, proWidgetNote, proInviteTitle, proInviteBody, proInviteOpen, proInviteLater
     case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
     // Quyền riêng tư (docs/09) — sửa ở đây thì sửa cả docs/privacy-policy.md
     case privacyTitle, privacyHeadline, privacyOnDevice, privacyNoTracking, privacyPurchases, privacyShortcuts
@@ -474,6 +474,19 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Bản miễn phí: widget hiện {0} khoản quen đầu tiên.",
                           en: "Free version: the widget shows the first {0} quick picks.",
                           ja: "無料版: ウィジェットには上から{0}件を表示します。")
+        case .proInviteTitle:
+            // {0} số ngày liền
+            LocalizedText(vi: "Bạn đã ghi chép {0} ngày liền 🎉", en: "You've logged {0} days in a row 🎉",
+                          ja: "{0}日連続で記録しました 🎉")
+        case .proInviteBody:
+            LocalizedText(
+                vi: "Nếu Xu có ích với bạn, Xu Pro mở thêm thói quen và nút widget, mua một lần. Ghi chép và xuất CSV vẫn luôn miễn phí.",
+                en: "If Xu is helping, Xu Pro adds more habits and widget buttons — pay once. Logging and CSV export stay free.",
+                ja: "Xuが役に立っていたら、Xu Proで習慣とウィジェットのボタンを増やせます(買い切り)。記録とCSV書き出しはずっと無料です。")
+        case .proInviteOpen:
+            LocalizedText(vi: "Xem Xu Pro", en: "See Xu Pro", ja: "Xu Proを見る")
+        case .proInviteLater:
+            LocalizedText(vi: "Để sau", en: "Not now", ja: "あとで")
 
         case .privacyTitle:
             LocalizedText(vi: "Quyền riêng tư", en: "Privacy", ja: "プライバシー")

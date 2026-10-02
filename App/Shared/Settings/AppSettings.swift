@@ -22,6 +22,9 @@ enum AppSettings {
         static let isPro = "isPro"
         /// Lúc bắt đầu chờ duyệt giao dịch Xu Pro (Hỏi mua…), để mở lại app vẫn báo "đang chờ duyệt".
         static let proPendingSince = "proPendingSince"
+        /// Lời mời Pro (docs/07): ngày thẻ hiện lần đầu (`DayKey`, "" = chưa) và đã chạm "Để sau"/"Xem Xu Pro" chưa.
+        static let proInviteDay = "proInviteDay"
+        static let proInviteDismissed = "proInviteDismissed"
     }
 
     static let defaultReminderMinutes = 21 * 60
