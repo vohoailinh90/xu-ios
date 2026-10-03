@@ -10,9 +10,12 @@ public struct QuickEntryResult: Equatable, Sendable {
     public var note: String
     /// Câu có nhiều số tiền tường minh — UI nên gợi ý tách khoản.
     public var hasMultipleAmounts: Bool
+    /// Giờ trong câu ("7h sáng", "19h30", "7:30"), tính bằng số phút từ 0:00; `nil` nếu câu không có giờ. `date` vẫn
+    /// chỉ là ngày: ngày của khoản không bao giờ đổi vì giờ.
+    public var minutesOfDay: Int?
 
     public init(amount: Int64?, currency: Currency = .vnd, isIncome: Bool, date: Date, categoryID: String,
-                note: String, hasMultipleAmounts: Bool = false) {
+                note: String, hasMultipleAmounts: Bool = false, minutesOfDay: Int? = nil) {
         self.amount = amount
         self.currency = currency
         self.isIncome = isIncome
@@ -20,6 +23,7 @@ public struct QuickEntryResult: Equatable, Sendable {
         self.categoryID = categoryID
         self.note = note
         self.hasMultipleAmounts = hasMultipleAmounts
+        self.minutesOfDay = minutesOfDay
     }
 
     public var isComplete: Bool { amount != nil }
@@ -59,7 +63,7 @@ public struct QuickEntryParser: Sendable {
 
     public func parse(_ text: String, now: Date = Date()) -> QuickEntryResult {
         let analysis = analyze(text, now: now)
-        var removed = analysis.dateRange.map { [$0] } ?? []
+        var removed = (analysis.dateRange.map { [$0] } ?? []) + (analysis.time.map { [$0.range] } ?? [])
         let explicit = analysis.explicit
 
         // Ưu tiên số có đơn vị: nhiều số có đơn vị thì lấy số đầu tiên; chỉ có số trần thì lấy số lớn nhất.
@@ -73,15 +77,15 @@ public struct QuickEntryParser: Sendable {
             removed.append(pick.range)
         }
 
-        // 3. Ghi chú (giữ dấu từ chuỗi gốc)
+        // Ghi chú (giữ dấu từ chuỗi gốc)
         let note = Self.buildNote(analysis.original, removing: removed)
 
-        // 4. Danh mục & thu/chi
+        // Danh mục & thu/chi
         let (isIncome, categoryID) = Self.classify(matcher.match(note: note), signedIncome: signedIncome)
 
         return QuickEntryResult(amount: amount, currency: currency, isIncome: isIncome, date: analysis.date,
                                 categoryID: categoryID, note: note,
-                                hasMultipleAmounts: explicit.count > 1)
+                                hasMultipleAmounts: explicit.count > 1, minutesOfDay: analysis.time?.minutes)
     }
 
     /// Bước 1–2, dùng chung cho `parse` và `split`.
@@ -92,6 +96,8 @@ public struct QuickEntryParser: Sendable {
         let date: Date
         /// Vùng ngày (kèm thứ trong ngoặc, trợ từ) để bỏ khỏi ghi chú.
         let dateRange: Range<Int>?
+        /// Giờ trong câu ("7h sáng"); `nil` nếu không có.
+        let time: TimeHit?
         /// Mọi số tìm thấy, theo thứ tự trong câu.
         let candidates: [AmountCandidate]
         /// Số có đơn vị tường minh (k, tr, đ, 円…).
@@ -111,10 +117,14 @@ public struct QuickEntryParser: Sendable {
             dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
 
-        // 2. Số tiền (trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均")
-        let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? [])
+        // 2. Giờ ("7h sáng", "19h30", "7:30")
+        let time = findTime(in: folded)
+
+        // 3. Số tiền (trên chuỗi đã che vùng ngày, vùng giờ và tên cửa hàng có số như "100均"):
+        // che giờ để "30" trong "7:30" không thành số tiền.
+        let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? []) + (time.map { [$0.range] } ?? [])
                                    + Self.ranges(of: Self.numericNameRegex, in: folded))
-        return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange,
+        return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange, time: time,
                         candidates: findAmounts(in: masked, original: original))
     }
 
@@ -511,6 +521,68 @@ public struct QuickEntryParser: Sendable {
         let components = DateComponents(year: year, month: month, day: day)
         guard components.isValidDate(in: calendar), let date = calendar.date(from: components) else { return nil }
         return date
+    }
+
+    // MARK: - Giờ
+
+    /// "7h sáng", "19h30", "7:30", "7 giờ 30", "sáng 7h", "chiều nay 3h" (chuỗi đã gấp: "giờ" → "gio").
+    /// Nhóm: 1 buổi đứng trước, 2 giờ, 3 phút ("7h30"), 4 phút ("7 giờ 30"), 5 phút ("7:30"), 6 buổi đứng sau.
+    /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 30k" là 7h và 30k, không phải 7h30.
+    static let timeRegex = try! NSRegularExpression(
+        pattern: #"(?<![a-z0-9_/:.,])(?:(sang|trua|chieu|toi|dem)(?:\s(?:nay|qua))?\s)?(\d{1,2})"#
+            + #"(?:h(\d{2})?|\s?gio(?:\s?(\d{2})(?![a-z0-9_]))?|:(\d{2}))"#
+            + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
+    )
+
+    struct TimeHit {
+        /// Số phút từ 0:00.
+        let minutes: Int
+        /// Vùng bỏ khỏi ghi chú: từ chữ số giờ tới hết buổi đứng sau ("7h sáng"). Buổi đứng trước ("ăn tối 7h") ở lại,
+        /// vì đó là chữ của ghi chú: bỏ "tối" thì "ăn tối" mất danh mục.
+        let range: Range<Int>
+    }
+
+    /// Giờ đầu tiên trong câu. "2h" trơn có thể là thời lượng ("phòng 2h", "gói 24h"), nên chỉ nhận khi có buổi
+    /// ("7h sáng"), có phút ("7h30", "7:30") hoặc giờ từ 13 trở lên ("19h"). Nhầm giờ thì khoản vẫn đúng ngày và
+    /// thấy ngay trên thẻ xem trước; nhưng không đoán bừa thì ghi chú giữ nguyên chữ của người dùng.
+    func findTime(in text: String) -> TimeHit? {
+        let ns = NSRange(text.startIndex..., in: text)
+        for m in Self.timeRegex.matches(in: text, range: ns) {
+            guard let hour = Self.group(m, 2, in: text).flatMap(Int.init),
+                  let hourRange = Self.characterRange(m.range(at: 2), in: text),
+                  let whole = Self.characterRange(m.range, in: text) else { continue }
+            let minuteText = Self.group(m, 3, in: text) ?? Self.group(m, 4, in: text) ?? Self.group(m, 5, in: text)
+            let minute = minuteText.flatMap(Int.init) ?? 0
+            let period = Self.group(m, 6, in: text) ?? Self.group(m, 1, in: text)
+            guard hour <= 23, minute <= 59, !(hour == 0 && period != nil) else { continue }
+            guard period != nil || minuteText != nil || hour >= 13 else { continue }
+            guard let hour24 = Self.hour24(hour, period: period) else { continue }
+            return TimeHit(minutes: hour24 * 60 + minute, range: hourRange.lowerBound..<whole.upperBound)
+        }
+        return nil
+    }
+
+    /// Giờ viết theo buổi → giờ 24h: "7h tối" → 19, "12h trưa" → 12, "12h đêm" → 0, "1h chiều" → 13.
+    /// Giờ từ 13 trở lên thì buổi mâu thuẫn ("19h sáng"): giữ 19. `nil` nếu buổi và giờ không đi với nhau ("5h trưa").
+    static func hour24(_ hour: Int, period: String?) -> Int? {
+        guard let period, hour <= 12 else { return hour }
+        switch period {
+        case "sang":
+            return hour == 12 ? 0 : hour
+        case "trua":
+            if (10...12).contains(hour) { return hour }
+            return (1...3).contains(hour) ? hour + 12 : nil
+        case "chieu":
+            return hour == 12 ? 12 : hour + 12
+        case "toi":
+            return hour == 12 ? 0 : hour + 12
+        case "dem":
+            if hour == 12 { return 0 }
+            if (9...11).contains(hour) { return hour + 12 }
+            return (1...5).contains(hour) ? hour : nil
+        default:
+            return hour
+        }
     }
 
     // MARK: - Tiện ích

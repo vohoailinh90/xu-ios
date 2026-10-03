@@ -54,7 +54,7 @@ enum Ledger {
             result.amount.map { amount in
                 TransactionRecord(amount: amount, currency: result.currency, isIncome: result.isIncome,
                                   categoryID: result.categoryID, note: result.note,
-                                  occurredAt: occurredAt(for: result.date),
+                                  occurredAt: occurredAt(for: result.date, minutesOfDay: result.minutesOfDay),
                                   day: DayKey(result.date, calendar: .current), source: source, rawInput: rawInput)
             }
         }
@@ -148,9 +148,13 @@ enum Ledger {
                                 matcher: CategoryMatcher(learned: map))
     }
 
-    /// Ngày hôm nay → giữ giờ hiện tại; ngày khác → đặt 12:00 trưa để tránh lệch ngày khi đổi múi giờ.
-    private static func occurredAt(for day: Date) -> Date {
+    /// Câu có giờ ("7h sáng") → đúng giờ đó của ngày đó. Không có giờ: ngày hôm nay → giữ giờ hiện tại; ngày khác → đặt
+    /// 12:00 trưa để tránh lệch ngày khi đổi múi giờ. Ngày của khoản (`storedDay`) không đổi theo giờ.
+    private static func occurredAt(for day: Date, minutesOfDay: Int? = nil) -> Date {
         let calendar = Calendar.current
+        if let minutesOfDay {
+            return calendar.date(bySettingHour: minutesOfDay / 60, minute: minutesOfDay % 60, second: 0, of: day) ?? day
+        }
         if calendar.isDateInToday(day) { return Date() }
         return calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
     }
