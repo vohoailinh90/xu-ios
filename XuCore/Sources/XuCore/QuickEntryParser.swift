@@ -442,11 +442,12 @@ public struct QuickEntryParser: Sendable {
     /// Đơn vị chữ Hán liền sát token mà `kanjiAmountRegex` thật sự gắn vào số, theo đúng hai nhánh của nó rồi tới ranh giới cuối `(?![a-z0-9_/])`:
     /// - số thường + 万千百: `[万千百]` rồi các đoạn `\d+[万千百]?` hay `[千百]` nối tiếp, tuỳ chọn 円/yen ("9万", "9千円", "9万5000円");
     /// - số trộn: một dãy chữ số Hán (〇–九, 十, 百, 千, 万) xen các nhóm số thường, có ít nhất một chữ số Hán, và **phải** có 円 ("9十円", "9十五円", "9十万円",
-    ///   "9万五千円"); chữ số thường cuối của token nằm ngay trước dãy nên đã thoả điều kiện "có chữ số thường".
+    ///   "9万五千円"); chữ số thường cuối của token nằm ngay trước dãy nên đã thoả điều kiện "có chữ số thường". Nhánh này chỉ nhìn thấy 円 (`(?=\s?円)`) chứ
+    ///   không đòi gì sau nó: `kanjiAmountRegex` thấy 円 theo sau bởi chữ Latin thì bỏ 円 tuỳ chọn rồi vẫn đọc số ("9十五円candy" là 95 yên, ghi chú "円candy").
     /// "R2-3-9万candy" không khớp (`kanjiAmountRegex` từ chối "9万" trước "c" và số tiền rơi về số trần), nên không coi là có đơn vị.
     private static let kanjiUnitTail =
         #"(?:[万千百](?:\d+[万千百]?|[千百])*\s?(?:円|yen)?(?![a-z0-9_/])"#
-        + #"|(?=[万千百\d.,]*[〇零一二三四五六七八九十])(?:[〇零一二三四五六七八九十百千万]|\d+(?:[.,]\d+)*)+\s?円(?![a-z0-9_/]))"#
+        + #"|(?=[万千百\d.,]*[〇零一二三四五六七八九十])(?:[〇零一二三四五六七八九十百千万]|\d+(?:[.,]\d+)*)+\s?円)"#
 
     /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
     /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.
