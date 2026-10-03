@@ -125,15 +125,18 @@ public struct QuickEntryParser: Sendable {
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
-            // Giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn ("2 ly cà phê lúc 7 giờ 30.000đ", "cà phê lúc 7:30"):
-            // số đó là tiền, không phải phút. Mất số tiền là chặn luồng ghi, nên bỏ giờ. Một bất biến chung thay cho việc đoán
-            // từng cách viết tiền (dấu phân nhóm, nhiều dấu cách, đơn vị lạ, số trần vô can như "2 ly"…).
-            if let chosen = Self.chosenAmount(candidates), chosen.range.overlaps(hit.range) {
+            // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
+            // - số có đơn vị tiền (đ, k, nghìn, triệu…) chồng lên cụm giờ là tiền, không phải phút ("lúc 7 giờ 30.000đ"): bỏ giờ;
+            // - che giờ đi mà không còn số nào, trong khi chưa che thì có: số duy nhất đó là tiền ("cà phê lúc 7:30"): bỏ giờ.
+            // Còn có số tiền khác thì giờ là giờ, và số tiền xác định SAU khi loại cụm giờ — không so với số lớn nhất của chuỗi chưa
+            // che giờ: "lúc 7:30 trà đá 5" là 5.000đ lúc 07:30, không phải 30.000đ.
+            let stolen = candidates.contains { $0.hasUnit && $0.range.overlaps(hit.range) }
+            let masked = stolen ? [] : findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + [hit.range] + numericNames),
+                                                   original: original)
+            if stolen || (masked.isEmpty && !candidates.isEmpty) {
                 time = nil
             } else {
-                // Giữ giờ thì che nó đi để "30" trong "lúc 7:30" không thành số tiền.
-                candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + [hit.range] + numericNames),
-                                         original: original)
+                candidates = masked
             }
         }
         return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange, time: time,

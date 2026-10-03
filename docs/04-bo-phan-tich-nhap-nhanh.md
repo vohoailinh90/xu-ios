@@ -144,9 +144,10 @@ sau nó là hết câu/dấu câu/con số (cách 1). Chữ buổi đứng cạn
 hay theo sau là số (`7h sáng,35k`) thì là dấu câu thật. Khoảng trắng giữa các thành phần của cụm giờ (`7h  tối`, `vào  lúc`, `sáng  nay`) có thể là một hay nhiều (dấu cách, tab, NBSP), và cụm ngày bên trong nó (`tối  qua`, `hôm   qua`, `last   night`) nhận cùng quy tắc, để giờ và ngày luôn hiểu cùng một câu. Cái giá: `7h tối ăn phở 45k` (giờ, buổi, rồi một từ) không nhận;
 viết `tối 7h ăn phở 45k` hoặc `ăn phở 7h tối 45k` thì được.
 
-**Bảo đảm 2, tiền:** **giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn** (số có đơn vị đầu tiên, nếu không thì số trần lớn nhất — đúng như `parse`).
-Nếu cụm giờ che con số đó thì số đó là tiền, không phải phút: bỏ giờ, giữ tiền (`cà phê lúc 7:30`, `2 ly cà phê lúc 7 giờ 45`). Bỏ giờ thì quay về đúng kết quả như trước khi có
-tính năng giờ. Một bất biến chung (ở `analyze`) thay cho việc đoán từng cách viết tiền: dấu phân nhóm, nhiều dấu cách, đơn vị lạ, số trần vô can như `2 ly`.
+**Bảo đảm 2, tiền:** **giờ không bao giờ lấy mất tiền**, theo đúng hai cách (ở `analyze`): (1) số có **đơn vị tiền** (đ, k, nghìn, triệu…) chồng lên cụm giờ là
+tiền, không phải phút: bỏ giờ; (2) che cụm giờ đi mà không còn số nào, trong khi chưa che thì có, thì số duy nhất đó là tiền (`cà phê lúc 7:30`, `cà phê lúc 7 giờ 45`): bỏ giờ,
+quay về đúng kết quả như trước khi có tính năng giờ. Còn có số khác thì giờ là giờ, và **số tiền xác định sau khi loại cụm giờ** — không so với số lớn nhất của chuỗi chưa
+che giờ: `lúc 7:30 trà đá 5` là 5.000đ lúc 07:30 (không phải 30.000đ), `trà đá 5 lúc 7 giờ 45` cũng vậy, và số lượng như `2 ly` không phải lý do để bỏ giờ đã nói rõ bằng `lúc`.
 Ở gốc, phút chỉ là phút khi sau nó **không tiếp tục cú pháp số tiền**: không có `.000`/`,5` (`30.000đ`, `30,5 triệu`) và không có đơn vị tiền sau bất kỳ khoảng trắng nào
 (`7 giờ 30 nghìn`, `30  triệu`, `30 yên`). Phút bị từ chối thì `cà phê lúc 7 giờ 30.000đ` là 07:00 và 30.000; `2 ly cà phê lúc 7 giờ 30.000đ` cũng vậy (`2 ly` ở lại trong ghi chú).
 
