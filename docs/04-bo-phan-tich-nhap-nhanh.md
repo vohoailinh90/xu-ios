@@ -104,6 +104,10 @@ Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một
 | `12/9` | 12/09/2026 |
 | `28/12` | 28/12/**2025** (ngày trong tương lai của năm nay → hiểu là năm ngoái) |
 
+Cụm ngày tiếng Việt (`tối qua`, `đêm qua`, `sáng nay`…) nhận một hay nhiều khoảng trắng giữa các chữ, và mỗi chữ phải là **bỏ dấu hoàn toàn** (`toi qua`, gõ không dấu)
+hoặc **đúng chữ đủ dấu** (`tối qua`). Dấu khác là một từ khác: `tôi qua quán 50k` (đại từ + qua) và `đem qua nhà bạn 50k` (mang sang) không phải `tối qua`/`đêm qua`,
+không đổi ngày và giữ nguyên ghi chú — cùng nguyên tắc với chữ buổi trong cụm giờ. Gõ không dấu thì vẫn không phân biệt được (`toi qua` là `tối qua`).
+
 Mẹo: trong lịch Gregorian của Foundation, `weekday` 1 = Chủ nhật, 2 = thứ Hai… 7 = thứ Bảy — **trùng khớp với cách người Việt gọi "thứ 2…thứ 7"**, nên chuyển đổi rất gọn.
 
 **Tránh nhầm "thu" (thứ) với "thu" (thu tiền):** `thu 5 triệu tiền thưởng` không phải "thứ 5" vì theo sau là đơn vị tiền. Regex thứ trong tuần có lookahead loại trừ trường hợp số được theo sau bởi đơn vị tiền hoặc chữ số.

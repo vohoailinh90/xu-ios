@@ -112,7 +112,7 @@ public struct QuickEntryParser: Sendable {
         let today = calendar.startOfDay(for: now)
         var date = today
         var dateRange: Range<Int>?
-        if let hit = findDate(in: folded, today: today) {
+        if let hit = findDate(in: folded, original: original, today: today) {
             date = hit.date
             dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
@@ -363,13 +363,22 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9])(?:(?:(\d{4})|令和(\d{1,2}|元))年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分目])"#
     )
 
+    /// Cụm ngày tương đối. `spelling` là cách viết đủ dấu của từng chữ (cụm tiếng Việt), `nil` cho tiếng Anh/Nhật.
+    struct RelativeDay {
+        let regex: NSRegularExpression
+        let offset: Int
+        let spelling: [String]?
+    }
+
     /// Thứ tự quan trọng: cụm dài/cụ thể trước ("一昨日" trước "昨日").
-    static let relativeDays: [(NSRegularExpression, Int)] = {
-        let latin: [(String, Int)] = [
-            ("hom kia", -2), ("toi qua", -1), ("dem qua", -1), ("sang qua", -1), ("hom qua", -1),
-            ("hom nay", 0), ("sang nay", 0), ("trua nay", 0), ("chieu nay", 0), ("toi nay", 0),
-            ("day before yesterday", -2), ("yesterday", -1), ("last night", -1),
-            ("today", 0), ("tonight", 0), ("this morning", 0)
+    static let relativeDays: [RelativeDay] = {
+        let latin: [(String, Int, [String]?)] = [
+            ("hom kia", -2, ["hôm", "kia"]), ("toi qua", -1, ["tối", "qua"]), ("dem qua", -1, ["đêm", "qua"]),
+            ("sang qua", -1, ["sáng", "qua"]), ("hom qua", -1, ["hôm", "qua"]),
+            ("hom nay", 0, ["hôm", "nay"]), ("sang nay", 0, ["sáng", "nay"]), ("trua nay", 0, ["trưa", "nay"]),
+            ("chieu nay", 0, ["chiều", "nay"]), ("toi nay", 0, ["tối", "nay"]),
+            ("day before yesterday", -2, nil), ("yesterday", -1, nil), ("last night", -1, nil),
+            ("today", 0, nil), ("tonight", 0, nil), ("this morning", 0, nil)
         ]
         // Tiếng Nhật không có khoảng trắng giữa các từ nên không xét ranh giới từ.
         let japanese: [(String, Int)] = [
@@ -378,13 +387,30 @@ public struct QuickEntryParser: Sendable {
             ("今日", 0), ("きょう", 0), ("今朝", 0), ("けさ", 0), ("今夜", 0), ("今晩", 0)
         ]
         // Khoảng trắng giữa hai chữ là một hay nhiều (dấu cách, tab, NBSP…), cùng quy tắc với cụm giờ ("tối  qua  7h"): cụm ngày và
-        // cụm giờ phải hiểu cùng một câu như nhau, không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
-        return latin.map {
-            (try! NSRegularExpression(pattern: QuickEntryParser.wordStart + $0.0.replacingOccurrences(of: " ", with: #"\s+"#)
-                                        + QuickEntryParser.wordEnd), $0.1)
+        // cụm giờ phải hiểu cùng một câu, không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
+        var days: [RelativeDay] = []
+        for (phrase, offset, spelling) in latin {
+            let pattern = QuickEntryParser.wordStart + phrase.replacingOccurrences(of: " ", with: #"\s+"#) + QuickEntryParser.wordEnd
+            days.append(RelativeDay(regex: try! NSRegularExpression(pattern: pattern), offset: offset, spelling: spelling))
         }
-            + japanese.map { (try! NSRegularExpression(pattern: NSRegularExpression.escapedPattern(for: $0.0)), $0.1) }
+        for (phrase, offset) in japanese {
+            let pattern = NSRegularExpression.escapedPattern(for: phrase)
+            days.append(RelativeDay(regex: try! NSRegularExpression(pattern: pattern), offset: offset, spelling: nil))
+        }
+        return days
     }()
+
+    /// Chuỗi đã bỏ dấu khớp cả những câu không phải cụm ngày: "tôi qua quán" (đại từ), "đem qua nhà" (mang sang) trông như
+    /// "tối qua", "đêm qua" sau khi bỏ dấu. Nên mỗi chữ của cụm đối chiếu với chữ gốc: hoặc bỏ dấu hoàn toàn ("toi qua": người
+    /// dùng gõ không dấu), hoặc đúng chữ đủ dấu ("tối qua"); dấu khác ("tôi", "đem") là một từ khác. Cùng nguyên tắc với chữ buổi
+    /// trong cụm giờ.
+    static func spellsDatePhrase(_ range: Range<Int>, in original: [Character], spelling: [String]?) -> Bool {
+        guard let spelling else { return true }
+        guard range.upperBound <= original.count else { return false }
+        let words = String(original[range]).lowercased().split(whereSeparator: \.isWhitespace).map(String.init)
+        guard words.count == spelling.count else { return false }
+        return zip(words, spelling).allSatisfy { pair in pair.0 == pair.1 || pair.0 == TextFolding.fold(pair.1) }
+    }
 
     /// "thu 2", "t2", "cn", "chu nhat" — nhưng KHÔNG khớp "thu 5 trieu" (thu tiền).
     static let weekdayRegex = try! NSRegularExpression(
@@ -405,7 +431,7 @@ public struct QuickEntryParser: Sendable {
     )
     static let englishWeekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
-    func findDate(in text: String, today: Date) -> (date: Date, range: Range<Int>)? {
+    func findDate(in text: String, original: [Character], today: Date) -> (date: Date, range: Range<Int>)? {
         let ns = NSRange(text.startIndex..., in: text)
         let currentYear = calendar.component(.year, from: today)
 
@@ -446,10 +472,11 @@ public struct QuickEntryParser: Sendable {
             }
         }
 
-        for (regex, offset) in Self.relativeDays {
-            if let m = regex.firstMatch(in: text, range: ns),
-               let range = Self.characterRange(m.range, in: text),
-               let date = calendar.date(byAdding: .day, value: offset, to: today) {
+        for day in Self.relativeDays {
+            for m in day.regex.matches(in: text, range: ns) {
+                guard let range = Self.characterRange(m.range, in: text),
+                      Self.spellsDatePhrase(range, in: original, spelling: day.spelling),
+                      let date = calendar.date(byAdding: .day, value: day.offset, to: today) else { continue }
                 return (date, range)
             }
         }

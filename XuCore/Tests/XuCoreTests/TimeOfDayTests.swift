@@ -265,6 +265,38 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(day(yesterday), "2026-09-24")
     }
 
+    func testDatePhrasesMustBeSpelledAsTheyAreOrWithoutAccents() {
+        // Chuỗi đã bỏ dấu coi "tôi qua" (đại từ + qua) như "tối qua", "đem qua" như "đêm qua": mỗi chữ của cụm ngày phải là chữ
+        // bỏ dấu hoàn toàn (gõ không dấu) hoặc đúng chữ đủ dấu; dấu khác là một từ khác, không đổi ngày, không bỏ khỏi ghi chú.
+        let notDates: [(String, String)] = [
+            ("tôi qua quán 50k", "tôi qua quán"), ("đem qua nhà bạn 50k", "đem qua nhà bạn"),
+            ("tôi   qua quán 50k", "tôi qua quán"), ("lúc 7h tôi   qua quán 50k", "tôi qua quán")
+        ]
+        for (text, note) in notDates {
+            let r = parse(text)
+            XCTAssertEqual(day(r), "2026-09-25", "Không phải \"tối qua\": \(text)")
+            XCTAssertEqual(r.note, note, "Ghi chú giữ nguyên chữ của người dùng: \(text)")
+            XCTAssertEqual(r.amount, 50_000, text)
+        }
+        XCTAssertEqual(parse("lúc 7h tôi   qua quán 50k").minutesOfDay, minutes(7), "\"lúc 7h\" vẫn là 7 giờ")
+        // Gõ không dấu, đủ dấu hay viết hoa vẫn là cụm ngày.
+        let dates: [(String, String, String)] = [
+            ("toi qua an pho 50k", "2026-09-24", "an pho"), ("tối qua ăn phở 50k", "2026-09-24", "ăn phở"),
+            ("TOI QUA an pho 50k", "2026-09-24", "an pho"), ("dem qua cafe 35k", "2026-09-24", "cafe"),
+            ("hom  qua cà phê 35k", "2026-09-24", "cà phê"), ("hôm   qua cà phê 35k", "2026-09-24", "cà phê"),
+            ("sáng qua cà phê 35k", "2026-09-24", "cà phê"), ("cà phê 35k hom kia", "2026-09-23", "cà phê")
+        ]
+        for (text, date, note) in dates {
+            let r = parse(text)
+            XCTAssertEqual(day(r), date, text)
+            XCTAssertEqual(r.note, note, "Cụm ngày bỏ khỏi ghi chú: \(text)")
+        }
+        // Cụm "nay" cùng quy tắc: hôm nay trùng ngày mặc định, nên kiểm bằng việc cụm có bị bỏ khỏi ghi chú hay không.
+        XCTAssertEqual(parse("sang nay cà phê 35k").note, "cà phê")
+        XCTAssertEqual(parse("sáng nay cà phê 35k").note, "cà phê")
+        XCTAssertEqual(parse("sàng nay cà phê 35k").note, "sàng nay cà phê", "Dấu lạ: không phải \"sáng nay\"")
+    }
+
     func testDatePhraseAndTimeReadTheSameSpacing() {
         // Cụm giờ nhận nhiều khoảng trắng thì cụm ngày bên trong nó cũng phải nhận: không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
         let cases: [(String, Int, String, String)] = [
