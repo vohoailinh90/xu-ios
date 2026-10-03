@@ -531,9 +531,15 @@ public struct QuickEntryParser: Sendable {
     /// Regex chỉ *tìm* ứng viên; có nhận là giờ hay không do `findTime` quyết.
     static let timeRegex = try! NSRegularExpression(
         pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s)?luc)\s)?(?:(sang|trua|chieu|toi|dem)(?:\s(nay|qua))?\s)?(\d{1,2})"#
-            + #"(?:h(\d{2})?|\s?gio(?:\s?(\d{2})(?![a-z0-9_]))?|:(\d{2}))"#
+            + #"(?:h(\d{2}"# + moneyUnitAhead + #")?|\s?gio(?:\s?(\d{2})(?![a-z0-9_])"# + moneyUnitAhead + #")?|:(\d{2}"#
+            + moneyUnitAhead + #"))"#
             + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
     )
+
+    /// Sau hai chữ số phút không được là một đơn vị tiền, kể cả đứng rời ("7 giờ 30 nghìn", "30 triệu", "30 yên"): đó là số tiền,
+    /// không phải phút. Phút bị từ chối thì "lúc 7 giờ 30 nghìn" thành 7 giờ và 30 nghìn, như người viết định nói; giờ không
+    /// bao giờ nuốt số tiền, vì mất số tiền là chặn luồng ghi.
+    private static let moneyUnitAhead = #"(?!\s?(?:"# + japanUnits + #")(?![a-z0-9_]))"#
 
     struct TimeHit {
         /// Số phút từ 0:00.

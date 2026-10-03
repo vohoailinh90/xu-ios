@@ -145,6 +145,28 @@ final class TimeOfDayTests: XCTestCase {
         }
     }
 
+    func testMoneyUnitAfterTheMinutesKeepsTheAmount() {
+        // "30 nghìn" là số tiền, không phải 30 phút: giờ không bao giờ nuốt số tiền (mất số tiền là chặn luồng ghi).
+        let cases: [(String, Int64)] = [
+            ("cà phê lúc 7 giờ 30 nghìn", 30_000), ("cà phê lúc 7 giờ 30 k", 30_000), ("lúc 7 giờ 30 ngàn", 30_000),
+            ("lúc 7 giờ 30 triệu", 30_000_000), ("lúc 7 giờ 30 đồng", 30), ("lúc 7 giờ 30 yên", 30),
+            ("lúc 7 giờ 30 tr", 30_000_000), ("lúc 7 giờ 30 củ", 30_000_000)
+        ]
+        for (text, amount) in cases {
+            let r = parse(text)
+            XCTAssertEqual(r.amount, amount, text)
+            XCTAssertEqual(r.minutesOfDay, minutes(7), "Phút bị từ chối: còn 7 giờ, số tiền giữ nguyên: \(text)")
+        }
+        XCTAssertEqual(parse("cà phê lúc 7 giờ 30 nghìn").note, "cà phê")
+        // Có số tiền riêng thì "7 giờ 30" vẫn là 7:30, kể cả khi sau còn chữ như "đi".
+        XCTAssertEqual(parse("lúc 7 giờ 30 đi chợ 45k").minutesOfDay, minutes(7, 30))
+        XCTAssertEqual(parse("lúc 7 giờ 30 cà phê 35k").minutesOfDay, minutes(7, 30))
+        XCTAssertEqual(parse("lúc 7 giờ 30 cà phê 35k").amount, 35_000)
+        // Đơn vị rời cũng không biến "7h30" hay "lúc 7:30" thành giờ.
+        XCTAssertNil(parse("lúc 7h30 nghìn 5").minutesOfDay)
+        XCTAssertNil(parse("lúc 7:30 nghìn").minutesOfDay)
+    }
+
     func testSeveralSpacesBeforeNayQuaStillMeanADatePhrase() {
         // Văn bản dán vào có thể có nhiều dấu cách: vẫn là "2h30" rồi cụm ngày, không phải 02:30.
         for text in ["thuê phòng trong 2h30 sáng  nay 100k", "thuê phòng 2h sáng   qua 100k"] {

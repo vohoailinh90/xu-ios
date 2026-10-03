@@ -146,6 +146,8 @@ Cụm giờ (cả `lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú. K
 - `nay`/`qua` có thể cách chữ buổi bằng nhiều dấu cách (văn bản dán vào): `2h30 sáng  nay` vẫn là thời lượng rồi ngày.
 - Với `lúc` mà không có buổi thì giờ là số viết ra, 0–23 (`lúc 7h` → 07:00, `lúc 19h` → 19:00); muốn chiều/tối thì thêm buổi (`lúc 7h tối`).
 - Phút dính liền `h` (`7h30`); riêng "giờ" cho một dấu cách (`7 giờ 30`). `7h 35k` là `7h` rồi `35k`; `7 giờ 30k` là 30k, không phải 7:30.
+  **Giờ không bao giờ nuốt số tiền**: sau hai chữ số phút không được là một đơn vị tiền, kể cả đứng rời (`7 giờ 30 nghìn`, `30 triệu`,
+  `30 yên`, `30 k`): đó là số tiền. Phút bị từ chối thì `cà phê lúc 7 giờ 30 nghìn` là 07:00 và 30.000, đúng như người viết định nói.
   Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
 - Số trong cụm giờ không bao giờ là số tiền: `lúc 7:30 phở 45` → 45.000 (không phải 30).
 - `split`: cụm giờ không tính là chữ đi trước số tiền đầu tiên (`sáng 7h 35k cà phê 20k bánh` → `cà phê` · `bánh`); mọi khoản dùng chung giờ.
