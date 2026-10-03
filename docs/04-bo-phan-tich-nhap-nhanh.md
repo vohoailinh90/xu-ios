@@ -115,30 +115,35 @@ Kết quả là `QuickEntryResult.minutesOfDay` (số phút từ 0:00, `nil` n�
 ngày của khoản** (`storedDay`). Có giờ thì `Ledger` lưu `occurredAt` đúng giờ đó; không có thì như cũ (hôm nay: bây giờ,
 ngày khác: 12:00). Thẻ xem trước hiện "Hôm qua · 19:00" để người dùng thấy ngay nếu hiểu sai.
 
-**Nguyên tắc: chỉ nhận giờ khi người dùng nói rõ đó là một thời điểm** — bằng *buổi trong ngày* hoặc bằng *"lúc"*. Mọi dạng trần
-(`19h30`, `7:30`, `20h`, `2h30`) đều bỏ qua: chúng cũng là thời lượng (`thuê phòng 2h30`, `pin dùng được 20h`), tỷ lệ (`1:20`) hay
-số khác, và một danh sách loại trừ thì không bao giờ đủ. Nhầm giờ làm ghi chú mất chữ và `occurredAt` sai; bỏ sót giờ thì khoản vẫn
-đúng ngày như trước khi có tính năng này — thà bỏ sót còn hơn cắt mất chữ.
+**Nguyên tắc: chỉ nhận giờ khi người dùng nói rõ đó là một thời điểm.** Một con số dính chữ `h`/`:` chưa chứng minh được gì: `2h30` là
+thời lượng, `1:20` là tỷ lệ, `20h` là pin; và chữ buổi đứng cạnh nó cũng chưa đủ (`đèn sáng 20h`, `ăn sáng 7h`: "sáng" là chữ của ghi
+chú). Danh sách loại trừ thì không bao giờ đủ, nên chỉ có **ba cách** nói rõ, mọi cách khác đều bỏ qua và giữ nguyên chữ của người dùng.
+Nhầm giờ làm ghi chú mất chữ và `occurredAt` sai; bỏ sót giờ thì khoản vẫn đúng ngày như trước khi có tính năng này.
 
-| Người dùng gõ | Giờ | Ghi chú còn lại |
+| Cách nói rõ | Ví dụ | Giờ · ghi chú còn lại |
 |---|---|---|
-| `cà phê 7h sáng 35k` | 07:00 | `cà phê` (buổi đứng **sau** giờ thì bỏ cùng giờ) |
-| `ăn tối 7h 80k` | 19:00 | `ăn tối` (buổi đứng **trước** giờ ở lại: là chữ của ghi chú, bỏ thì mất danh mục) |
-| `ăn sáng 7h30 35k`, `7 giờ 30 sáng cà phê 35k`, `8h15 tối xem phim 120k` | 07:30 · 07:30 · 20:15 | `ăn sáng` · `cà phê` · `xem phim` |
-| `đi chợ lúc 7h30 100k`, `lúc 19h30 grab 52k`, `vào lúc 7:30 phở 45` | 07:30 · 19:30 · 07:30 | `đi chợ` · `grab` · `phở` ("lúc"/"vào lúc" bỏ cùng giờ) |
-| `7h tối qua grab 52k` | 19:00, ngày hôm qua | `grab` — "tối" vừa là buổi vừa nằm trong "tối qua" |
-| `chiều nay 3h trà sữa 45k` | 15:00, hôm nay | `trà sữa` |
-| `lúc 23h30 hôm qua 50k` | 23:30, ngày hôm qua | |
-| `19h30 grab 52k`, `7:30 phở 45`, `thuê phòng 2h30 100k`, `pin dùng được 20h giá 500k`, `tỷ lệ 1:20 phí 50k` | không có giờ | giữ nguyên như người dùng gõ |
+| 1. Buổi đứng **ngay sau** giờ | `cà phê 7h sáng 35k` · `8h15 tối xem phim 120k` · `7h tối qua grab 52k` · `19h tối grab 52k` | 07:00 `cà phê` · 20:15 `xem phim` · 19:00, hôm qua, `grab` · 19:00 `grab` |
+| 2. Buổi đứng **đầu câu**, hoặc kèm `nay`/`qua` | `sáng 7h cà phê 35k` · `chiều nay 3h trà sữa 45k` · `tối qua 7h taxi 100k` | 07:00 `cà phê` · 15:00 hôm nay `trà sữa` · 19:00 hôm qua `taxi` |
+| 3. `lúc` / `vào lúc` | `đi chợ lúc 7h30 100k` · `vào lúc 7:30 phở 45` · `lúc 23h30 hôm qua 50k` | 07:30 `đi chợ` · 07:30 `phở` · 23:30 hôm qua |
 
-- Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó: `sáng` 1–11h, `trưa` 10–12h giữ
-  và 1–3h → 13–15h, `chiều` 1–7h → 13–19h, `tối` 5–11h → 17–23h, `đêm` 9–11h → 21–23h, 12h → 0h, 1–5h giữ. Ngoài khoảng đó (`5h trưa`,
-  `11h chiều`, `1h tối`, `12h sáng`) thì không phải giờ, không cộng 12 bừa. Từ 13h trở lên thì buổi mâu thuẫn (`19h sáng`): giữ 19h.
-  `tối qua 1h` có thể là 1 giờ sáng nay: mơ hồ nên không đoán (ngày vẫn là hôm qua, `1h` ở lại trong ghi chú).
-- Với "lúc" mà không có buổi thì giờ là số viết ra (`lúc 7h` → 07:00, `lúc 19h` → 19:00); muốn chiều/tối thì thêm buổi hoặc viết 19h.
+Cụm giờ (cả `lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú. Không nhận (giờ = không có, ghi chú giữ nguyên):
+
+| Người dùng gõ | Vì sao |
+|---|---|
+| `19h30 grab 52k`, `7:30 phở 45`, `23h grab 90k` | dạng trần: không nói rõ là thời điểm |
+| `thuê phòng 2h30 100k`, `thuê phòng trong 2:30 100k`, `pin dùng được 20h giá 500k`, `tỷ lệ 1:20 phí 50k` | thời lượng / tỷ lệ |
+| `ăn tối 7h 80k`, `ăn sáng 7h30 35k`, `đèn sáng 20h giá 500k`, `cà phê sáng 7h 35k` | buổi nằm giữa câu là chữ của ghi chú, không phải bằng chứng |
+| `7:30 sáng cà phê 35k`, `in bản đồ tỷ lệ 1:20 sáng nay 50k` | dạng dấu hai chấm chỉ nhận khi có `lúc` (`sáng nay` vẫn là ngày hôm nay) |
+| `tối qua 1h taxi 100k` | giờ sau nửa đêm, có thể là 1 giờ sáng nay: mơ hồ (ngày vẫn là hôm qua, `1h` ở lại trong ghi chú) |
+
+- Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó (giờ 12h hoặc 24h): `sáng` 1–11 ·
+  `trưa` 10–13 và 1–3 (→ 13–15) · `chiều` 1–7 (→ 13–19) và 13–18 · `tối` 5–11 (→ 17–23) và 17–23 · `đêm` 9–11 (→ 21–23), 12 (→ 0), 0–5, 21–23.
+  Ngoài khoảng đó (`5h trưa`, `11h chiều`, `1h tối`, `12h sáng`, `19h sáng`) thì không phải giờ, không cộng 12 bừa.
+- Với `lúc` mà không có buổi thì giờ là số viết ra, 0–23 (`lúc 7h` → 07:00, `lúc 19h` → 19:00); muốn chiều/tối thì thêm buổi (`lúc 7h tối`).
 - Phút dính liền `h` (`7h30`); riêng "giờ" cho một dấu cách (`7 giờ 30`). `7h 35k` là `7h` rồi `35k`; `7 giờ 30k` là 30k, không phải 7:30.
   Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
-- Số trong vùng giờ không bao giờ là số tiền: `lúc 7:30 phở 45` → 45.000 (không phải 30).
+- Số trong cụm giờ không bao giờ là số tiền: `lúc 7:30 phở 45` → 45.000 (không phải 30).
+- `split`: cụm giờ không tính là chữ đi trước số tiền đầu tiên (`sáng 7h 35k cà phê 20k bánh` → `cà phê` · `bánh`); mọi khoản dùng chung giờ.
 - Chưa làm: giờ kiểu Nhật (`7時30分`), kiểu Anh (`7am`), sửa giờ trên màn sửa khoản.
 - Tốc độ: `analyze` thêm một regex cho giờ. `QuickEntryParserTests/testPerformance` (`measure`) đã theo dõi; mục tiêu < 1 giây cho 10.000 lần
   `parse` trên iPhone đời cũ nhất hỗ trợ vẫn phải đo trên máy thật (CI chạy Debug trên máy Mac nên không đại diện).

@@ -525,12 +525,12 @@ public struct QuickEntryParser: Sendable {
 
     // MARK: - Giờ
 
-    /// "7h sáng", "lúc 19h30", "sáng 7h", "chiều nay 3h", "7 giờ 30 sáng", "lúc 7:30" (chuỗi đã gấp: "giờ" → "gio").
-    /// Nhóm: 1 "lúc" hoặc "vào lúc", 2 buổi đứng trước, 3 giờ, 4 phút ("7h30"), 5 phút ("7 giờ 30"), 6 phút ("7:30"), 7 buổi đứng sau.
-    /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 30k" là 7h và 30k, không phải 7h30.
+    /// Ứng viên giờ trên chuỗi đã gấp ("giờ" → "gio"). Nhóm: 1 "lúc"/"vào lúc", 2 buổi đứng trước, 3 "nay"/"qua" theo sau
+    /// buổi đó, 4 giờ, 5 phút ("7h30"), 6 phút ("7 giờ 30"), 7 phút ("7:30"), 8 buổi đứng sau.
+    /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 35k" là 7h và 30k, không phải 7h30.
     /// Regex chỉ *tìm* ứng viên; có nhận là giờ hay không do `findTime` quyết.
     static let timeRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s)?luc)\s)?(?:(sang|trua|chieu|toi|dem)(?:\s(?:nay|qua))?\s)?(\d{1,2})"#
+        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s)?luc)\s)?(?:(sang|trua|chieu|toi|dem)(?:\s(nay|qua))?\s)?(\d{1,2})"#
             + #"(?:h(\d{2})?|\s?gio(?:\s?(\d{2})(?![a-z0-9_]))?|:(\d{2}))"#
             + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
     )
@@ -538,60 +538,69 @@ public struct QuickEntryParser: Sendable {
     struct TimeHit {
         /// Số phút từ 0:00.
         let minutes: Int
-        /// Vùng bỏ khỏi ghi chú: từ "lúc" (nếu có) hoặc chữ số giờ tới hết buổi đứng sau ("7h sáng", "lúc 19h30").
-        /// Buổi đứng trước ("ăn tối 7h") ở lại, vì đó là chữ của ghi chú: bỏ "tối" thì "ăn tối" mất danh mục.
+        /// Cả cụm giờ, bỏ khỏi ghi chú: "lúc"/"vào lúc" và buổi đứng đầu câu cũng là một phần của cụm.
         let range: Range<Int>
     }
 
-    /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**: có buổi trong ngày ("7h sáng",
-    /// "tối 7h", "7h tối qua") hoặc có "lúc" ("lúc 19h30"). Mọi dạng trần ("19h30", "7:30", "20h", "2h30") đều bỏ qua: chúng
-    /// cũng là thời lượng ("thuê phòng 2h30", "pin dùng được 20h"), tỷ lệ ("1:20") hay số khác, và danh sách loại trừ thì
-    /// không bao giờ đủ. Nhầm giờ làm ghi chú mất chữ và `occurredAt` sai; bỏ sót giờ thì khoản vẫn đúng ngày như cũ.
+    /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**, bằng đúng một trong ba cách:
+    /// - buổi đứng **ngay sau** giờ ("7h sáng", "8h15 tối", "7h tối qua");
+    /// - buổi đứng **đầu câu** hoặc kèm "nay"/"qua" ("sáng 7h", "chiều nay 3h", "tối qua 7h");
+    /// - "lúc"/"vào lúc" ("lúc 19h30", "vào lúc 7:30").
+    /// Dạng dấu hai chấm ("7:30") chỉ nhận khi có "lúc". Mọi dạng khác bị bỏ qua, kể cả buổi nằm giữa câu: "ăn tối 7h",
+    /// "đèn sáng 20h", "tỷ lệ 1:20 sáng nay" — buổi ở đó là chữ của ghi chú, còn con số có thể là thời lượng ("thuê phòng
+    /// 2h30"), tỷ lệ, hay số khác. Danh sách loại trừ thì không bao giờ đủ; nhầm giờ làm ghi chú mất chữ và `occurredAt` sai,
+    /// còn bỏ sót giờ thì khoản vẫn đúng ngày như trước.
     func findTime(in text: String) -> TimeHit? {
         let ns = NSRange(text.startIndex..., in: text)
+        let chars = Array(text)
         for m in Self.timeRegex.matches(in: text, range: ns) {
-            guard let hour = Self.group(m, 3, in: text).flatMap(Int.init),
-                  let hourRange = Self.characterRange(m.range(at: 3), in: text),
+            guard let hour = Self.group(m, 4, in: text).flatMap(Int.init),
+                  let hourRange = Self.characterRange(m.range(at: 4), in: text),
                   let whole = Self.characterRange(m.range, in: text) else { continue }
-            let minuteText = Self.group(m, 4, in: text) ?? Self.group(m, 5, in: text) ?? Self.group(m, 6, in: text)
+            let minuteText = Self.group(m, 5, in: text) ?? Self.group(m, 6, in: text) ?? Self.group(m, 7, in: text)
             let minute = minuteText.flatMap(Int.init) ?? 0
-            let period = Self.group(m, 7, in: text) ?? Self.group(m, 2, in: text)
-            let hasLead = Self.group(m, 1, in: text) != nil
-            guard hour <= 23, minute <= 59, !(hour == 0 && period != nil) else { continue }
-            guard period != nil || hasLead else { continue }
+            let isClockStyle = Self.group(m, 7, in: text) != nil
+            let lead = Self.characterRange(m.range(at: 1), in: text)
+            let pre = Self.characterRange(m.range(at: 2), in: text)
+            // Buổi đứng trước chỉ là bằng chứng khi nó mở đầu câu, kèm "nay"/"qua", hoặc có "lúc"; còn lại là chữ của ghi chú.
+            let usablePre = pre.map { range in
+                lead != nil || Self.group(m, 3, in: text) != nil || chars[..<range.lowerBound].allSatisfy(\.isWhitespace)
+            } ?? false
+            let period = Self.group(m, 8, in: text) ?? (usablePre ? Self.group(m, 2, in: text) : nil)
+            guard hour <= 23, minute <= 59 else { continue }
+            guard lead != nil || (period != nil && !isClockStyle) else { continue }
             guard let hour24 = Self.hour24(hour, period: period) else { continue }
-            // "lúc" đứng ngay trước giờ thì bỏ cùng giờ ("đi chợ lúc 7h30" → "đi chợ"); còn "lúc sáng 7h" thì giữ chữ buổi.
-            var lower = hourRange.lowerBound
-            if hasLead, Self.group(m, 2, in: text) == nil, let lead = Self.characterRange(m.range(at: 1), in: text) {
-                lower = lead.lowerBound
-            }
+            let lower = lead?.lowerBound ?? (usablePre ? pre?.lowerBound : nil) ?? hourRange.lowerBound
             return TimeHit(minutes: hour24 * 60 + minute, range: lower..<whole.upperBound)
         }
         return nil
     }
 
-    /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó: sáng 1–11, trưa 10–12 và 1–3
-    /// (→ 13–15), chiều 1–7 (→ 13–19), tối 5–11 (→ 17–23), đêm 9–11 (→ 21–23), 12 (→ 0) và 1–5. Ví dụ "7h tối" → 19,
-    /// "12h trưa" → 12, "12h đêm" → 0. Giờ từ 13 trở lên thì buổi mâu thuẫn ("19h sáng"): giữ 19.
-    /// `nil` nếu buổi và giờ không đi với nhau ("11h chiều", "1h tối", "12h sáng", "5h trưa"): không phải giờ.
+    /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó (giờ 12h hoặc 24h):
+    /// sáng 1–11 · trưa 10–13 và 1–3 (→ 13–15) · chiều 1–7 (→ 13–19) và 13–18 · tối 5–11 (→ 17–23) và 17–23 ·
+    /// đêm 9–11 (→ 21–23), 12 (→ 0), 1–5, 0 và 21–23. Ví dụ "7h tối" → 19, "19h tối" → 19, "12h đêm" → 0.
+    /// Ngoài khoảng đó ("11h chiều", "1h tối", "12h sáng", "19h sáng") thì không phải giờ: không cộng 12 bừa.
+    /// Không có buổi (chỉ khi có "lúc") thì giờ là số viết ra, 0–23.
     static func hour24(_ hour: Int, period: String?) -> Int? {
-        guard let period, hour <= 12 else { return hour }
+        guard let period else { return (0...23).contains(hour) ? hour : nil }
         switch period {
         case "sang":
             return (1...11).contains(hour) ? hour : nil
         case "trua":
-            if (10...12).contains(hour) { return hour }
+            if (10...13).contains(hour) { return hour }
             return (1...3).contains(hour) ? hour + 12 : nil
         case "chieu":
-            return (1...7).contains(hour) ? hour + 12 : nil
+            if (1...7).contains(hour) { return hour + 12 }
+            return (13...18).contains(hour) ? hour : nil
         case "toi":
-            return (5...11).contains(hour) ? hour + 12 : nil
+            if (5...11).contains(hour) { return hour + 12 }
+            return (17...23).contains(hour) ? hour : nil
         case "dem":
             if hour == 12 { return 0 }
             if (9...11).contains(hour) { return hour + 12 }
-            return (1...5).contains(hour) ? hour : nil
+            return (1...5).contains(hour) || hour == 0 || (21...23).contains(hour) ? hour : nil
         default:
-            return hour
+            return nil
         }
     }
 
