@@ -434,6 +434,11 @@ public struct QuickEntryParser: Sendable {
     /// kê từng cú pháp số tiền. Riêng 円 không bị loại ở đây mà do `moneyUnitFollowsToken` quyết, vì 円 hay mở đầu một từ ("R8.9.20円山公園").
     private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])(?![万千百十])[\s\S])"#
 
+    /// Phần đứng sau đơn vị tiền mà `amountRegex` yêu cầu để gắn đơn vị vào số: hậu tố thập phân viết tắt (`\d{1,3}`: "1tr2", "1k5") rồi không có
+    /// chữ Latin, chữ số, `_` hay `/` dính liền ("9円candy", "9k/ngày" thì `amountRegex` không nhận đơn vị). Điều kiện của token dùng đúng ranh giới này
+    /// để việc loại token khỏi ngày và việc đọc số tiền không bất đồng.
+    private static let unitTail = #"(?:\d{1,3})?(?![a-z0-9_/])"#
+
     /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
     /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.
     /// Có đơn vị tiền ngay sau token thì nhóm cuối là giá chứ không phải ngày ("R2-3-9 円", "R2-3-9 k", "R2-3-1tr2", "R2-3-1k5", "R2-3-9千円"):
@@ -446,7 +451,8 @@ public struct QuickEntryParser: Sendable {
     /// quy tắc nào đúng cho cả hai. Chọn giữ giá: mất hay đọc sai số tiền là chặn luồng ghi, còn bỏ sót ngày thì khoản vẫn đúng như trước khi có tính
     /// năng này và thẻ xem trước hiện ngày để người dùng thấy ngay; viết có khoảng trắng ("R8.9.20 円山公園") thì được nhận là ngày.
     private static func moneyUnitFollowsToken(units: String) -> String {
-        #"(?!\s?(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")(?:\d{1,3})?(?![a-z0-9_]))(?!円)(?!\s円(?!\p{Han}))(?![万千百十])"#
+        #"(?!\s?(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")"# + unitTail + #")(?!円"# + unitTail + #")(?!\s円(?!\p{Han})"#
+            + unitTail + #")(?![万千百十])"#
     }
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
