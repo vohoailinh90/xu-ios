@@ -301,6 +301,10 @@ final class JapanMarketTests: XCTestCase {
         let nine = parse("R2-3-9円")
         XCTAssertEqual(nine.amount, 9)
         XCTAssertEqual(day(nine), "2026-09-25")
+        // Đơn vị chữ Hán của số kiểu Nhật (万/千/百) cũng là dấu hiệu tiền: "R2-3-9万円" là 90.000 yên, "R2-3-9千円" là 9.000 yên.
+        XCTAssertEqual(parse("R2-3-9万円").amount, 90_000)
+        XCTAssertEqual(parse("R2-3-9千円").amount, 9_000)
+        XCTAssertEqual(day(parse("R2-3-9万円")), "2026-09-25")
         // Hậu tố thập phân viết tắt ("1tr2", "1k5") là một phần của giá.
         let vietnam = QuickEntryParser(calendar: calendar)
         XCTAssertEqual(vietnam.parse("R2-3-1tr2", now: now).amount, 1_200_000)

@@ -426,9 +426,10 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
 
-    /// Ngay sau nhóm số cuối của token "R…" có đơn vị tiền (kể cả hậu tố thập phân viết tắt "1tr2", "1k5", như `amountRegex`) thì nhóm cuối
-    /// là giá chứ không phải ngày: "R2-3-900円", "R2-3-9円", "R2-3-1k5" là mã hàng kèm giá. Dùng chung cho regex nhận ngày và regex che token.
-    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #")(?:\d{1,3})?(?![a-z0-9_]))"#
+    /// Ngay sau nhóm số cuối của token "R…" có đơn vị tiền (kể cả hậu tố thập phân viết tắt "1tr2", "1k5", như `amountRegex`, và chữ Hán 万/千/百
+    /// của số kiểu Nhật) thì nhóm cuối là giá chứ không phải ngày: "R2-3-900円", "R2-3-9円", "R2-3-1k5", "R2-3-9万円" là mã hàng kèm giá.
+    /// Dùng chung cho regex nhận ngày và regex che token.
+    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #"|[万千百])(?:\d{1,3})?(?![a-z0-9_]))"#
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
     /// Không phải ngày khi nhóm cuối có đơn vị tiền ngay sau ("R2-3-9円": 9 yên, không phải 09/03/2020).
