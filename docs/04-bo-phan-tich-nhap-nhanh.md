@@ -203,6 +203,7 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 | `1万`, `1.5万`, `1万2千円`, `1万2000`, `1万500`, `2千5百円` | 10.000 / 15.000 / 12.000 / 12.000 / 10.500 / 2.500 | Số kiểu Nhật, luôn là yên |
 | `1万2`, `2千5` | 12.000 / 2.500 | Một chữ số đứng sau 万/千 là cách nói tắt; từ hai chữ số trở lên thì cộng nguyên (`1万25` = 10.025) |
 | `千円`, `百円`, `千五百円`, `一万二千円`, `二〇〇円` | 1.000 / 100 / 1.500 / 12.000 / 200 | Số viết toàn chữ Hán chỉ là tiền khi ngay sau là 円: `千葉`, `百貨店`, `八百屋` không phải số tiền |
+| `1万五千円`, `三万5千円`, `2千五百円`, `1.5万三千円` | 15.000 / 35.000 / 2.500 / 18.000 | Số **trộn** chữ số thường với chữ Hán (hoá đơn, bàn phím điện thoại): phải có cả chữ số thường lẫn chữ số Hán (〇–九, 十) và đứng ngay trước 円, như số toàn chữ Hán. Chữ số thường dính liền chữ số Hán (`1五千円`) không phải số hợp lệ nên không đoán. Số toàn chữ số thường (`6万5千円`, `1万2`) giữ nguyên cách đọc cũ, không cần 円 |
 | `25 man`, `1man2`, `3 sen` (thị trường Nhật) | 250.000 / 12.000 / 3.000 yên | Từ lóng của người Việt ở Nhật (vạn, nghìn yên). **Tắt** ở thị trường Việt Nam để không nhầm "mận", "sen" |
 | `35k`, `35 nghìn` (thị trường Nhật) | 35.000 yên | k / nghìn / ngàn nhân 1.000 với tiền của nơi chi tiêu |
 | `gửi về nhà 5tr`, `50.000đ` (thị trường Nhật) | tiền đồng | tr, triệu, củ, đ, đồng, vnd chỉ thuộc về tiền đồng |
@@ -217,6 +218,7 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 | `一昨日`, `おととい`, `day before yesterday` | 23/09 |
 | `9/20` | Thị trường Nhật: 20/09 (tháng trước, ngày sau). Thị trường Việt Nam vẫn là ngày/tháng |
 | `2026/9/1`, `2026-09-01` | 01/09/2026 (năm trước) |
+| `R8.9.20`, `R08.09.01`, `R8/9/20` | 20/09/2026 · 01/09/2026 · 20/09/2026 — năm 令和 viết tắt kiểu hoá đơn (R = 令和; `R1` = 2019). "R" phải đứng riêng (`CAR8.9.20` không phải). Biên lai không có ngày tương lai nên ngày sau hôm nay (`R8.9.30` khi hôm nay là 25/09/2026), tháng/ngày không hợp lệ hay `R0` không phải ngày: chữ ở lại trong ghi chú. Giới hạn đã biết: một mã kiểu phiên bản như `R2.3.15` trùng một ngày đã qua nên vẫn bị đọc là ngày; thẻ xem trước hiện ngày để người dùng thấy ngay |
 | `9月20日`, `2026年9月1日`, `令和8年9月1日`, `20日` | 20/09 · 01/09 · 01/09/2026 (令和元年 = 2019) · 20/09. `28日` chưa tới trong tháng → 28/08. `3日間`, `3日分`, `2日目` không phải ngày. `N日` thiếu tháng chỉ là ngày khi đứng riêng: bên trái là đầu câu, khoảng trắng hoặc dấu câu; bên phải là hết câu, khoảng trắng, dấu câu, buổi trong ngày, `から`, `ごろ`/`頃` hoặc `の` (`20日朝`, `20日午後`, `20日から`, `20日の`). `1日乗車券`, `2日酔い`, `3日で5000円`, `1日につき500円`, `最長3日まで`, `3泊4日`, `3泊 4日` không phải ngày |
 | `月曜`, `月曜日`, `(月)`, `（月）`, `monday` | 21/09 (thứ Hai gần nhất, tính cả hôm nay) |
 | `9/23(水)`, `9/23 (水曜日)` | 23/09; thứ trong ngoặc ngay sau ngày cũng bỏ khỏi ghi chú |
@@ -254,4 +256,4 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 - [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ. (Đã có `testPerformance` để theo dõi; phải đo trên máy thật.)
 - [ ] Bộ dữ liệu thật: cho phép người dùng (tự nguyện) gửi các câu parser hiểu sai để bổ sung test.
 - [x] Tiếng Nhật: số viết bằng chữ Hán (`千五百円`), năm 令和, thứ trong ngoặc (`(月)`) — 2026-10-02.
-- [ ] Tiếng Nhật: năm 令和 viết tắt kiểu hoá đơn (`R8.9.30`), số chữ Hán trộn chữ số (`1万五千円`).
+- [x] Tiếng Nhật: năm 令和 viết tắt kiểu hoá đơn (`R8.9.20`), số chữ Hán trộn chữ số (`1万五千円`) — 2026-10-03.

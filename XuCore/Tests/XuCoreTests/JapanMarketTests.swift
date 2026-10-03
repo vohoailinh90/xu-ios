@@ -67,6 +67,27 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(greengrocer.categoryID, "groceries")
     }
 
+    func testNumbersMixingDigitsAndKanji() {
+        // Hoá đơn và bàn phím điện thoại hay trộn chữ số thường với chữ Hán: "1万五千円" = 15.000, không phải 1万 rồi 五千.
+        let rent = parse("家賃 1万五千円")
+        XCTAssertEqual(rent.amount, 15_000)
+        XCTAssertEqual(rent.currency, .jpy)
+        XCTAssertEqual(rent.note, "家賃", "円 bỏ cùng số tiền")
+        XCTAssertEqual(parse("三万5千円 服").amount, 35_000)
+        XCTAssertEqual(parse("三万5千円 服").note, "服")
+        XCTAssertEqual(parse("2千五百円 ランチ").amount, 2_500)
+        XCTAssertEqual(parse("1.5万三千円 旅行").amount, 18_000)
+        XCTAssertEqual(parse("五万3千 円 服").amount, 53_000, "Có thể cách một dấu cách trước 円")
+        let party = parse("5人で1万五千円")
+        XCTAssertEqual(party.amount, 15_000, "Số người đứng trước không thành số tiền")
+        XCTAssertEqual(party.note, "5人で")
+        // Dạng cũ không đổi.
+        XCTAssertEqual(parse("家賃 6万5千円").amount, 65_000)
+        XCTAssertEqual(parse("1万500円").amount, 10_500)
+        XCTAssertEqual(parse("一万二千円 服").amount, 12_000)
+        XCTAssertEqual(parse("1万2 服").amount, 12_000)
+    }
+
     func testKanjiInNamesIsNotAnAmount() {
         XCTAssertEqual(parse("千葉 電車 450").amount, 450)
         XCTAssertEqual(parse("千葉 電車 450").note, "千葉 電車")
@@ -219,6 +240,29 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(parse("令和8年9月1日 家賃 65000")), "2026-09-01")
         XCTAssertEqual(day(parse("令和元年5月1日 家賃 65000")), "2019-05-01")
         XCTAssertEqual(parse("令和8年9月1日 家賃 65000").note, "家賃")
+    }
+
+    func testReiwaYearAbbreviatedLikeAReceipt() {
+        // Hoá đơn in ngày kiểu "R8.9.20" (R = 令和; 令和元年 = 2019). Hôm nay là 25/09/2026.
+        let r = parse("R8.9.20 ランチ 900")
+        XCTAssertEqual(day(r), "2026-09-20")
+        XCTAssertEqual(r.note, "ランチ", "Ngày bỏ khỏi ghi chú")
+        XCTAssertEqual(r.amount, 900, "8.9 và 20 trong ngày không thành số tiền")
+        XCTAssertEqual(day(parse("R08.09.01 ランチ 900")), "2026-09-01")
+        XCTAssertEqual(day(parse("R8/9/20 ランチ 900")), "2026-09-20")
+        XCTAssertEqual(day(parse("r8.9.20 ランチ 900")), "2026-09-20")
+        XCTAssertEqual(day(parse("R1.5.1 ランチ 900")), "2019-05-01")
+        XCTAssertEqual(day(parse("Ｒ８．９．２０ ランチ 900")), "2026-09-20", "Chữ toàn khổ của bàn phím Nhật")
+        XCTAssertEqual(parse("ランチ 900 R8.9.20").note, "ランチ")
+        // Ngày sau hôm nay (biên lai không có) hay không hợp lệ thì không phải ngày: chữ ở lại trong ghi chú.
+        for text in ["R8.9.30 ランチ 900", "R8.13.20 ランチ 900", "R0.9.20 ランチ 900"] {
+            let r = parse(text)
+            XCTAssertEqual(day(r), "2026-09-25", text)
+            XCTAssertTrue(r.note.hasPrefix("R"), "Ghi chú giữ nguyên chữ của người dùng: \(text)")
+            XCTAssertEqual(r.amount, 900, text)
+        }
+        // "R" phải đứng riêng: không đọc giữa một từ.
+        XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }
 
     func testJapaneseWeekdays() {

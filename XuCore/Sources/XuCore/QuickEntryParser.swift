@@ -200,10 +200,18 @@ public struct QuickEntryParser: Sendable {
     static let amountRegexVietnam = QuickEntryParser.amountRegex(units: QuickEntryParser.vietnamUnits)
     static let amountRegexJapan = QuickEntryParser.amountRegex(units: QuickEntryParser.japanUnits)
 
-    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円", "千五百円". Luôn là yên.
+    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円", "千五百円", "1万五千円". Luôn là yên.
     /// Số viết toàn chữ Hán chỉ là số tiền khi ngay sau là 円, để "千葉", "百貨店", "八百屋" không thành số tiền.
+    /// Số trộn chữ số với chữ Hán ("1万五千円", "三万5千円") cũng vậy: phải có cả chữ số thường lẫn chữ số Hán (〇–九, 十) và đứng ngay
+    /// trước 円; viết toàn chữ số thường ("1万5千") không cần 円, như trước. Nhóm: 1 dấu, 2 ¥, 3 số trộn, 4 số thường + 万千百,
+    /// 5 toàn chữ Hán, 6 đơn vị.
     static let kanjiAmountRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)|([〇零一二三四五六七八九十百千万]+)(?=\s?円))\s?(円|yen)?(?![a-z0-9_/])"#
+        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:"#
+            + #"(?=[0-9.,〇零一二三四五六七八九十百千万]*[〇零一二三四五六七八九十])(?=[0-9.,〇零一二三四五六七八九十百千万]*\d)"#
+            + #"((?:\d+(?:[.,]\d+)*|[〇零一二三四五六七八九十百千万])+)(?=\s?円)"#
+            + #"|(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)"#
+            + #"|([〇零一二三四五六七八九十百千万]+)(?=\s?円))"#
+            + #"\s?(円|yen)?(?![a-z0-9_/])"#
     )
 
     /// Tên có số không phải số tiền: "100均 330" là 330 yên, không phải 100.
@@ -219,10 +227,12 @@ public struct QuickEntryParser: Sendable {
         for m in Self.kanjiAmountRegex.matches(in: text, range: ns) {
             guard let range = Self.characterRange(m.range, in: text) else { continue }
             let value: Decimal?
-            if let core = Self.group(m, 3, in: text) {
+            if let mixed = Self.group(m, 3, in: text) {
+                value = Self.parseMixedKanjiNumber(mixed)
+            } else if let core = Self.group(m, 4, in: text) {
                 value = Self.parseKanjiNumber(core)
             } else {
-                value = Self.group(m, 4, in: text).flatMap(Self.parseKanjiDigits)
+                value = Self.group(m, 5, in: text).flatMap(Self.parseKanjiDigits)
             }
             guard let value, value > 0 else { continue }
             kanjiRanges.append(range)
@@ -341,6 +351,62 @@ public struct QuickEntryParser: Sendable {
         return value > 0 ? Decimal(value) : nil
     }
 
+    /// Số trộn chữ số thường với chữ Hán: "1万五千" → 15000 · "三万5千" → 35000 · "2千五百" → 2500 · "1.5万三千" → 18000.
+    /// Chữ số Hán liền nhau tạo thành số ("二〇〇"); chữ số thường và chữ số Hán không dính liền nhau ("1五" là không hợp lệ).
+    /// Không có cách nói tắt như "1万2" (ở đây luôn đứng trước 円): chữ số lẻ ở cuối cộng thẳng.
+    static func parseMixedKanjiNumber(_ text: String) -> Decimal? {
+        let kanjiDigits: [Character: Int] = ["〇": 0, "零": 0, "一": 1, "二": 2, "三": 3, "四": 4,
+                                             "五": 5, "六": 6, "七": 7, "八": 8, "九": 9]
+        let units: [Character: Decimal] = ["十": 10, "百": 100, "千": 1_000, "万": 10_000]
+        var total: Decimal = 0      // phần đã nhân 万
+        var section: Decimal = 0    // phần dưới 万
+        var pending: Decimal?       // số đang chờ đơn vị
+        var pendingIsKanji = false
+        var ascii = ""
+
+        func takeAscii() -> Bool {
+            guard !ascii.isEmpty else { return true }
+            defer { ascii = "" }
+            guard pending == nil, let number = parseNumber(ascii) else { return false }
+            pending = number
+            pendingIsKanji = false
+            return true
+        }
+
+        for ch in text {
+            if ch.isASCII, ch.isNumber || ch == "." || ch == "," {
+                ascii.append(ch)
+                continue
+            }
+            guard takeAscii() else { return nil }
+            if let digit = kanjiDigits[ch] {
+                if let current = pending {
+                    guard pendingIsKanji else { return nil }
+                    pending = current * 10 + Decimal(digit)
+                } else {
+                    pending = Decimal(digit)
+                    pendingIsKanji = true
+                }
+            } else if let unit = units[ch] {
+                let count = pending
+                pending = nil
+                if unit == 10_000 {
+                    let head = section + (count ?? 0)
+                    guard head > 0 else { return nil }
+                    total += head * unit
+                    section = 0
+                } else {
+                    section += (count ?? 1) * unit
+                }
+            } else {
+                return nil
+            }
+        }
+        guard takeAscii() else { return nil }
+        let value = total + section + (pending ?? 0)
+        return value > 0 ? value : nil
+    }
+
     static func int64(_ value: Decimal) -> Int64 {
         var input = value
         var rounded = Decimal()
@@ -353,6 +419,11 @@ public struct QuickEntryParser: Sendable {
     /// "2026/9/30", "2026-09-30" — năm đứng trước, cách ghi của Nhật và ISO.
     static let yearFirstDateRegex = try! NSRegularExpression(
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
+    )
+
+    /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
+    static let reiwaShortDateRegex = try! NSRegularExpression(
+        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2})(?![0-9a-z_/-])(?!\.\d)"#
     )
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
@@ -442,6 +513,17 @@ public struct QuickEntryParser: Sendable {
            let day = Self.group(m, 3, in: text).flatMap(Int.init),
            let range = Self.characterRange(m.range, in: text),
            let date = makeDate(year: year, month: month, day: day) {
+            return (date, range)
+        }
+
+        // Hoá đơn Nhật in ngày kiểu "R8.9.30". Biên lai không có ngày tương lai, nên ngày sau hôm nay không phải ngày
+        // (tránh đọc nhầm một mã kiểu phiên bản "R2.3.15"); khi đó chữ ở lại trong ghi chú.
+        if let m = Self.reiwaShortDateRegex.firstMatch(in: text, range: ns),
+           let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
+           let month = Self.group(m, 2, in: text).flatMap(Int.init),
+           let day = Self.group(m, 3, in: text).flatMap(Int.init),
+           let range = Self.characterRange(m.range, in: text),
+           let date = makeDate(year: 2018 + era, month: month, day: day), date <= today {
             return (date, range)
         }
 
