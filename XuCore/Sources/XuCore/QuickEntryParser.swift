@@ -525,11 +525,12 @@ public struct QuickEntryParser: Sendable {
 
     // MARK: - Giờ
 
-    /// "7h sáng", "19h30", "7:30", "7 giờ 30", "sáng 7h", "chiều nay 3h" (chuỗi đã gấp: "giờ" → "gio").
-    /// Nhóm: 1 buổi đứng trước, 2 giờ, 3 phút ("7h30"), 4 phút ("7 giờ 30"), 5 phút ("7:30"), 6 buổi đứng sau.
+    /// "7h sáng", "lúc 19h30", "sáng 7h", "chiều nay 3h", "7 giờ 30 sáng", "lúc 7:30" (chuỗi đã gấp: "giờ" → "gio").
+    /// Nhóm: 1 "lúc" hoặc "vào lúc", 2 buổi đứng trước, 3 giờ, 4 phút ("7h30"), 5 phút ("7 giờ 30"), 6 phút ("7:30"), 7 buổi đứng sau.
     /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 30k" là 7h và 30k, không phải 7h30.
+    /// Regex chỉ *tìm* ứng viên; có nhận là giờ hay không do `findTime` quyết.
     static let timeRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/:.,])(?:(sang|trua|chieu|toi|dem)(?:\s(?:nay|qua))?\s)?(\d{1,2})"#
+        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s)?luc)\s)?(?:(sang|trua|chieu|toi|dem)(?:\s(?:nay|qua))?\s)?(\d{1,2})"#
             + #"(?:h(\d{2})?|\s?gio(?:\s?(\d{2})(?![a-z0-9_]))?|:(\d{2}))"#
             + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
     )
@@ -537,29 +538,34 @@ public struct QuickEntryParser: Sendable {
     struct TimeHit {
         /// Số phút từ 0:00.
         let minutes: Int
-        /// Vùng bỏ khỏi ghi chú: từ chữ số giờ tới hết buổi đứng sau ("7h sáng"). Buổi đứng trước ("ăn tối 7h") ở lại,
-        /// vì đó là chữ của ghi chú: bỏ "tối" thì "ăn tối" mất danh mục.
+        /// Vùng bỏ khỏi ghi chú: từ "lúc" (nếu có) hoặc chữ số giờ tới hết buổi đứng sau ("7h sáng", "lúc 19h30").
+        /// Buổi đứng trước ("ăn tối 7h") ở lại, vì đó là chữ của ghi chú: bỏ "tối" thì "ăn tối" mất danh mục.
         let range: Range<Int>
     }
 
-    /// Giờ đầu tiên trong câu. "2h", "2h30", "2 giờ 30" có thể là thời lượng ("thuê phòng 2h30", "gói 24h"), nên chỉ nhận khi
-    /// có buổi ("7h sáng"), giờ từ 13 trở lên ("19h30") hoặc viết dạng đồng hồ có dấu hai chấm ("7:30"). Phút dính liền
-    /// "h" không đủ làm bằng chứng. Nhầm giờ thì ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì thấy ngay trên
-    /// thẻ xem trước: nên không đoán bừa.
+    /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**: có buổi trong ngày ("7h sáng",
+    /// "tối 7h", "7h tối qua") hoặc có "lúc" ("lúc 19h30"). Mọi dạng trần ("19h30", "7:30", "20h", "2h30") đều bỏ qua: chúng
+    /// cũng là thời lượng ("thuê phòng 2h30", "pin dùng được 20h"), tỷ lệ ("1:20") hay số khác, và danh sách loại trừ thì
+    /// không bao giờ đủ. Nhầm giờ làm ghi chú mất chữ và `occurredAt` sai; bỏ sót giờ thì khoản vẫn đúng ngày như cũ.
     func findTime(in text: String) -> TimeHit? {
         let ns = NSRange(text.startIndex..., in: text)
         for m in Self.timeRegex.matches(in: text, range: ns) {
-            guard let hour = Self.group(m, 2, in: text).flatMap(Int.init),
-                  let hourRange = Self.characterRange(m.range(at: 2), in: text),
+            guard let hour = Self.group(m, 3, in: text).flatMap(Int.init),
+                  let hourRange = Self.characterRange(m.range(at: 3), in: text),
                   let whole = Self.characterRange(m.range, in: text) else { continue }
-            let minuteText = Self.group(m, 3, in: text) ?? Self.group(m, 4, in: text) ?? Self.group(m, 5, in: text)
+            let minuteText = Self.group(m, 4, in: text) ?? Self.group(m, 5, in: text) ?? Self.group(m, 6, in: text)
             let minute = minuteText.flatMap(Int.init) ?? 0
-            let period = Self.group(m, 6, in: text) ?? Self.group(m, 1, in: text)
+            let period = Self.group(m, 7, in: text) ?? Self.group(m, 2, in: text)
+            let hasLead = Self.group(m, 1, in: text) != nil
             guard hour <= 23, minute <= 59, !(hour == 0 && period != nil) else { continue }
-            let isClockStyle = Self.group(m, 5, in: text) != nil
-            guard period != nil || isClockStyle || hour >= 13 else { continue }
+            guard period != nil || hasLead else { continue }
             guard let hour24 = Self.hour24(hour, period: period) else { continue }
-            return TimeHit(minutes: hour24 * 60 + minute, range: hourRange.lowerBound..<whole.upperBound)
+            // "lúc" đứng ngay trước giờ thì bỏ cùng giờ ("đi chợ lúc 7h30" → "đi chợ"); còn "lúc sáng 7h" thì giữ chữ buổi.
+            var lower = hourRange.lowerBound
+            if hasLead, Self.group(m, 2, in: text) == nil, let lead = Self.characterRange(m.range(at: 1), in: text) {
+                lower = lead.lowerBound
+            }
+            return TimeHit(minutes: hour24 * 60 + minute, range: lower..<whole.upperBound)
         }
         return nil
     }
