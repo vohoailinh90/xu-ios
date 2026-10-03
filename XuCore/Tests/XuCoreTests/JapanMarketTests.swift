@@ -331,12 +331,17 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(chiba), "2026-09-20")
         XCTAssertEqual(chiba.amount, 900)
         XCTAssertEqual(chiba.note, "千葉 電車")
-        for text in ["R8.9.20 円山公園 900", "R8.9.20円山公園 900"] {
-            let maruyama = parse(text)
-            XCTAssertEqual(day(maruyama), "2026-09-20", text)
-            XCTAssertEqual(maruyama.amount, 900, "Không phải 9 yên: \(text)")
-            XCTAssertEqual(maruyama.note, "円山公園", text)
-        }
+        let maruyama = parse("R8.9.20 円山公園 900")
+        XCTAssertEqual(day(maruyama), "2026-09-20", "Có khoảng trắng: 円山公園 là tên")
+        XCTAssertEqual(maruyama.amount, 900, "Không phải 9 yên")
+        XCTAssertEqual(maruyama.note, "円山公園")
+        // Nhập nhằng thật, quyết định có chủ ý: 円 liền sát token luôn là đơn vị. "R2-3-9円菓子" là giá 9 yên + ghi chú "菓子" (không mất số tiền);
+        // "R8.9.20円山公園" giống hệt về chữ nên cùng một kết quả (giá, không có ngày): viết cách khoảng trắng thì được nhận là ngày.
+        let sweets = parse("R2-3-9円菓子")
+        XCTAssertEqual(sweets.amount, 9)
+        XCTAssertEqual(day(sweets), "2026-09-25")
+        XCTAssertEqual(sweets.note, "R2-3-菓子", "Chỉ số tiền 9円 bị bỏ khỏi ghi chú")
+        XCTAssertEqual(day(parse("R8.9.20円山公園 900")), "2026-09-25", "Nhập nhằng: giữ giá, bỏ sót ngày")
         // Nhưng chữ Hán của số tiền sát token thì không: "R2-3-9万5000円" và "R2-3-9十円" là giá.
         XCTAssertEqual(day(parse("R2-3-9十円")), "2026-09-25")
         XCTAssertEqual(parse("R2-3-9十円").amount, 90)
