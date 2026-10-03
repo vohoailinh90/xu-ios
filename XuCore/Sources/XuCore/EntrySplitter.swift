@@ -24,7 +24,9 @@ extension QuickEntryParser {
         guard amounts.count > 1 else { return [whole] }
 
         let chars = analysis.folded
-        let outsideDate = { (i: Int) in analysis.dateRange?.contains(i) != true }
+        let outsideDate = { (i: Int) in
+            analysis.dateRange?.contains(i) != true && analysis.time?.range.contains(i) != true
+        }
         let notesFirst = (0..<amounts[0].range.lowerBound).contains { i in
             outsideDate(i) && (chars[i].isLetter || chars[i].isNumber)
         }
@@ -47,11 +49,13 @@ extension QuickEntryParser {
             let amount = amounts[i]
             var removed = [0..<starts[i], ends[i]..<chars.count, amount.range]
             if let dateRange = analysis.dateRange { removed.append(dateRange) }
+            if let timeRange = analysis.time?.range { removed.append(timeRange) }
             let note = Self.trimConnectors(Self.buildNote(analysis.original, removing: removed))
             let (isIncome, categoryID) = Self.classify(matcher.match(note: note) ?? fallback,
                                                        signedIncome: amount.isPlus)
             return QuickEntryResult(amount: amount.value, currency: amount.currency, isIncome: isIncome,
-                                    date: analysis.date, categoryID: categoryID, note: note)
+                                    date: analysis.date, categoryID: categoryID, note: note,
+                                    minutesOfDay: analysis.time?.minutes)
         }
     }
 

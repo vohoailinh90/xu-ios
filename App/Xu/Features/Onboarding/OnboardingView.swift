@@ -113,7 +113,7 @@ struct OnboardingView: View {
             MoneyFormatter.signed($0, isIncome: result.isIncome, currency: result.currency, language: language)
         } ?? language.t(.noAmountYet)
         return [result.category.emoji + " " + result.category.name(in: language), amount,
-                DayLabel.text(for: result.date, language: language)].joined(separator: " · ")
+                DayLabel.text(for: result, language: language)].joined(separator: " · ")
     }
 
     private func saveFirst(_ result: QuickEntryResult) {

@@ -10,9 +10,12 @@ public struct QuickEntryResult: Equatable, Sendable {
     public var note: String
     /// Câu có nhiều số tiền tường minh — UI nên gợi ý tách khoản.
     public var hasMultipleAmounts: Bool
+    /// Giờ trong câu ("7h sáng", "19h30", "7:30"), tính bằng số phút từ 0:00; `nil` nếu câu không có giờ. `date` vẫn
+    /// chỉ là ngày: ngày của khoản không bao giờ đổi vì giờ.
+    public var minutesOfDay: Int?
 
     public init(amount: Int64?, currency: Currency = .vnd, isIncome: Bool, date: Date, categoryID: String,
-                note: String, hasMultipleAmounts: Bool = false) {
+                note: String, hasMultipleAmounts: Bool = false, minutesOfDay: Int? = nil) {
         self.amount = amount
         self.currency = currency
         self.isIncome = isIncome
@@ -20,6 +23,7 @@ public struct QuickEntryResult: Equatable, Sendable {
         self.categoryID = categoryID
         self.note = note
         self.hasMultipleAmounts = hasMultipleAmounts
+        self.minutesOfDay = minutesOfDay
     }
 
     public var isComplete: Bool { amount != nil }
@@ -59,29 +63,29 @@ public struct QuickEntryParser: Sendable {
 
     public func parse(_ text: String, now: Date = Date()) -> QuickEntryResult {
         let analysis = analyze(text, now: now)
-        var removed = analysis.dateRange.map { [$0] } ?? []
+        var removed = (analysis.dateRange.map { [$0] } ?? []) + (analysis.time.map { [$0.range] } ?? [])
         let explicit = analysis.explicit
 
         // Ưu tiên số có đơn vị: nhiều số có đơn vị thì lấy số đầu tiên; chỉ có số trần thì lấy số lớn nhất.
         var amount: Int64?
         var currency = options.market.currency
         var signedIncome = false
-        if let pick = explicit.first ?? analysis.candidates.max(by: { $0.value < $1.value }) {
+        if let pick = Self.chosenAmount(analysis.candidates) {
             amount = pick.value
             currency = pick.currency
             signedIncome = pick.isPlus
             removed.append(pick.range)
         }
 
-        // 3. Ghi chú (giữ dấu từ chuỗi gốc)
+        // Ghi chú (giữ dấu từ chuỗi gốc)
         let note = Self.buildNote(analysis.original, removing: removed)
 
-        // 4. Danh mục & thu/chi
+        // Danh mục & thu/chi
         let (isIncome, categoryID) = Self.classify(matcher.match(note: note), signedIncome: signedIncome)
 
         return QuickEntryResult(amount: amount, currency: currency, isIncome: isIncome, date: analysis.date,
                                 categoryID: categoryID, note: note,
-                                hasMultipleAmounts: explicit.count > 1)
+                                hasMultipleAmounts: explicit.count > 1, minutesOfDay: analysis.time?.minutes)
     }
 
     /// Bước 1–2, dùng chung cho `parse` và `split`.
@@ -92,6 +96,8 @@ public struct QuickEntryParser: Sendable {
         let date: Date
         /// Vùng ngày (kèm thứ trong ngoặc, trợ từ) để bỏ khỏi ghi chú.
         let dateRange: Range<Int>?
+        /// Giờ trong câu ("7h sáng"); `nil` nếu không có.
+        let time: TimeHit?
         /// Mọi số tìm thấy, theo thứ tự trong câu.
         let candidates: [AmountCandidate]
         /// Số có đơn vị tường minh (k, tr, đ, 円…).
@@ -106,16 +112,35 @@ public struct QuickEntryParser: Sendable {
         let today = calendar.startOfDay(for: now)
         var date = today
         var dateRange: Range<Int>?
-        if let hit = findDate(in: folded, today: today) {
+        if let hit = findDate(in: folded, original: original, today: today) {
             date = hit.date
             dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
 
-        // 2. Số tiền (trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均")
-        let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? [])
-                                   + Self.ranges(of: Self.numericNameRegex, in: folded))
-        return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange,
-                        candidates: findAmounts(in: masked, original: original))
+        // 2. Giờ ("cà phê 7h sáng 35k", "lúc 19h30")
+        var time = findTime(in: folded, original: original)
+
+        // 3. Số tiền, trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均".
+        let dateRanges = dateRange.map { [$0] } ?? []
+        let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
+        var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
+        if let hit = time {
+            // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
+            // - số có đơn vị tiền (đ, k, nghìn, triệu…) chồng lên cụm giờ là tiền, không phải phút ("lúc 7 giờ 30.000đ"): bỏ giờ;
+            // - che giờ đi mà không còn số nào, trong khi chưa che thì có: số duy nhất đó là tiền ("cà phê lúc 7:30"): bỏ giờ.
+            // Còn có số tiền khác thì giờ là giờ, và số tiền xác định SAU khi loại cụm giờ — không so với số lớn nhất của chuỗi chưa
+            // che giờ: "lúc 7:30 trà đá 5" là 5.000đ lúc 07:30, không phải 30.000đ.
+            let stolen = candidates.contains { $0.hasUnit && $0.range.overlaps(hit.range) }
+            let masked = stolen ? [] : findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + [hit.range] + numericNames),
+                                                   original: original)
+            if stolen || (masked.isEmpty && !candidates.isEmpty) {
+                time = nil
+            } else {
+                candidates = masked
+            }
+        }
+        return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange, time: time,
+                        candidates: candidates)
     }
 
     /// Thu/chi và danh mục: dấu "+" hoặc danh mục thu nhập là khoản thu. Có "+" mà danh mục đoán được là khoản chi
@@ -135,6 +160,11 @@ public struct QuickEntryParser: Sendable {
         let hasUnit: Bool
         let isPlus: Bool
         let range: Range<Int>
+    }
+
+    /// Số tiền `parse` sẽ chọn: số có đơn vị đầu tiên; không có thì số trần lớn nhất.
+    static func chosenAmount(_ candidates: [AmountCandidate]) -> AmountCandidate? {
+        candidates.first(where: \.hasUnit) ?? candidates.max(by: { $0.value < $1.value })
     }
 
     /// Ranh giới từ chỉ xét chữ Latin và số: chữ Nhật đứng sát số vẫn là ranh giới ("コーヒー350円").
@@ -336,13 +366,22 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9])(?:(?:(\d{4})|令和(\d{1,2}|元))年)?(?:(\d{1,2})月)?(\d{1,2})日(?![間分目])"#
     )
 
+    /// Cụm ngày tương đối. `spelling` là cách viết đủ dấu của từng chữ (cụm tiếng Việt), `nil` cho tiếng Anh/Nhật.
+    struct RelativeDay {
+        let regex: NSRegularExpression
+        let offset: Int
+        let spelling: [String]?
+    }
+
     /// Thứ tự quan trọng: cụm dài/cụ thể trước ("一昨日" trước "昨日").
-    static let relativeDays: [(NSRegularExpression, Int)] = {
-        let latin: [(String, Int)] = [
-            ("hom kia", -2), ("toi qua", -1), ("dem qua", -1), ("sang qua", -1), ("hom qua", -1),
-            ("hom nay", 0), ("sang nay", 0), ("trua nay", 0), ("chieu nay", 0), ("toi nay", 0),
-            ("day before yesterday", -2), ("yesterday", -1), ("last night", -1),
-            ("today", 0), ("tonight", 0), ("this morning", 0)
+    static let relativeDays: [RelativeDay] = {
+        let latin: [(String, Int, [String]?)] = [
+            ("hom kia", -2, ["hôm", "kia"]), ("toi qua", -1, ["tối", "qua"]), ("dem qua", -1, ["đêm", "qua"]),
+            ("sang qua", -1, ["sáng", "qua"]), ("hom qua", -1, ["hôm", "qua"]),
+            ("hom nay", 0, ["hôm", "nay"]), ("sang nay", 0, ["sáng", "nay"]), ("trua nay", 0, ["trưa", "nay"]),
+            ("chieu nay", 0, ["chiều", "nay"]), ("toi nay", 0, ["tối", "nay"]),
+            ("day before yesterday", -2, nil), ("yesterday", -1, nil), ("last night", -1, nil),
+            ("today", 0, nil), ("tonight", 0, nil), ("this morning", 0, nil)
         ]
         // Tiếng Nhật không có khoảng trắng giữa các từ nên không xét ranh giới từ.
         let japanese: [(String, Int)] = [
@@ -350,9 +389,29 @@ public struct QuickEntryParser: Sendable {
             ("昨日", -1), ("きのう", -1), ("昨夜", -1), ("昨晩", -1), ("ゆうべ", -1),
             ("今日", 0), ("きょう", 0), ("今朝", 0), ("けさ", 0), ("今夜", 0), ("今晩", 0)
         ]
-        return latin.map { (try! NSRegularExpression(pattern: QuickEntryParser.wordStart + $0.0 + QuickEntryParser.wordEnd), $0.1) }
-            + japanese.map { (try! NSRegularExpression(pattern: NSRegularExpression.escapedPattern(for: $0.0)), $0.1) }
+        // Khoảng trắng giữa hai chữ là một hay nhiều (dấu cách, tab, NBSP…), cùng quy tắc với cụm giờ ("tối  qua  7h"): cụm ngày và
+        // cụm giờ phải hiểu cùng một câu, không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
+        var days: [RelativeDay] = []
+        for (phrase, offset, spelling) in latin {
+            let pattern = QuickEntryParser.wordStart + phrase.replacingOccurrences(of: " ", with: #"\s+"#) + QuickEntryParser.wordEnd
+            days.append(RelativeDay(regex: try! NSRegularExpression(pattern: pattern), offset: offset, spelling: spelling))
+        }
+        for (phrase, offset) in japanese {
+            let pattern = NSRegularExpression.escapedPattern(for: phrase)
+            days.append(RelativeDay(regex: try! NSRegularExpression(pattern: pattern), offset: offset, spelling: nil))
+        }
+        return days
     }()
+
+    /// Chuỗi đã bỏ dấu khớp cả những câu không phải cụm ngày: "tôi qua quán" (đại từ), "đem qua nhà" (mang sang) trông như
+    /// "tối qua", "đêm qua" sau khi bỏ dấu. Nên mỗi chữ của cụm đối chiếu với chữ gốc: hoặc bỏ dấu hoàn toàn ("toi qua": người
+    /// dùng gõ không dấu), hoặc đúng chữ đủ dấu ("tối qua"); dấu khác ("tôi", "đem") là một từ khác. Cùng nguyên tắc với chữ buổi
+    /// trong cụm giờ.
+    static func spellsDatePhrase(_ range: Range<Int>, in original: [Character], spelling: [String]?) -> Bool {
+        guard let spelling else { return true }
+        guard let words = originalWords(range, in: original), words.count == spelling.count else { return false }
+        return zip(words, spelling).allSatisfy { pair in pair.0 == pair.1 || pair.0 == TextFolding.fold(pair.1) }
+    }
 
     /// "thu 2", "t2", "cn", "chu nhat" — nhưng KHÔNG khớp "thu 5 trieu" (thu tiền).
     static let weekdayRegex = try! NSRegularExpression(
@@ -373,7 +432,7 @@ public struct QuickEntryParser: Sendable {
     )
     static let englishWeekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
-    func findDate(in text: String, today: Date) -> (date: Date, range: Range<Int>)? {
+    func findDate(in text: String, original: [Character], today: Date) -> (date: Date, range: Range<Int>)? {
         let ns = NSRange(text.startIndex..., in: text)
         let currentYear = calendar.component(.year, from: today)
 
@@ -414,10 +473,11 @@ public struct QuickEntryParser: Sendable {
             }
         }
 
-        for (regex, offset) in Self.relativeDays {
-            if let m = regex.firstMatch(in: text, range: ns),
-               let range = Self.characterRange(m.range, in: text),
-               let date = calendar.date(byAdding: .day, value: offset, to: today) {
+        for day in Self.relativeDays {
+            for m in day.regex.matches(in: text, range: ns) {
+                guard let range = Self.characterRange(m.range, in: text),
+                      Self.spellsDatePhrase(range, in: original, spelling: day.spelling),
+                      let date = calendar.date(byAdding: .day, value: day.offset, to: today) else { continue }
                 return (date, range)
             }
         }
@@ -511,6 +571,170 @@ public struct QuickEntryParser: Sendable {
         let components = DateComponents(year: year, month: month, day: day)
         guard components.isValidDate(in: calendar), let date = calendar.date(from: components) else { return nil }
         return date
+    }
+
+    // MARK: - Giờ
+
+    /// Ứng viên giờ trên chuỗi đã gấp ("giờ" → "gio"). Nhóm: 1 "lúc"/"vào lúc", 2 buổi đứng trước, 3 "nay"/"qua" theo sau
+    /// buổi đó, 4 giờ, 5 phút ("7h30"), 6 phút ("7 giờ 30"), 7 phút ("7:30"), 8 buổi đứng sau.
+    /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 35k" là 7h và 30k, không phải 7h30.
+    /// Regex chỉ *tìm* ứng viên; có nhận là giờ hay không do `findTime` quyết.
+    static let timeRegex = try! NSRegularExpression(
+        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s+)?luc)\s+)?(?:(sang|trua|chieu|toi|dem)(?:\s+(nay|qua))?\s+)?(\d{1,2})"#
+            + #"(?:h(\d{2}"# + moneyUnitAhead + #")?|\s*gio(?:\s*(\d{2})(?![a-z0-9_])"# + moneyUnitAhead + #")?|:(\d{2}"#
+            + moneyUnitAhead + #"))"#
+            + #"(?:\s*(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
+    )
+
+    /// Sau hai chữ số phút không được tiếp tục cú pháp số tiền: không có dấu nhóm/thập phân ("30.000đ", "30,5 triệu") và không có đơn
+    /// vị tiền sau bất kỳ khoảng trắng nào ("7 giờ 30 nghìn", "30  triệu", "30 yên"): đó là số tiền, không phải phút. Phút bị từ
+    /// chối thì "lúc 7 giờ 30 nghìn" thành 7 giờ và 30 nghìn, như người viết định nói. Chốt chặn cuối là bất biến ở `analyze`.
+    private static let moneyUnitAhead = #"(?![.,]\d)(?!\s*(?:"# + japanUnits + #")(?![a-z0-9_]))"#
+
+    struct TimeHit {
+        /// Số phút từ 0:00.
+        let minutes: Int
+        /// Cả cụm giờ, bỏ khỏi ghi chú: "lúc"/"vào lúc" và buổi đứng đầu câu cũng là một phần của cụm.
+        let range: Range<Int>
+    }
+
+    /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**, bằng đúng một trong ba cách:
+    /// - buổi đứng **ngay sau** giờ, mà sau buổi là hết câu, dấu câu hoặc con số ("cà phê 7h sáng 35k", "grab 7h tối");
+    /// - buổi đứng **đầu câu** hoặc kèm "nay"/"qua" ("sáng 7h cà phê 35k", "chiều nay 3h", "tối qua 7h");
+    /// - "lúc"/"vào lúc" ("lúc 19h30", "vào lúc 7:30", "lúc 7h tối qua").
+    /// Dạng dấu hai chấm ("7:30") chỉ nhận khi có "lúc". Mọi dạng khác bị bỏ qua, kể cả buổi nằm giữa câu: "ăn tối 7h",
+    /// "đèn sáng 20h", "tỷ lệ 1:20 sáng nay" — buổi ở đó là chữ của ghi chú, còn con số có thể là thời lượng ("thuê phòng
+    /// 2h30"), tỷ lệ, hay số khác. Buổi theo sau mà lại mở đầu "nay"/"qua" thì thuộc về cụm ngày, không bổ nghĩa cho con số
+    /// ("thuê phòng 2h30 sáng nay": thời lượng rồi ngày; "7h tối qua" cũng vậy, về chữ không phân biệt được) — trừ khi có "lúc".
+    /// Chữ buổi và "lúc" phải viết **đủ dấu**: bản đã gấp dấu không phân biệt được "tôi" (đại từ) với "tối", "đem" với "đêm"
+    /// ("lúc 7h tôi ăn phở" là 7 giờ, không phải 19 giờ), nên đối chiếu với chuỗi gốc — như `SpokenAmounts` chỉ nhận chữ số có dấu.
+    /// Danh sách loại trừ thì không bao giờ đủ; nhầm giờ làm ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì khoản
+    /// vẫn đúng ngày như trước.
+    func findTime(in text: String, original: [Character]) -> TimeHit? {
+        let ns = NSRange(text.startIndex..., in: text)
+        let chars = Array(text)
+        for m in Self.timeRegex.matches(in: text, range: ns) {
+            guard let hour = Self.group(m, 4, in: text).flatMap(Int.init),
+                  let hourRange = Self.characterRange(m.range(at: 4), in: text),
+                  let whole = Self.characterRange(m.range, in: text) else { continue }
+            let minuteText = Self.group(m, 5, in: text) ?? Self.group(m, 6, in: text) ?? Self.group(m, 7, in: text)
+            let minute = minuteText.flatMap(Int.init) ?? 0
+            let isClockStyle = Self.group(m, 7, in: text) != nil
+            let lead = Self.spelled(Self.characterRange(m.range(at: 1), in: text), in: original, as: Self.leadSpellings)
+            // "nay"/"qua" theo sau buổi đứng trước phải đúng chữ gốc: "sáng quá 7h" (quá = too) không phải "sáng qua 7h".
+            if let dateWord = Self.characterRange(m.range(at: 3), in: text),
+               Self.spelled(dateWord, in: original, as: Self.dateWords) == nil { continue }
+            let pre = Self.spelled(Self.characterRange(m.range(at: 2), in: text), in: original, as: Self.periodSpellings)
+            // Buổi đứng trước chỉ là bằng chứng khi nó mở đầu câu, kèm "nay"/"qua", hoặc có "lúc"; còn lại là chữ của ghi chú.
+            let usablePre = pre.map { range in
+                lead != nil || Self.group(m, 3, in: text) != nil || chars[..<range.lowerBound].allSatisfy(\.isWhitespace)
+            } ?? false
+            let postRange = Self.characterRange(m.range(at: 8), in: text)
+            var post: String?
+            if let postRange, Self.spelled(postRange, in: original, as: Self.periodSpellings) != nil {
+                // Chữ buổi đứng sau giờ chỉ nhận khi cấu trúc chứng minh nó không phải đầu một từ ghép: sau nó là hết câu, dấu
+                // câu hoặc con số. Sau nó là một từ khác ("tối đa", "tối ưu", "sáng tạo", "tối ăn") thì mơ hồ: bỏ cả giờ,
+                // không đoán AM/PM. Sau nó là "nay"/"qua" thì nó mở đầu cụm ngày ("2h30 sáng nay"): chỉ nhận khi có "lúc".
+                switch Self.follower(of: chars, original: original, from: postRange.upperBound) {
+                case .boundary:
+                    post = Self.group(m, 8, in: text)
+                case .dateWord:
+                    guard lead != nil else { continue }
+                    post = Self.group(m, 8, in: text)
+                case .word:
+                    continue
+                }
+            }
+            let period = post ?? (usablePre ? Self.group(m, 2, in: text) : nil)
+            guard hour <= 23, minute <= 59 else { continue }
+            guard lead != nil || (period != nil && !isClockStyle) else { continue }
+            guard let hour24 = Self.hour24(hour, period: period) else { continue }
+            let lower = lead?.lowerBound ?? (usablePre ? pre?.lowerBound : nil) ?? hourRange.lowerBound
+            var upper = whole.upperBound
+            if post == nil, let postRange {   // chữ sau giờ không phải buổi của nó ("tôi", "sáng nay"): cụm giờ kết thúc trước nó
+                upper = postRange.lowerBound
+                while upper > hourRange.upperBound, chars[upper - 1].isWhitespace { upper -= 1 }
+            }
+            return TimeHit(minutes: hour24 * 60 + minute, range: lower..<upper)
+        }
+        return nil
+    }
+
+    /// Chữ buổi viết đủ dấu. Chuỗi đã gấp dấu coi "tôi" như "tối", "đem" như "đêm", "sang" như "sáng".
+    static let periodSpellings: Set<String> = ["sáng", "trưa", "chiều", "tối", "đêm"]
+    static let leadSpellings: Set<String> = ["lúc", "vào lúc"]
+    static let dateWords: Set<String> = ["nay", "qua"]
+
+    /// Các chữ gốc trong `range` (không phân biệt hoa thường, chữ Latin toàn khổ của bàn phím Nhật về nửa khổ), **giữ dấu**, cách nhau
+    /// bằng đúng một dấu cách dù giữa chúng có nhiều khoảng trắng.
+    static func originalWords(_ range: Range<Int>, in original: [Character]) -> [String]? {
+        guard range.lowerBound >= 0, range.upperBound <= original.count else { return nil }
+        return TextFolding.foldWidth(String(original[range])).split(whereSeparator: \.isWhitespace).map(String.init)
+    }
+
+    /// `range` nếu chữ gốc ở đó đúng là một trong `allowed`, còn không thì `nil`.
+    static func spelled(_ range: Range<Int>?, in original: [Character], as allowed: Set<String>) -> Range<Int>? {
+        guard let range, let words = originalWords(range, in: original),
+              allowed.contains(words.joined(separator: " ")) else { return nil }
+        return range
+    }
+
+    /// Cái đứng sau một chữ buổi (bỏ qua mọi khoảng trắng).
+    enum PeriodFollower {
+        /// Hết câu, dấu câu, ký hiệu hoặc chữ số: chữ buổi không thể là đầu của một từ ghép.
+        case boundary
+        /// "nay"/"qua": chữ buổi mở đầu một cụm ngày ("sáng nay", "tối qua").
+        case dateWord
+        /// Một từ khác: chữ buổi có thể là đầu của từ ghép ("tối đa", "tối ưu", "sáng tạo").
+        case word
+    }
+
+    static func follower(of chars: [Character], original: [Character], from index: Int) -> PeriodFollower {
+        var start = index
+        while start < chars.count, chars[start].isWhitespace { start += 1 }
+        // Chuỗi dấu câu dính liền chữ buổi rồi tới ngay một chữ cái ("tối-đa", "sáng-tạo", "tối/đa", "tối'đa", "tối--đa") nối hai
+        // chữ thành một từ ghép: dấu câu không chứng minh chữ buổi đã kết thúc, dù có một hay nhiều dấu. Có khoảng trắng quanh
+        // dấu ("tối - đa", "tối, đa") thì dấu là dấu câu thật.
+        if start == index {
+            var symbols = start
+            while symbols < chars.count, !chars[symbols].isLetter, !chars[symbols].isNumber, !chars[symbols].isWhitespace { symbols += 1 }
+            if symbols > start, symbols < chars.count, chars[symbols].isLetter { return .word }
+        }
+        guard start < chars.count, chars[start].isLetter else { return .boundary }
+        var end = start
+        while end < chars.count, chars[end].isLetter || chars[end].isNumber { end += 1 }
+        let word = String(chars[start..<end])
+        // "quá" (quá đắt), "quà", "nảy" bỏ dấu cũng thành "qua"/"nay" nhưng không phải cụm ngày: chữ gốc cũng phải là "nay"/"qua".
+        let isDateWord = (word == "nay" || word == "qua") && spelled(start..<end, in: original, as: dateWords) != nil
+        return isDateWord ? .dateWord : .word
+    }
+
+    /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó (giờ 12h hoặc 24h):
+    /// sáng 1–11 · trưa 10–13 và 1–3 (→ 13–15) · chiều 1–7 (→ 13–19) và 13–18 · tối 5–11 (→ 17–23) và 17–23 ·
+    /// đêm 9–11 (→ 21–23), 12 (→ 0), 1–5, 0 và 21–23. Ví dụ "7h tối" → 19, "19h tối" → 19, "12h đêm" → 0.
+    /// Ngoài khoảng đó ("11h chiều", "1h tối", "12h sáng", "19h sáng") thì không phải giờ: không cộng 12 bừa.
+    /// Không có buổi (chỉ khi có "lúc") thì giờ là số viết ra, 0–23.
+    static func hour24(_ hour: Int, period: String?) -> Int? {
+        guard let period else { return (0...23).contains(hour) ? hour : nil }
+        switch period {
+        case "sang":
+            return (1...11).contains(hour) ? hour : nil
+        case "trua":
+            if (10...13).contains(hour) { return hour }
+            return (1...3).contains(hour) ? hour + 12 : nil
+        case "chieu":
+            if (1...7).contains(hour) { return hour + 12 }
+            return (13...18).contains(hour) ? hour : nil
+        case "toi":
+            if (5...11).contains(hour) { return hour + 12 }
+            return (17...23).contains(hour) ? hour : nil
+        case "dem":
+            if hour == 12 { return 0 }
+            if (9...11).contains(hour) { return hour + 12 }
+            return (1...5).contains(hour) || hour == 0 || (21...23).contains(hour) ? hour : nil
+        default:
+            return nil
+        }
     }
 
     // MARK: - Tiện ích

@@ -265,7 +265,7 @@ private struct PreviewCard: View {
                 Text(amountText)
                     .font(.headline)
                     .foregroundStyle(result.amount == nil ? .secondary : .primary)
-                Text(DayLabel.text(for: result.date, language: language)).font(.caption).foregroundStyle(.secondary)
+                Text(DayLabel.text(for: result, language: language)).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }

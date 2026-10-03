@@ -104,9 +104,79 @@ Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một
 | `12/9` | 12/09/2026 |
 | `28/12` | 28/12/**2025** (ngày trong tương lai của năm nay → hiểu là năm ngoái) |
 
+Cụm ngày tiếng Việt (`tối qua`, `đêm qua`, `sáng nay`…) nhận một hay nhiều khoảng trắng giữa các chữ, và mỗi chữ phải là **bỏ dấu hoàn toàn** (`toi qua`, gõ không dấu)
+hoặc **đúng chữ đủ dấu** (`tối qua`). Dấu khác là một từ khác: `tôi qua quán 50k` (đại từ + qua) và `đem qua nhà bạn 50k` (mang sang) không phải `tối qua`/`đêm qua`,
+không đổi ngày và giữ nguyên ghi chú — cùng nguyên tắc với chữ buổi trong cụm giờ. Gõ không dấu thì vẫn không phân biệt được (`toi qua` là `tối qua`). Chữ Latin toàn khổ của bàn phím Nhật (`ＴＯＩ ＱＵＡ`) được thu về nửa khổ trước khi so.
+`nay`/`qua` cũng phải đúng chữ gốc: `quá` (quá đắt), `quà` bỏ dấu cũng thành `qua` nhưng không phải cụm ngày, nên `đèn sáng quá 7h giá 500k` không có giờ lẫn ngày,
+ghi chú giữ nguyên — cụm giờ, cụm ngày và ghi chú luôn hiểu cùng một câu.
+
 Mẹo: trong lịch Gregorian của Foundation, `weekday` 1 = Chủ nhật, 2 = thứ Hai… 7 = thứ Bảy — **trùng khớp với cách người Việt gọi "thứ 2…thứ 7"**, nên chuyển đổi rất gọn.
 
 **Tránh nhầm "thu" (thứ) với "thu" (thu tiền):** `thu 5 triệu tiền thưởng` không phải "thứ 5" vì theo sau là đơn vị tiền. Regex thứ trong tuần có lookahead loại trừ trường hợp số được theo sau bởi đơn vị tiền hoặc chữ số.
+
+## Giờ (từ 2026-10-03)
+
+`findTime(in:original:)` trong `QuickEntryParser.swift` · Test: `XuCore/Tests/XuCoreTests/TimeOfDayTests.swift`.
+Kết quả là `QuickEntryResult.minutesOfDay` (số phút từ 0:00, `nil` nếu câu không có giờ). `date` vẫn chỉ là ngày: **giờ không bao giờ đổi
+ngày của khoản** (`storedDay`). Có giờ thì `Ledger` lưu `occurredAt` đúng giờ đó; không có thì như cũ (hôm nay: bây giờ,
+ngày khác: 12:00). Thẻ xem trước hiện "Hôm qua · 19:00" để người dùng thấy ngay nếu hiểu sai.
+
+**Nguyên tắc: chỉ nhận giờ khi người dùng nói rõ đó là một thời điểm.** Một con số dính chữ `h`/`:` chưa chứng minh gì: `2h30` là thời lượng,
+`1:20` là tỷ lệ, `20h` là pin. Chữ buổi đứng cạnh nó cũng chưa đủ: mỗi chữ buổi là **đầu của cả một họ từ ghép** (`tối đa`, `tối ưu`, `tối thiểu`,
+`sáng tạo`, `sáng kiến`, `chiều cao`…) hay một từ khác sau khi bỏ dấu (`tôi`/`tối`). Danh sách loại trừ thì không bao giờ đủ, nên mô hình dựa vào
+**hai bảo đảm cấu trúc** thay vì đoán từng từ. Mọi thứ không qua được thì bỏ qua và giữ nguyên chữ của người dùng. Bỏ sót giờ thì khoản vẫn
+đúng ngày như trước khi có tính năng này; nhầm giờ thì ghi chú mất chữ, `occurredAt` sai, hoặc mất số tiền.
+
+**Ba cách nói rõ một thời điểm:**
+
+| Cách | Ví dụ | Giờ · ghi chú còn lại |
+|---|---|---|
+| 1. Buổi đứng **ngay sau** giờ, mà sau buổi là **hết câu, dấu câu hoặc con số** | `cà phê 7h sáng 35k` · `xem phim 8h15 tối 120k` · `grab 7h tối` | 07:00 `cà phê` · 20:15 `xem phim` · 19:00 `grab` |
+| 2. Buổi đứng **đầu câu**, hoặc kèm `nay`/`qua`; liền sau là chữ số | `sáng 7h cà phê 35k` · `chiều nay 3h trà sữa 45k` · `tối qua 7h taxi 100k` | 07:00 `cà phê` · 15:00 hôm nay `trà sữa` · 19:00 hôm qua `taxi` |
+| 3. `lúc` / `vào lúc` | `đi chợ lúc 7h30 100k` · `vào lúc 7:30 phở 45` · `lúc 7h tối qua grab 52k` | 07:30 `đi chợ` · 07:30 `phở` · 19:00 hôm qua `grab` |
+
+Cụm giờ (cả `lúc`, `vào lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú.
+
+**Bảo đảm 1, từ ghép:** chữ buổi chỉ nhận khi cấu trúc chứng minh nó không phải đầu một từ ghép: liền sau nó là chữ số (cách 2, không thể là từ ghép) hoặc
+sau nó là hết câu/dấu câu/con số (cách 1). Chữ buổi đứng cạnh giờ mà sau đó là **một từ khác** thì mơ hồ: bỏ cả giờ, không đoán AM/PM.
+`taxi lúc 7h tối đa 100k` và `lúc 7h sáng tạo logo 500k` không có giờ, ghi chú giữ nguyên. Chuỗi dấu câu **dính liền** chữ buổi (một hay nhiều dấu) rồi tới ngay một chữ cái
+(`tối-đa`, `sáng-tạo`, `tối'đa`, `tối--đa`) cũng nối thành một từ ghép, không phải ranh giới; dấu có khoảng trắng sau hoặc quanh nó (`7h sáng, mua`, `7h sáng - 35k`)
+hay theo sau là số (`7h sáng,35k`) thì là dấu câu thật. Khoảng trắng giữa các thành phần của cụm giờ (`7h  tối`, `vào  lúc`, `sáng  nay`) có thể là một hay nhiều (dấu cách, tab, NBSP), và cụm ngày bên trong nó (`tối  qua`, `hôm   qua`, `last   night`) nhận cùng quy tắc, để giờ và ngày luôn hiểu cùng một câu. Cái giá: `7h tối ăn phở 45k` (giờ, buổi, rồi một từ) không nhận;
+viết `tối 7h ăn phở 45k` hoặc `ăn phở 7h tối 45k` thì được.
+
+**Bảo đảm 2, tiền:** **giờ không bao giờ lấy mất tiền**, theo đúng hai cách (ở `analyze`): (1) số có **đơn vị tiền** (đ, k, nghìn, triệu…) chồng lên cụm giờ là
+tiền, không phải phút: bỏ giờ; (2) che cụm giờ đi mà không còn số nào, trong khi chưa che thì có, thì số duy nhất đó là tiền (`cà phê lúc 7:30`, `cà phê lúc 7 giờ 45`): bỏ giờ,
+quay về đúng kết quả như trước khi có tính năng giờ. Còn có số khác thì giờ là giờ, và **số tiền xác định sau khi loại cụm giờ** — không so với số lớn nhất của chuỗi chưa
+che giờ: `lúc 7:30 trà đá 5` là 5.000đ lúc 07:30 (không phải 30.000đ), `trà đá 5 lúc 7 giờ 45` cũng vậy, và số lượng như `2 ly` không phải lý do để bỏ giờ đã nói rõ bằng `lúc`.
+Ở gốc, phút chỉ là phút khi sau nó **không tiếp tục cú pháp số tiền**: không có `.000`/`,5` (`30.000đ`, `30,5 triệu`) và không có đơn vị tiền sau bất kỳ khoảng trắng nào
+(`7 giờ 30 nghìn`, `30  triệu`, `30 yên`). Phút bị từ chối thì `cà phê lúc 7 giờ 30.000đ` là 07:00 và 30.000; `2 ly cà phê lúc 7 giờ 30.000đ` cũng vậy (`2 ly` ở lại trong ghi chú).
+
+Không nhận (giờ = không có, ghi chú giữ nguyên):
+
+| Người dùng gõ | Vì sao |
+|---|---|
+| `19h30 grab 52k`, `7:30 phở 45`, `23h grab 90k` | dạng trần: không nói rõ là thời điểm |
+| `thuê phòng 2h30 100k`, `thuê phòng trong 2:30 100k`, `pin dùng được 20h giá 500k`, `tỷ lệ 1:20 phí 50k` | thời lượng / tỷ lệ |
+| `ăn tối 7h 80k`, `ăn sáng 7h30 35k`, `đèn sáng 20h giá 500k` | buổi nằm giữa câu là chữ của ghi chú, không phải bằng chứng |
+| `7:30 sáng cà phê 35k`, `in bản đồ tỷ lệ 1:20 sáng nay 50k` | dạng dấu hai chấm chỉ nhận khi có `lúc` (`sáng nay` vẫn là ngày hôm nay) |
+| `thuê phòng trong 2h30 sáng nay 100k`, `7h tối qua grab 52k` | buổi theo sau mà mở đầu `nay`/`qua` thuộc về cụm ngày: `2h30 sáng nay` (thời lượng + ngày) và `7h tối qua` (giờ + ngày) về chữ không phân biệt được, nên không đoán. `tối qua 7h` thì rõ; có `lúc` thì cũng rõ |
+| `tối qua 1h taxi 100k` | giờ sau nửa đêm, có thể là 1 giờ sáng nay: mơ hồ |
+
+- Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó (giờ 12h hoặc 24h): `sáng` 1–11 ·
+  `trưa` 10–13 và 1–3 (→ 13–15) · `chiều` 1–7 (→ 13–19) và 13–18 · `tối` 5–11 (→ 17–23) và 17–23 · `đêm` 9–11 (→ 21–23), 12 (→ 0), 0–5, 21–23.
+  Ngoài khoảng đó (`5h trưa`, `11h chiều`, `1h tối`, `12h sáng`, `19h sáng`) thì không phải giờ, không cộng 12 bừa.
+- **Chữ buổi và `lúc` phải viết đủ dấu**, đối chiếu với chữ gốc: chuỗi đã bỏ dấu coi `tôi` (đại từ) như `tối`, `đem` như `đêm`, `sang` như `sáng`
+  (`lúc 7h tôi ăn phở 45k` là 7 giờ, ghi chú giữ `tôi ăn phở`). Gõ không dấu (`7h toi`, `luc 19h30`) thì không đoán, như `SpokenAmounts`
+  chỉ nhận chữ số có dấu. Hoa thường không quan trọng (`7h TỐI`).
+- `nay`/`qua` có thể cách chữ buổi bằng nhiều dấu cách (văn bản dán vào): `2h30 sáng  nay` vẫn là thời lượng rồi ngày.
+- Với `lúc` mà không có buổi thì giờ là số viết ra, 0–23 (`lúc 7h` → 07:00, `lúc 19h` → 19:00); muốn chiều/tối thì thêm buổi theo cách 1 (`lúc 7h tối 52k`).
+- Phút dính liền `h` (`7h30`); riêng "giờ" cho một dấu cách (`7 giờ 30`). `7h 35k` là `7h` rồi `35k`; `7 giờ 30k` là 30k, không phải 7:30.
+  Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
+- Số trong cụm giờ không bao giờ là số tiền: `lúc 7:30 phở 45` → 45.000 (không phải 30).
+- `split`: cụm giờ không tính là chữ đi trước số tiền đầu tiên (`sáng 7h 35k cà phê 20k bánh` → `cà phê` · `bánh`); mọi khoản dùng chung giờ.
+- Chưa làm: giờ kiểu Nhật (`7時30分`), kiểu Anh (`7am`), sửa giờ trên màn sửa khoản.
+- Tốc độ: `analyze` thêm một regex cho giờ (và, khi cần, một lần tìm số tiền thứ hai cho bất biến tiền). `QuickEntryParserTests/testPerformance` (`measure`) đã
+  theo dõi; mục tiêu < 1 giây cho 10.000 lần `parse` trên iPhone đời cũ nhất hỗ trợ vẫn phải đo trên máy thật (CI chạy Debug trên máy Mac nên không đại diện).
 
 ## Danh mục
 
@@ -180,8 +250,8 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 - [x] Tách nhiều khoản trong một câu (issue E8) — 2026-10-02.
 - [x] Từ lóng tiền `lít`, `xị`, `chai`: **không hỗ trợ** (quyết định 2026-10-03). Giá trị khác nhau theo vùng và dễ nhầm
   ("2 lít xăng"). Xu chỉ hiểu cách viết chuẩn: `k`, `nghìn`, `tr`, `triệu`, số bằng chữ.
-- [ ] Giờ: "7h sáng" → gán giờ cho `occurredAt`.
-- [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ.
+- [x] Giờ: "7h sáng" → gán giờ cho `occurredAt` — 2026-10-03.
+- [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ. (Đã có `testPerformance` để theo dõi; phải đo trên máy thật.)
 - [ ] Bộ dữ liệu thật: cho phép người dùng (tự nguyện) gửi các câu parser hiểu sai để bổ sung test.
 - [x] Tiếng Nhật: số viết bằng chữ Hán (`千五百円`), năm 令和, thứ trong ngoặc (`(月)`) — 2026-10-02.
 - [ ] Tiếng Nhật: năm 令和 viết tắt kiểu hoá đơn (`R8.9.30`), số chữ Hán trộn chữ số (`1万五千円`).

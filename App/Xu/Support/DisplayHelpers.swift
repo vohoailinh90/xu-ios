@@ -11,6 +11,14 @@ enum DayLabel {
         let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
         return date.formatted(sameYear ? style : style.year())
     }
+
+    /// Ngày của khoản đang xem trước, kèm giờ nếu câu có giờ ("Hôm qua · 07:00"). Giờ luôn viết 24h, không phụ thuộc máy.
+    static func text(for result: QuickEntryResult, language: AppLanguage, calendar: Calendar = .current,
+                     now: Date = Date()) -> String {
+        let day = text(for: result.date, language: language, calendar: calendar, now: now)
+        guard let minutes = result.minutesOfDay else { return day }
+        return day + " · " + String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    }
 }
 
 /// Tổng chi theo từng loại tiền, không quy đổi (tỷ giá cần mạng — docs/08).
