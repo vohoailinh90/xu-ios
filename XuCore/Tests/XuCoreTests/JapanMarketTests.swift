@@ -319,6 +319,11 @@ final class JapanMarketTests: XCTestCase {
         let candy = QuickEntryParser(calendar: calendar).parse("R2-3-9円candy", now: now)
         XCTAssertEqual(DayKey(candy.date, calendar: calendar).description, "2020-03-09")
         XCTAssertNil(candy.amount, "Không phải 9.000đ")
+        // Số trộn nối tiếp sau 十: "9十五円" = 95 yên, "9十万円" = 900.000 yên (cùng ngữ pháp với nhánh số trộn của `kanjiAmountRegex`), không phải ngày.
+        XCTAssertEqual(parse("R2-3-9十五円").amount, 95)
+        XCTAssertEqual(parse("R2-3-9十万円").amount, 900_000)
+        XCTAssertEqual(parse("R2-3-9万五千円").amount, 95_000)
+        XCTAssertEqual(day(parse("R2-3-9十五円")), "2026-09-25")
         // Đơn vị chữ Hán cũng theo ranh giới của `kanjiAmountRegex`: "9万candy" không đọc được "9万" nên không coi là có đơn vị; dạng `.` thì luôn là ngày.
         let manCandy = parse("R2-3-9万candy")
         XCTAssertEqual(day(manCandy), "2020-03-09")
