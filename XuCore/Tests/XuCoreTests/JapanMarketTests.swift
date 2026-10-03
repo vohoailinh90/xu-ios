@@ -323,6 +323,18 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(tight), "2026-09-20")
         XCTAssertEqual(tight.note, "ランチ")
         XCTAssertEqual(tight.amount, 900)
+        // Mọi chữ Nhật đứng sát token đều là ranh giới, kể cả "〆" "々" mà Unicode xếp vào script Common.
+        XCTAssertEqual(day(parse("R8.9.20〆鯖 900")), "2026-09-20")
+        XCTAssertEqual(day(parse("R8.9.20々 900")), "2026-09-20")
+        // Chữ Hán của số tiền cách khoảng trắng là chữ đầu của một từ ("千葉", "円山公園"), không phải đơn vị: vẫn là ngày, giá giữ nguyên.
+        let chiba = parse("R8.9.20 千葉 電車 900")
+        XCTAssertEqual(day(chiba), "2026-09-20")
+        XCTAssertEqual(chiba.amount, 900)
+        XCTAssertEqual(chiba.note, "千葉 電車")
+        let maruyama = parse("R8.9.20 円山公園 900")
+        XCTAssertEqual(day(maruyama), "2026-09-20")
+        XCTAssertEqual(maruyama.amount, 900, "Không phải 9 yên")
+        XCTAssertEqual(maruyama.note, "円山公園")
         // Nhưng chữ Hán của số tiền sát token thì không: "R2-3-9万5000円" và "R2-3-9十円" là giá.
         XCTAssertEqual(day(parse("R2-3-9十円")), "2026-09-25")
         XCTAssertEqual(parse("R2-3-9十円").amount, 90)

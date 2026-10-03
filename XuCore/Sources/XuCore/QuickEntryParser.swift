@@ -426,17 +426,22 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
 
-    /// Cái đứng ngay sau token "R…" để nó là một token riêng: hết câu, khoảng trắng, bất kỳ dấu câu hay ký hiệu nào (Unicode, kể cả "！", "）", "、"),
-    /// chữ Nhật đứng sát ("R8.9.20ランチ": chữ Nhật đứng sát số vẫn là ranh giới, như mọi chỗ khác của parser), hoặc dấu chấm/phẩy không dính chữ
-    /// số. Mọi thứ dính liền khác — chữ số, chữ Latin, dấu nối `-` `/` `_`, dấu chấm/phẩy rồi chữ số, chữ Hán của số tiền 万千百十円 — là phần của một
-    /// số tiền hay một mã dài hơn ("R2-3-9,000円", "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt
-    /// kê từng cú pháp số tiền để tránh nhận nhầm giá thành ngày.
-    private static let receiptTokenEnd =
-        #"(?=$|\s|[.,](?!\d)|[^\p{L}\p{N}.,/_-]|(?![万千百十円])[\p{Han}\p{Hiragana}\p{Katakana}])"#
+    /// Cái đứng ngay sau token "R…" để nó là một token riêng. Regex chạy trên chuỗi đã gấp nên chữ Latin luôn là a–z: hết câu, hoặc bất kỳ
+    /// ký tự nào KHÔNG phải chữ Latin, chữ số, `.` `,` `/` `_` `-` (khoảng trắng, dấu câu hay ký hiệu Unicode như "！" "）" "、", mọi chữ Nhật kể cả
+    /// "〆" "々" — chữ Nhật đứng sát số vẫn là ranh giới, như mọi chỗ khác của parser), hoặc dấu chấm/phẩy không dính chữ số. Dính liền chữ số,
+    /// chữ Latin, dấu nối, dấu chấm/phẩy rồi chữ số, hay chữ Hán của số tiền 万千百十円 thì là phần của một giá hay một mã dài hơn ("R2-3-9,000円",
+    /// "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt kê từng cú pháp số tiền.
+    private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])(?![万千百十円])[\s\S])"#
 
-    /// Sau token (kể cả cách khoảng trắng) có đơn vị tiền — kể cả hậu tố thập phân viết tắt "1tr2", "1k5" như `amountRegex`, và 万/千/百 của số kiểu
-    /// Nhật — thì nhóm cuối là giá chứ không phải ngày: "R2-3-9 円", "R2-3-9 k" là mã hàng kèm giá.
-    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #"|[万千百十])(?:\d{1,3})?(?![a-z0-9_]))"#
+    /// Chữ Latin của các đơn vị tiền: `japanUnits` bỏ 円 (xử lý riêng vì 円 hay mở đầu một từ: "円山公園").
+    private static let latinMoneyUnits = japanUnits.replacingOccurrences(of: "|円", with: "")
+
+    /// Có đơn vị tiền ngay sau token thì nhóm cuối là giá chứ không phải ngày ("R2-3-9 円", "R2-3-9 k", "R2-3-1tr2", "R2-3-1k5", "R2-3-9千円"):
+    /// - đơn vị chữ Latin, kể cả cách khoảng trắng và hậu tố thập phân viết tắt như `amountRegex`;
+    /// - 円 (cũng cách khoảng trắng) khi sau nó không phải chữ Hán: "R2-3-9 円 ガム" là giá, "R8.9.20 円山公園" là tên;
+    /// - 万/千/百/十 **liền sát** token ("R2-3-9千円"); cách khoảng trắng thì là chữ đầu của một từ ("R8.9.20 千葉 電車 900").
+    private static let moneyUnitFollowsToken =
+        #"(?!\s*(?:"# + latinMoneyUnits + #")(?:\d{1,3})?(?![a-z0-9_]))(?!\s*円(?!\p{Han}))(?![万千百十])"#
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
     /// Phải là một token riêng (`receiptTokenEnd`) và không có đơn vị tiền ngay sau (`moneyUnitFollowsToken`): "R2-3-9円" là 9 yên, không phải
