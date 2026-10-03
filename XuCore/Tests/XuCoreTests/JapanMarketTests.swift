@@ -304,6 +304,14 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("R2-3-9万円").amount, 90_000)
         XCTAssertEqual(parse("R2-3-9千円").amount, 9_000)
         XCTAssertEqual(day(parse("R2-3-9万円")), "2026-09-25")
+        // "man"/"sen" chỉ là đơn vị ở thị trường Nhật: ở Việt Nam "mận", "sen" (đã gấp dấu thành "man", "sen") là một từ, không phải lý do để bỏ ngày.
+        let plum = QuickEntryParser(calendar: calendar).parse("R8.9.20 mận 900", now: now)
+        XCTAssertEqual(DayKey(plum.date, calendar: calendar).description, "2026-09-20")
+        XCTAssertEqual(plum.amount, 900_000)
+        XCTAssertEqual(plum.note, "mận")
+        // Ở thị trường Nhật "9 man" là 9 vạn yên: đơn vị, nên "R2-3-9 man" là giá, không phải ngày.
+        XCTAssertEqual(parse("R2-3-9 man").amount, 90_000)
+        XCTAssertEqual(day(parse("R2-3-9 man")), "2026-09-25")
         // Hậu tố thập phân viết tắt ("1tr2", "1k5") là một phần của giá.
         let vietnam = QuickEntryParser(calendar: calendar)
         XCTAssertEqual(vietnam.parse("R2-3-1tr2", now: now).amount, 1_200_000)

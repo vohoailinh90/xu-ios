@@ -125,7 +125,7 @@ public struct QuickEntryParser: Sendable {
         // Không bao giờ là tiền: tên có số ("100均") và mọi token ngày hoá đơn kiểu "R8.9.20" — kể cả token không hợp lệ, ở tương lai hay
         // đứng sau token đã được dùng làm ngày ("R8.13.20 R8.9.20 ガム 5"): phần giữa các dấu chấm không được đọc thành số thập phân.
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
-            + Self.ranges(of: Self.reiwaShortDateRegex, in: folded)
+            + Self.ranges(of: reiwaShortDateRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
             // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
@@ -434,9 +434,8 @@ public struct QuickEntryParser: Sendable {
     /// kê từng cú pháp số tiền. Riêng 円 không bị loại ở đây mà do `moneyUnitFollowsToken` quyết, vì 円 hay mở đầu một từ ("R8.9.20円山公園").
     private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])(?![万千百十])[\s\S])"#
 
-    /// Chữ Latin của các đơn vị tiền: `japanUnits` bỏ 円 (xử lý riêng vì 円 hay mở đầu một từ: "円山公園").
-    private static let latinMoneyUnits = japanUnits.replacingOccurrences(of: "|円", with: "")
-
+    /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
+    /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.
     /// Có đơn vị tiền ngay sau token thì nhóm cuối là giá chứ không phải ngày ("R2-3-9 円", "R2-3-9 k", "R2-3-1tr2", "R2-3-1k5", "R2-3-9千円"):
     /// - đơn vị chữ Latin, kể cả cách khoảng trắng và hậu tố thập phân viết tắt như `amountRegex`;
     /// - 万/千/百/十 liền sát token ("R2-3-9千円"); cách khoảng trắng thì là chữ đầu của một từ ("R8.9.20 千葉 電車 900");
@@ -445,17 +444,27 @@ public struct QuickEntryParser: Sendable {
     /// Quyết định có chủ ý cho một nhập nhằng thật: "R8.9.20円山公園" (ngày + tên) và "R2-3-9円菓子" (giá + ghi chú) giống hệt nhau về chữ, không
     /// quy tắc nào đúng cho cả hai. Chọn giữ giá: mất hay đọc sai số tiền là chặn luồng ghi, còn bỏ sót ngày thì khoản vẫn đúng như trước khi có tính
     /// năng này và thẻ xem trước hiện ngày để người dùng thấy ngay; viết có khoảng trắng ("R8.9.20 円山公園") thì được nhận là ngày.
-    private static let moneyUnitFollowsToken =
-        #"(?!\s*(?:"# + latinMoneyUnits + #")(?:\d{1,3})?(?![a-z0-9_]))(?!円)(?!\s+円(?!\p{Han}))(?![万千百十])"#
+    private static func moneyUnitFollowsToken(units: String) -> String {
+        #"(?!\s*(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")(?:\d{1,3})?(?![a-z0-9_]))(?!円)(?!\s+円(?!\p{Han}))(?![万千百十])"#
+    }
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
     /// Phải là một token riêng (`receiptTokenEnd`) và không có đơn vị tiền ngay sau (`moneyUnitFollowsToken`): "R2-3-9円" là 9 yên, không phải
     /// 09/03/2020. Cũng dùng để che mọi token cùng hình dạng khỏi bước đọc số tiền, kể cả token không phải ngày hợp lệ (tương lai, tháng 13,
     /// "R8.13.20 R8.9.20 ガム 5"): cùng một regex nên nhận ngày và che không thể bất đồng. Token sai độ dài do OCR ("R8.9.200") không được
     /// nhận cũng không bị che: che theo hình dạng rộng hơn từng nuốt mất giá của một mã hàng ("R2-3-900 ガム 5").
-    static let reiwaShortDateRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken
-    )
+    static func makeReceiptDateRegex(units: String) -> NSRegularExpression {
+        try! NSRegularExpression(
+            pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken(units: units)
+        )
+    }
+    static let reiwaShortDateRegexVietnam = makeReceiptDateRegex(units: vietnamUnits)
+    static let reiwaShortDateRegexJapan = makeReceiptDateRegex(units: japanUnits)
+
+    /// Regex ngày hoá đơn theo thị trường đang chọn (cùng quy tắc chọn tập đơn vị với `findAmounts`).
+    private var reiwaShortDateRegex: NSRegularExpression {
+        options.market == .japan ? Self.reiwaShortDateRegexJapan : Self.reiwaShortDateRegexVietnam
+    }
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
     static let explicitDateRegex = try! NSRegularExpression(
@@ -551,7 +560,7 @@ public struct QuickEntryParser: Sendable {
         // mã kiểu phiên bản "R2.3.15"); thời Reiwa bắt đầu từ 01/05/2019 nên "R1.1.1" cũng vậy. Token không hợp lệ thì chữ ở lại trong
         // ghi chú và xét tiếp token sau: "R8.13.20 R8.9.20" lấy ngày thật.
         let reiwaStart = makeDate(year: 2019, month: 5, day: 1)
-        for m in Self.reiwaShortDateRegex.matches(in: text, range: ns) {
+        for m in reiwaShortDateRegex.matches(in: text, range: ns) {
             guard let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
                   let month = Self.group(m, 2, in: text).flatMap(Int.init),
                   let day = Self.group(m, 3, in: text).flatMap(Int.init),
