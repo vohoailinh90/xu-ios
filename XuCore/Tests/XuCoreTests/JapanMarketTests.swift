@@ -313,9 +313,22 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(parse("R2-3-9,000円")), "2026-09-25")
         XCTAssertEqual(parse("R2-3-9万5000円").amount, 95_000)
         XCTAssertEqual(vietnam.parse("R2-3-1,5tr", now: now).amount, 1_500_000)
-        // Dấu câu không dính chữ số vẫn kết thúc token.
+        // Dấu câu không dính chữ số vẫn kết thúc token, kể cả dấu Unicode.
         XCTAssertEqual(day(parse("R8.9.20, ランチ 900")), "2026-09-20")
         XCTAssertEqual(day(parse("ランチ 900 (R8.9.20)")), "2026-09-20")
+        XCTAssertEqual(day(parse("R8.9.20！ ランチ 900")), "2026-09-20")
+        XCTAssertEqual(day(parse("（R8.9.20） ランチ 900")), "2026-09-20")
+        // Chữ Nhật đứng sát token vẫn là ranh giới (người dùng Nhật ghi nhanh không chèn khoảng trắng).
+        let tight = parse("R8.9.20ランチ 900")
+        XCTAssertEqual(day(tight), "2026-09-20")
+        XCTAssertEqual(tight.note, "ランチ")
+        XCTAssertEqual(tight.amount, 900)
+        // Nhưng chữ Hán của số tiền sát token thì không: "R2-3-9万5000円" và "R2-3-9十円" là giá.
+        XCTAssertEqual(day(parse("R2-3-9十円")), "2026-09-25")
+        XCTAssertEqual(parse("R2-3-9十円").amount, 90)
+        // Chữ Latin hay dấu nối dính liền không phải ranh giới.
+        XCTAssertEqual(day(parse("R8.9.20abc ランチ 900")), "2026-09-25")
+        XCTAssertEqual(day(parse("R2-3-9-4 ランチ 900")), "2026-09-25")
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }

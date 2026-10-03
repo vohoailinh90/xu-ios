@@ -426,14 +426,17 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
 
-    /// Cái đứng ngay sau token "R…" để nó là một token riêng: hết câu, khoảng trắng, hoặc dấu câu (dấu chấm/phẩy không dính chữ số). Mọi thứ dính
-    /// liền khác ("R2-3-9,000円", "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200") là phần của một số tiền hay một mã dài hơn, không phải ngày hoá đơn.
-    /// Nhờ vậy không cần liệt kê từng cú pháp số tiền (dấu nhóm, thập phân, số sau đơn vị Hán…) để tránh nhận nhầm giá thành ngày.
-    private static let receiptTokenEnd = #"(?=$|\s|[;:)）、。]|[.,](?!\d))"#
+    /// Cái đứng ngay sau token "R…" để nó là một token riêng: hết câu, khoảng trắng, bất kỳ dấu câu hay ký hiệu nào (Unicode, kể cả "！", "）", "、"),
+    /// chữ Nhật đứng sát ("R8.9.20ランチ": chữ Nhật đứng sát số vẫn là ranh giới, như mọi chỗ khác của parser), hoặc dấu chấm/phẩy không dính chữ
+    /// số. Mọi thứ dính liền khác — chữ số, chữ Latin, dấu nối `-` `/` `_`, dấu chấm/phẩy rồi chữ số, chữ Hán của số tiền 万千百十円 — là phần của một
+    /// số tiền hay một mã dài hơn ("R2-3-9,000円", "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt
+    /// kê từng cú pháp số tiền để tránh nhận nhầm giá thành ngày.
+    private static let receiptTokenEnd =
+        #"(?=$|\s|[.,](?!\d)|[^\p{L}\p{N}.,/_-]|(?![万千百十円])[\p{Han}\p{Hiragana}\p{Katakana}])"#
 
     /// Sau token (kể cả cách khoảng trắng) có đơn vị tiền — kể cả hậu tố thập phân viết tắt "1tr2", "1k5" như `amountRegex`, và 万/千/百 của số kiểu
     /// Nhật — thì nhóm cuối là giá chứ không phải ngày: "R2-3-9 円", "R2-3-9 k" là mã hàng kèm giá.
-    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #"|[万千百])(?:\d{1,3})?(?![a-z0-9_]))"#
+    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #"|[万千百十])(?:\d{1,3})?(?![a-z0-9_]))"#
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
     /// Phải là một token riêng (`receiptTokenEnd`) và không có đơn vị tiền ngay sau (`moneyUnitFollowsToken`): "R2-3-9円" là 9 yên, không phải
