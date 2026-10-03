@@ -99,6 +99,7 @@ public enum L10n: String, CaseIterable, Sendable {
     case onboardingBudgetTitle, onboardingHabitTitle, onboardingHabitHint, next, skip, getStarted
     // Nhìn lại tuần
     case weekTitle, weekSpent, weekTop, weekNoSpend, weekLogged
+    case weekHistoryTitle, weekEarlier, weekPrevious, weekNext, weekRangeSpent, weekEmpty, weekProHistory
     // Theo tháng
     case monthTitle, monthSpent, monthEmpty, monthPrevious, monthNext, monthProHistory
     // Sửa giao dịch
@@ -119,9 +120,11 @@ public enum L10n: String, CaseIterable, Sendable {
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
+    // Khoá Face ID (chỉ che việc xem, không bao giờ che ô ghi)
+    case faceIDToggle, faceIDFooter, faceIDUnavailable, faceIDUnlock, faceIDLockedHint, faceIDReason
     // Xu Pro
     case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proBenefitMonths, proAlwaysFree, proBuy, proRestore
-    case proOwned
+    case proOwned, proBenefitFaceID
     case proPriceUnavailable, proHabitLimit, proWidgetNote, proInviteTitle, proInviteBody, proInviteOpen, proInviteLater
     case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
     // Quyền riêng tư (docs/09) — sửa ở đây thì sửa cả docs/privacy-policy.md
@@ -254,6 +257,23 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "🌱 {0} ngày không tiêu vặt", en: "🌱 {0} no-spend days", ja: "🌱 小さな出費なしの日 {0}日")
         case .weekLogged:
             LocalizedText(vi: "📝 Có ghi chép {0}/{1} ngày", en: "📝 Logged on {0} of {1} days", ja: "📝 記録した日 {0}/{1}日")
+        case .weekHistoryTitle:
+            LocalizedText(vi: "Theo tuần", en: "By week", ja: "週ごと")
+        case .weekEarlier:
+            LocalizedText(vi: "Xem các tuần trước", en: "See earlier weeks", ja: "前の週を見る")
+        case .weekPrevious:
+            LocalizedText(vi: "Tuần trước", en: "Previous week", ja: "前の週")
+        case .weekNext:
+            LocalizedText(vi: "Tuần sau", en: "Next week", ja: "次の週")
+        case .weekRangeSpent:
+            // {0} tổng chi trong tuần, mỗi loại tiền một số
+            LocalizedText(vi: "Đã tiêu {0}", en: "Spent: {0}", ja: "支出 {0}")
+        case .weekEmpty:
+            LocalizedText(vi: "Tuần này không có ghi chép.", en: "Nothing logged this week.", ja: "この週の記録はありません。")
+        case .weekProHistory:
+            LocalizedText(vi: "Xem lại các tuần trước với Xu Pro. Danh sách giao dịch và CSV luôn có đủ mọi tuần.",
+                          en: "See earlier weeks with Xu Pro. The list and CSV export always include every week.",
+                          ja: "前の週はXu Proで見られます。取引一覧とCSVにはいつでもすべての週が入っています。")
 
         case .editEntry:
             LocalizedText(vi: "Sửa khoản", en: "Edit entry", ja: "記録を編集")
@@ -451,6 +471,26 @@ public enum L10n: String, CaseIterable, Sendable {
         case .openShortcuts:
             LocalizedText(vi: "Mở app Phím tắt", en: "Open Shortcuts", ja: "ショートカットAppを開く")
 
+        case .faceIDToggle:
+            LocalizedText(vi: "Khóa bằng Face ID", en: "Lock with Face ID", ja: "Face IDでロック")
+        case .faceIDFooter:
+            LocalizedText(
+                vi: "Che danh sách, biểu đồ, thói quen, cài đặt và xuất CSV mỗi khi mở lại Xu. Ô ghi chi tiêu không bao giờ bị khoá. Không dùng được Face ID thì mở bằng mật mã iPhone. Widget và thông báo vẫn theo cài đặt của iPhone.",
+                en: "Hides the list, charts, habits, settings and CSV export each time you reopen Xu. The spending box is never locked. If Face ID isn't available, use your iPhone passcode. Widgets and notifications follow your iPhone settings.",
+                ja: "Xuを開き直すたびに、一覧・グラフ・習慣・設定・CSV書き出しを隠します。記録欄はロックされません。Face IDが使えないときはiPhoneのパスコードで開けます。ウィジェットと通知はiPhoneの設定に従います。")
+        case .faceIDUnavailable:
+            LocalizedText(vi: "Cần đặt mật mã cho iPhone để dùng khoá này.", en: "Set an iPhone passcode to use this lock.",
+                          ja: "このロックを使うには、iPhoneのパスコードを設定してください。")
+        case .faceIDUnlock:
+            LocalizedText(vi: "Mở khoá", en: "Unlock", ja: "ロック解除")
+        case .faceIDLockedHint:
+            LocalizedText(vi: "Phần này đang khoá. Ô ghi chi tiêu vẫn dùng bình thường.",
+                          en: "This part is locked. You can still log spending as usual.",
+                          ja: "この部分はロック中です。記録はいつも通りできます。")
+        case .faceIDReason:
+            LocalizedText(vi: "Mở khoá để xem chi tiêu của bạn", en: "Unlock to see your spending",
+                          ja: "支出を見るためにロックを解除します")
+
         case .proTitle:
             LocalizedText(vi: "Xu Pro", en: "Xu Pro", ja: "Xu Pro")
         case .proSubtitle:
@@ -467,9 +507,13 @@ public enum L10n: String, CaseIterable, Sendable {
                           en: "The widget shows up to {0} quick picks (free: {1})",
                           ja: "ウィジェットにいつものを最大{0}件表示(無料版: {1}件)")
         case .proBenefitMonths:
-            LocalizedText(vi: "Biểu đồ theo danh mục của các tháng trước (bản miễn phí: tháng này)",
-                          en: "Category charts for earlier months (free: this month)",
-                          ja: "前の月のカテゴリ別グラフ(無料版: 今月のみ)")
+            LocalizedText(vi: "Xem lại các tuần và biểu đồ các tháng trước (bản miễn phí: tuần này, tháng này)",
+                          en: "Look back at earlier weeks and monthly charts (free: this week and this month)",
+                          ja: "前の週と前の月のグラフを見返せます(無料版: 今週と今月のみ)")
+        case .proBenefitFaceID:
+            LocalizedText(vi: "Khoá phần xem bằng Face ID (tắt sẵn; ô ghi không bao giờ bị khoá)",
+                          en: "Lock viewing with Face ID (off by default; the spending box is never locked)",
+                          ja: "Face IDで閲覧をロック(初期はオフ。記録欄はロックされません)")
         case .proAlwaysFree:
             LocalizedText(vi: "Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.",
                           en: "Logging, quick picks in the app, Shortcuts and CSV export are always free.",

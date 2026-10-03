@@ -38,6 +38,8 @@ targets:
         # Ngôn ngữ giao diện chọn trong app (docs/08); khai báo để hệ thống biết app có 3 thứ tiếng.
         CFBundleLocalizations: [vi, en, ja]
         UILaunchScreen: {}
+        # Khoá Face ID (docs/02, S4). Bản dịch vi/en/ja ở App/Xu/InfoPlist.xcstrings.
+        NSFaceIDUsageDescription: Xu dùng Face ID để mở khoá phần xem chi tiêu. Ô ghi chi tiêu không bao giờ bị khoá.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         CFBundleURLTypes:
           - CFBundleURLName: com.example.xu

@@ -16,9 +16,10 @@ ghi quyết định vào tài liệu này trước, rồi sửa cả ba chỗ: p
 |---|---|---|---|
 | Giao dịch: số tiền, loại tiền, danh mục, ghi chú, ngày, nguồn ghi, **câu gốc người dùng gõ** (`rawInput`) | SwiftData trong App Group | App, widget, App Intents | Không (trừ khi người dùng tự xuất CSV) |
 | Khoản quen, từ khoá học được, thói quen, đánh dấu thói quen, chốt ngày | SwiftData trong App Group | App, widget, App Intents | Không |
-| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`) | UserDefaults của App Group | App, widget | Không |
+| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`), khoá Face ID bật/tắt (`faceIDLock`, tắt sẵn) | UserDefaults của App Group | App, widget | Không |
 | Ngân sách tháng, "số nhỏ là nghìn" | UserDefaults riêng của app | App | Không |
 | Thông báo nhắc chốt ngày | Lịch thông báo cục bộ của iOS | iOS | Không (không dùng push từ máy chủ) |
+| Tệp CSV tạm khi xuất (`xu-giao-dich.csv`) | Thư mục tạm của app | App, bảng chia sẻ của iOS | Chỉ khi người dùng chọn nơi gửi; xoá khi đóng bảng chia sẻ, và bảng chia sẻ tự đóng khi khoá Face ID |
 
 Các đường dữ liệu đi qua hệ thống của Apple (Xu không nhận gì thêm):
 
@@ -26,6 +27,9 @@ Các đường dữ liệu đi qua hệ thống của Apple (Xu không nhận g�
   và giá hiển thị (`Product.displayPrice`). Xu không nhận thông tin thẻ hay tài khoản Apple.
 - **Phím tắt / tự động hoá Apple Pay:** người dùng tự cài. iOS chuyển cho Xu câu nhập, hoặc số tiền (kèm mã loại tiền) + tên cửa hàng (`LogPaymentIntent`), ngay trên máy.
   Gọi bằng giọng nói qua Siri thì việc nhận dạng giọng nói là của Apple — cần kiểm tra cách diễn đạt nếu App Review hỏi.
+- **Khoá Face ID (LocalAuthentication):** iOS xử lý khuôn mặt hoặc mật mã ngay trên máy; Xu chỉ nhận kết quả đúng/sai,
+  không nhận dữ liệu sinh trắc học và không lưu gì thêm ngoài công tắc bật/tắt. Không thu thập dữ liệu nên không đổi
+  câu trả lời App Privacy — cần kiểm tra văn bản mới nhất.
 - **Xuất CSV:** người dùng tự chọn nơi gửi tệp qua bảng chia sẻ. Đây là hành động của người dùng, không phải Xu thu thập.
 - **Sao lưu iPhone (iCloud Backup / máy tính):** dữ liệu Xu có thể nằm trong bản sao lưu như mọi app. Do Apple và
   người dùng quản lý, Xu không đọc được.
@@ -77,4 +81,5 @@ gọi trực tiếp. Thêm code dùng chúng thì phải khai thêm. Danh sách 
 - [ ] Việt Nam: quy định về bảo vệ dữ liệu cá nhân (Nghị định 13/2023/NĐ-CP và văn bản mới hơn nếu có) — cần kiểm tra
   văn bản mới nhất; Xu không thu thập nên nghĩa vụ có thể ít, nhưng không tự kết luận.
 - [ ] Nhật: Luật Bảo vệ thông tin cá nhân (個人情報の保護に関する法律) — cần kiểm tra văn bản mới nhất.
+- [ ] Thử tay trên máy thật: hộp xin dùng Face ID (`NSFaceIDUsageDescription`, `App/Xu/InfoPlist.xcstrings`) hiện đúng ngôn ngữ máy.
 - [ ] Thử tay trên máy thật: Cài đặt › Quyền riêng tư hiện đủ 3 thứ tiếng; Xcode › Generate Privacy Report từ bản Archive.

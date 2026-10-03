@@ -1,10 +1,9 @@
-import SwiftUI
-import UniformTypeIdentifiers
+import Foundation
 import XuCore
 
 /// Xuất CSV — "dữ liệu là của bạn" là một điểm bán hàng, không phải tính năng phụ.
 /// Tiêu đề cột, loại thu/chi và tên danh mục theo ngôn ngữ đang chọn; số tiền là số nguyên kèm mã tiền (VND, JPY).
-struct CSVFile: Transferable {
+struct CSVFile {
     let text: String
 
     @MainActor
@@ -37,8 +36,10 @@ struct CSVFile: Transferable {
         return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .commaSeparatedText) { Data($0.text.utf8) }
-            .suggestedFileName("xu-giao-dich.csv")
+    /// Ghi ra tệp tạm để mở bảng chia sẻ. Bên gọi xoá tệp khi đóng bảng chia sẻ (`HomeView`).
+    func writeToTemporaryFile() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("xu-giao-dich.csv")
+        try Data(text.utf8).write(to: url, options: .atomic)
+        return url
     }
 }

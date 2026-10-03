@@ -1,0 +1,29 @@
+{
+  "sourceLanguage": "vi",
+  "strings": {
+    "NSFaceIDUsageDescription": {
+      "comment": "Lý do xin dùng Face ID (khoá phần xem chi tiêu, docs/02 S4).",
+      "localizations": {
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xu dùng Face ID để mở khoá phần xem chi tiêu. Ô ghi chi tiêu không bao giờ bị khoá."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xu uses Face ID to unlock the part where you view your spending. The spending box is never locked."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xuは支出を見る画面のロック解除にFace IDを使います。記録欄はロックされません。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

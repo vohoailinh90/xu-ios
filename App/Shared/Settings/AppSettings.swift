@@ -27,6 +27,8 @@ enum AppSettings {
         static let proInviteDismissed = "proInviteDismissed"
         /// Đã hỏi đánh giá App Store sau lần chốt ngày thứ 5 (docs/07), để chỉ hỏi một lần.
         static let reviewRequested = "reviewRequested"
+        /// Khoá Face ID che phần xem (docs/02, S4). Tắt sẵn; ô ghi không bao giờ bị khoá.
+        static let faceIDLock = "faceIDLock"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -47,6 +49,8 @@ enum AppSettings {
         }
         set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.entryTimings) }
     }
+
+    static var faceIDLockEnabled: Bool { defaults.bool(forKey: Key.faceIDLock) }
 
     static var isPro: Bool {
         get { defaults.bool(forKey: Key.isPro) }

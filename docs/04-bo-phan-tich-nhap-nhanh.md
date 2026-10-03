@@ -178,7 +178,8 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 
 - [x] Số bằng chữ từ giọng nói: "ba mươi lăm nghìn", "một triệu hai" (issue E9) — 2026-10-02.
 - [x] Tách nhiều khoản trong một câu (issue E8) — 2026-10-02.
-- [ ] Từ lóng tiền: `lít`, `xị`, `chai` — tắt mặc định vì dễ nhầm ("2 lít xăng"), cho bật trong Cài đặt.
+- [x] Từ lóng tiền `lít`, `xị`, `chai`: **không hỗ trợ** (quyết định 2026-10-03). Giá trị khác nhau theo vùng và dễ nhầm
+  ("2 lít xăng"). Xu chỉ hiểu cách viết chuẩn: `k`, `nghìn`, `tr`, `triệu`, số bằng chữ.
 - [ ] Giờ: "7h sáng" → gán giờ cho `occurredAt`.
 - [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ.
 - [ ] Bộ dữ liệu thật: cho phép người dùng (tự nguyện) gửi các câu parser hiểu sai để bổ sung test.

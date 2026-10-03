@@ -11,6 +11,8 @@ struct SettingsView: View {
     @AppStorage(AppSettings.Key.reminderEnabled, store: AppSettings.defaults) private var reminderEnabled = false
     @AppStorage(AppSettings.Key.reminderMinutes, store: AppSettings.defaults)
     private var reminderMinutes = AppSettings.defaultReminderMinutes
+    @AppStorage(AppSettings.Key.faceIDLock, store: AppSettings.defaults) private var faceIDLock = false
+    @State private var faceIDUnavailable = false
     @State private var reminderDenied = false
     @State private var showPaywall = false
     private let store = ProStore.shared
@@ -88,6 +90,21 @@ struct SettingsView: View {
                     }
                 }
                 Section {
+                    if ProPlan.canChangeFaceIDLock(isPro: store.isPro, isEnabled: faceIDLock) {
+                        Toggle(language.t(.faceIDToggle), isOn: $faceIDLock)
+                    } else {
+                        Button { showPaywall = true } label: {
+                            HStack {
+                                Label(language.t(.faceIDToggle), systemImage: "faceid")
+                                Spacer()
+                                Text(language.t(.proTitle)).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } footer: {
+                    Text(language.t(faceIDUnavailable ? .faceIDUnavailable : .faceIDFooter))
+                }
+                Section {
                     NavigationLink {
                         PrivacyView()
                     } label: {
@@ -109,6 +126,18 @@ struct SettingsView: View {
                 }
             }
             .onChange(of: reminderMinutes) { ReminderScheduler.refresh() }
+            .onChange(of: faceIDLock) {
+                guard faceIDLock else { AppLock.shared.lockDisabled(); return }
+                // Chỉ bật khi xác thực được một lần: không để người dùng tự khoá mình ngoài cửa.
+                Task {
+                    faceIDUnavailable = false
+                    let confirmed = await AppLock.shared.confirmEnabling()
+                    if !confirmed {
+                        faceIDLock = false
+                        faceIDUnavailable = !AppLock.canAuthenticate
+                    }
+                }
+            }
         }
     }
 

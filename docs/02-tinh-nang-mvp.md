@@ -66,7 +66,7 @@ Xếp theo tốc độ, từ nhanh nhất:
 | S1 | Onboarding 3 màn: gõ thử 1 câu → đặt ngân sách linh hoạt → chọn 1 thói quen | Must |
 | S2 | Nhắc nhở buổi tối (giờ tùy chọn) | Must |
 | S3 | Đồng bộ iCloud (SwiftData + CloudKit) | Should / v1.1 |
-| S4 | Khóa bằng Face ID | Should |
+| S4 | Khóa bằng Face ID: tắt sẵn, chỉ che phần xem (danh sách, biểu đồ, thói quen, cài đặt, xuất CSV), không bao giờ che ô ghi | Should — đã làm (Pro) |
 | S5 | Paywall + StoreKit 2 (mua một lần) | Must |
 
 ## User story và tiêu chí chấp nhận (các story quan trọng nhất)
@@ -106,8 +106,18 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Thẻ "còn được tiêu", danh sách, xuất CSV | ✅ | ✅ |
 | Khoản quen trên widget | 2 nút | 8 nút |
 | Thói quen | 2 | Không giới hạn + thử thách |
-| Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử (biểu đồ tháng: các tháng trước — đã làm; tuần cũ: chưa) |
-| OCR chuyển khoản, Apple Pay automation | — | ✅ |
-| Danh mục tùy chỉnh, Face ID, icon app, giao diện | — | ✅ |
+| Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử: các tuần cũ (màn "Theo tuần") và biểu đồ các tháng trước — đã làm |
+| Apple Pay automation | ✅ | ✅ |
+| OCR chuyển khoản | — | ✅ (chưa làm) |
+| Face ID (khoá phần xem; tắt sẵn) | — | ✅ — đã làm |
+| Danh mục tùy chỉnh, icon app, giao diện | — | ✅ (chưa làm) |
+
+Quyết định 2026-10-03 (chủ dự án):
+
+- Biểu đồ các tháng trước và các tuần cũ: giữ sau Xu Pro. Danh sách giao dịch và CSV vẫn đủ mọi tháng, mọi tuần.
+- Face ID: tắt mặc định; chỉ che phần xem, không bao giờ che ô ghi; bật là Pro. Người đã bật mà không còn Pro
+  (ví dụ hoàn tiền) vẫn tắt được khoá.
+- Apple Pay automation: **miễn phí** — nó là một đường ghi, mà luật 5 nói không khóa việc ghi. (Xu Pro là mua một lần
+  nên không có chuyện hết hạn; kể cả hoàn tiền thì cũng không khóa đường ghi.)
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.

@@ -14,6 +14,21 @@ final class ProPlanTests: XCTestCase {
         XCTAssertEqual(ProPlan.widgetChipLimit(isPro: false), 2)
         XCTAssertEqual(ProPlan.widgetChipLimit(isPro: true), 4)
     }
+
+    func testFreeSeesThisWeekOnlyProSeesEarlierWeeks() {
+        let current = DayKey(year: 2026, month: 9, day: 21)
+        let previous = DayKey(year: 2026, month: 9, day: 14)
+        XCTAssertTrue(ProPlan.canViewWeek(startingOn: current, currentWeekStart: current, isPro: false))
+        XCTAssertFalse(ProPlan.canViewWeek(startingOn: previous, currentWeekStart: current, isPro: false))
+        XCTAssertTrue(ProPlan.canViewWeek(startingOn: previous, currentWeekStart: current, isPro: true))
+    }
+
+    func testFaceIDLockIsProButAlreadyEnabledCanAlwaysBeTurnedOff() {
+        XCTAssertTrue(ProPlan.canChangeFaceIDLock(isPro: true, isEnabled: false))
+        XCTAssertTrue(ProPlan.canChangeFaceIDLock(isPro: true, isEnabled: true))
+        XCTAssertFalse(ProPlan.canChangeFaceIDLock(isPro: false, isEnabled: false), "Bản Free không bật được")
+        XCTAssertTrue(ProPlan.canChangeFaceIDLock(isPro: false, isEnabled: true), "Hết Pro (hoàn tiền) vẫn tắt được khoá")
+    }
 }
 
 final class ProInviteTests: XCTestCase {

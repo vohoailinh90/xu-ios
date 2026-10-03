@@ -303,4 +303,42 @@ final class WeeklySummaryTests: XCTestCase {
         XCTAssertTrue(s.isEmpty)
         XCTAssertNil(s.topCategoryID)
     }
+
+    // Xem lại các tuần cũ (Xu Pro, docs/02)
+
+    func testWeekStartIsTheMondayOfThatWeek() {
+        XCTAssertEqual(WeeklySummary.weekStart(of: d(21), calendar: calendar), d(21), "Thứ Hai là đầu tuần")
+        XCTAssertEqual(WeeklySummary.weekStart(of: d(25), calendar: calendar), d(21))
+        XCTAssertEqual(WeeklySummary.weekStart(of: d(27), calendar: calendar), d(21), "Chủ nhật thuộc tuần bắt đầu thứ Hai")
+        XCTAssertEqual(WeeklySummary.weekStart(of: d(1, month: 10), calendar: calendar), d(28), "Qua tháng vẫn đúng")
+        XCTAssertEqual(WeeklySummary.weekStart(of: d(4, month: 10), calendar: calendar), d(28))
+    }
+
+    func testPastWeekCountsAllSevenDaysAndOnlyItsOwnEntries() {
+        let entries = [
+            LedgerEntry(amount: 1_000, isIncome: false, categoryID: "food", day: d(14), currency: .jpy),
+            LedgerEntry(amount: 400, isIncome: false, categoryID: "drinks", day: d(20), currency: .jpy),
+            LedgerEntry(amount: 9_999, isIncome: false, categoryID: "food", day: d(21), currency: .jpy),  // tuần sau
+            LedgerEntry(amount: 8_888, isIncome: false, categoryID: "food", day: d(13), currency: .jpy)   // tuần trước nữa
+        ]
+        let s = WeeklySummary.compute(weekStarting: d(14), entries: entries, closedDays: [d(15)], today: today,
+                                      primary: .jpy, calendar: calendar)
+        XCTAssertEqual(s.weekStart, d(14))
+        XCTAssertEqual(s.weekEnd, d(20))
+        XCTAssertEqual(s.spent[.jpy], 1_400)
+        XCTAssertEqual(s.topCategoryID, "food")
+        XCTAssertEqual(s.elapsedDays, 7, "Tuần đã qua tính đủ 7 ngày, không dừng ở hôm nay")
+        XCTAssertEqual(s.loggedDays, 3, "14 và 20 có ghi, 15 đã chốt")
+        XCTAssertEqual(s.noSpendDays, 1, "15 đã chốt và không tiêu vặt")
+    }
+
+    func testCurrentWeekStillStopsAtToday() {
+        let entries = [LedgerEntry(amount: 500, isIncome: false, categoryID: "drinks", day: d(22), currency: .jpy)]
+        let viaWeek = WeeklySummary.compute(weekStarting: d(21), entries: entries, closedDays: [], today: today,
+                                            primary: .jpy, calendar: calendar)
+        let viaToday = WeeklySummary.compute(entries: entries, closedDays: [], today: today, primary: .jpy,
+                                             calendar: calendar)
+        XCTAssertEqual(viaWeek, viaToday)
+        XCTAssertEqual(viaWeek.elapsedDays, 5)
+    }
 }

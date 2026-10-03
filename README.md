@@ -110,6 +110,15 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | Đo thời gian ghi (trung vị, chỉ trên máy) | `XuCore/Sources/XuCore/EntryTiming.swift`, Cài đặt | Có test / Khung |
 | Khoản quen: gợi ý từ khoản lặp lại, ghim/bỏ ghim, sắp xếp | `XuCore/Sources/XuCore/ChipSuggester.swift`, `App/Xu/Features/QuickChips/` | Có test / Khung |
 | Widget khoản quen + màn hình khóa | `App/XuWidgets/` | Khung |
+| Tách câu có nhiều số tiền thành nhiều khoản (E8): gợi ý chạm để lưu, Enter vẫn lưu một khoản | `XuCore/Sources/XuCore/EntrySplitter.swift` (mở rộng `QuickEntryParser`), `App/Xu/Features/QuickEntry/QuickEntryBar.swift` | Có test / Khung |
+| Số tiền đọc bằng chữ từ đọc chính tả (E9): "ba mươi lăm nghìn", "một triệu rưỡi", "ba trăm yên" | `XuCore/Sources/XuCore/SpokenAmounts.swift` | Có test |
+| Biểu đồ chi tiêu theo danh mục theo tháng (O4); Free xem tháng hiện tại, Pro xem các tháng trước | `XuCore/Sources/XuCore/MonthlySummary.swift`, `App/Xu/Features/Month/MonthView.swift` | Có test / Khung |
+| Nhìn lại từng tuần (O3): Free xem tuần này, Pro xem các tuần cũ | `XuCore/Sources/XuCore/WeeklySummary.swift`, `App/Xu/Features/Week/` | Có test / Khung |
+| Khoá Face ID (S4, Pro): tắt sẵn, chỉ che phần xem, không bao giờ che ô ghi | `App/Xu/Support/AppLock.swift`, `XuCore/Sources/XuCore/ProPlan.swift`, Cài đặt | Có test (quy tắc Pro) / Khung |
+| Nút "Ghi chi tiêu" cho Trung tâm điều khiển, màn hình khoá, Nút Tác vụ (W4, iOS 18): mở Xu với con trỏ trong ô ghi | `App/XuWidgets/QuickEntryControl.swift`, `App/Shared/Intents/OpenQuickEntryIntent.swift` | Khung |
+| Hỏi đánh giá App Store đúng một lần, sau khi tự chốt đủ 5 ngày, không bao giờ lúc đang ghi | `XuCore/Sources/XuCore/ReviewPrompt.swift`, `App/Xu/Features/Habits/HabitsView.swift` | Có test / Khung |
+| Màn Quyền riêng tư đọc được ngay trong app, không cần mạng | `App/Xu/Features/Settings/PrivacyView.swift` (bản đầy đủ: `docs/privacy-policy.md`) | Khung |
+| Giữ ngày gốc của khoản khi đổi múi giờ: ngày chốt lúc ghi lưu ở `storedDay`, mọi màn đọc qua `day(in:)` | `App/Shared/Persistence/Models.swift` (`TransactionRecord`) | Khung |
 
 ## Repo này và repo ý tưởng
 

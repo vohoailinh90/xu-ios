@@ -17,11 +17,16 @@ struct HomeView: View {
     @AppStorage(AppSettings.Key.proInviteDay, store: AppSettings.defaults) private var proInviteDay = ""
     @AppStorage(AppSettings.Key.proInviteDismissed, store: AppSettings.defaults) private var proInviteDismissed = false
 
+    private let lock = AppLock.shared
+
     @State private var focusTrigger = 0
     @State private var showSettings = false
     @State private var showHabits = false
     @State private var showChips = false
     @State private var showMonth = false
+    @State private var showWeek = false
+    /// Tệp CSV đang chia sẻ; đóng ngay khi khoá Face ID.
+    @State private var exportFile: ExportFile?
     @State private var editing: TransactionRecord?
     @State private var showPaywall = false
     /// Ô nhập nhanh còn chữ chưa lưu.
@@ -30,12 +35,20 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Khoá Face ID (nếu bật) chỉ thay các mục XEM bằng ổ khoá. Khoản quen (đường ghi một chạm) và ô ghi
+                // (`QuickEntryBar`, bên dưới) không bao giờ bị che.
+                let covered = lock.isCovered
                 Section {
-                    TodayCard(records: records,
-                              flexibleBudget: Int64(market == .japan ? budgetJapan : budgetVietnam),
-                              currency: market.currency, language: language)
+                    if covered {
+                        FaceIDLockedContent().frame(maxWidth: .infinity).padding(.vertical, 8)
+                    } else {
+                        TodayCard(records: records,
+                                  flexibleBudget: Int64(market == .japan ? budgetJapan : budgetVietnam),
+                                  currency: market.currency, language: language)
+                    }
                 }
-                if showProInvite {
+                // Thẻ mời Pro kể lịch sử dùng ("đã ghi chép 7 ngày liền") nên cũng nằm sau khoá. Không phải đường ghi.
+                if showProInvite && !covered {
                     Section {
                         ProInviteCard(language: language) {
                             proInviteDismissed = true
@@ -52,6 +65,10 @@ struct HomeView: View {
                 if !chips.isEmpty {
                     Section {
                         ChipRow(chips: chips, language: language)
+                            // Luôn dùng được khi app đang mở (đường ghi một chạm). Chỉ che tạm lúc app không ở phía
+                            // trước, vì ảnh App Switcher sẽ lộ tên và số tiền của khoản quen.
+                            .overlay { if lock.isShielded { Color(.secondarySystemGroupedBackground) } }
+                            .accessibilityHidden(lock.isShielded)
                     } header: {
                         HStack {
                             Text(language.t(.quickChips))
@@ -62,28 +79,41 @@ struct HomeView: View {
                         }
                     }
                 }
-                let week = weeklySummary
-                if !week.isEmpty {
-                    Section(language.t(.weekTitle)) {
-                        WeekCard(summary: week, primary: market.currency, language: language)
-                    }
-                }
-                ForEach(groupedByDay, id: \.day) { group in
-                    Section {
-                        ForEach(group.items) { record in
-                            Button { editing = record } label: {
-                                TransactionRow(record: record, language: language)
+                if !covered {
+                    let week = weeklySummary
+                    // Tuần này còn trống mà đã có tuần cũ (ví dụ sáng thứ Hai): vẫn có đường vào các tuần trước.
+                    let hasEarlierWeeks = hasHistory(before: week.weekStart)
+                    if !week.isEmpty || hasEarlierWeeks {
+                        Section {
+                            if !week.isEmpty {
+                                WeekCard(summary: week, primary: market.currency, language: language)
                             }
-                            .buttonStyle(.plain)
+                            if hasEarlierWeeks {
+                                Button { showWeek = true } label: {
+                                    Label(language.t(.weekEarlier), systemImage: "calendar")
+                                }
+                            }
+                        } header: {
+                            if !week.isEmpty { Text(language.t(.weekTitle)) }
                         }
-                            .onDelete { offsets in
-                                for i in offsets { try? Ledger.delete(group.items[i], in: context) }
+                    }
+                    ForEach(groupedByDay, id: \.day) { group in
+                        Section {
+                            ForEach(group.items) { record in
+                                Button { editing = record } label: {
+                                    TransactionRow(record: record, language: language)
+                                }
+                                .buttonStyle(.plain)
                             }
-                    } header: {
-                        HStack {
-                            Text(group.title)
-                            Spacer()
-                            Text(group.spent)
+                                .onDelete { offsets in
+                                    for i in offsets { try? Ledger.delete(group.items[i], in: context) }
+                                }
+                        } header: {
+                            HStack {
+                                Text(group.title)
+                                Spacer()
+                                Text(group.spent)
+                            }
                         }
                     }
                 }
@@ -91,11 +121,9 @@ struct HomeView: View {
             .navigationTitle("Xu")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    ShareLink(item: CSVFile(records: records, language: language),
-                              preview: SharePreview(language.t(.csvPreviewTitle))) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .accessibilityLabel(language.t(.exportCSV))
+                    Button { exportCSV() } label: { Image(systemName: "square.and.arrow.up") }
+                        .accessibilityLabel(language.t(.exportCSV))
+                        .disabled(lock.isCovered)
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showHabits = true } label: { Image(systemName: "leaf") }
@@ -112,11 +140,17 @@ struct HomeView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 QuickEntryBar(focusTrigger: focusTrigger, hasDraft: $hasDraft)
+                    // Chỉ che tạm lúc app không ở phía trước (ảnh App Switcher cũng chụp cả nháp và bản xem trước).
+                    // Đang khoá mà app đang mở thì ô ghi vẫn dùng bình thường: `isShielded` không bật lúc `.active`.
+                    // Phủ lên chứ không gỡ ra, nên không mất chữ đang gõ hay con trỏ.
+                    .overlay { if lock.isShielded { Color(.systemBackground) } }
+                    .accessibilityHidden(lock.isShielded)
             }
-            .sheet(isPresented: $showSettings) { SettingsView() }
-            .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft) }
+            .sheet(isPresented: $showSettings) { SettingsView().faceIDGate() }
+            .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft).faceIDGate() }
             .sheet(isPresented: $showPaywall) { PaywallView() }
-            .sheet(isPresented: $showMonth) { MonthView() }
+            .sheet(isPresented: $showMonth) { MonthView().faceIDGate() }
+            .sheet(isPresented: $showWeek) { WeekView().faceIDGate() }
             .sheet(isPresented: $showChips) {
                 NavigationStack {
                     QuickChipsManager()
@@ -126,6 +160,7 @@ struct HomeView: View {
                             }
                         }
                 }
+                .faceIDGate()
             }
             .fullScreenCover(isPresented: showOnboarding) {
                 OnboardingView {
@@ -133,24 +168,48 @@ struct HomeView: View {
                     focusTrigger += 1
                 }
             }
-            .sheet(item: $editing) { TransactionEditor(record: $0) }
+            .sheet(item: $editing) { TransactionEditor(record: $0).faceIDGate() }
+            .sheet(item: $exportFile) { file in
+                ActivityView(url: file.url) { exportFile = nil }
+                    .presentationDetents([.medium, .large])
+                    .onDisappear { try? FileManager.default.removeItem(at: file.url) }
+            }
         }
         // Widget (`xu://new`) và "Ghi thêm" trên thông báo chốt ngày cùng một đường: đường ghi không bao giờ bị che.
         .onOpenURL { url in
             if url.host == "new" { startLogging() }
         }
         .onChange(of: focusRequest) { startLogging() }
+        // Vừa khoá (xuống nền): đóng mọi sheet xem dữ liệu, kể cả bảng chia sẻ CSV và sheet con của chúng.
+        .onChange(of: lock.isLocked) {
+            if lock.isLocked { closeViewingSheets() }
+        }
     }
 
     /// Đóng mọi sheet đang che ô nhập (cả paywall) rồi focus.
     private func startLogging() {
+        closeViewingSheets()
+        showPaywall = false
+        focusTrigger += 1
+    }
+
+    /// Đóng các sheet xem dữ liệu. Sheet con (ví dụ sửa khoản quen) đóng cùng sheet cha. Thêm sheet xem dữ liệu mới
+    /// thì phải thêm vào đây.
+    private func closeViewingSheets() {
         showSettings = false
         showHabits = false
         editing = nil
         showChips = false
         showMonth = false
-        showPaywall = false
-        focusTrigger += 1
+        showWeek = false
+        exportFile = nil
+    }
+
+    /// Xuất CSV: ghi tệp tạm rồi mở bảng chia sẻ. Đang khoá thì không xuất; mở khoá một chạm là xuất được.
+    private func exportCSV() {
+        guard !lock.isCovered,
+              let url = try? CSVFile(records: records, language: language).writeToTemporaryFile() else { return }
+        exportFile = ExportFile(url: url)
     }
 
     /// Onboarding chỉ hiện lần mở đầu; xong hoặc bỏ qua thì không hiện lại.
@@ -176,6 +235,12 @@ struct HomeView: View {
         }
         return WeeklySummary.compute(entries: entries, closedDays: Set(closures.map(\.dayKey)),
                                      today: DayKey(Date(), calendar: cal), primary: market.currency, calendar: cal)
+    }
+
+    /// Có ghi chép hoặc ngày đã chốt từ trước ngày `day` không. Tuần chỉ có ngày chốt cũng là lịch sử (`WeekView`).
+    private func hasHistory(before day: DayKey) -> Bool {
+        let cal = Calendar.current
+        return records.contains { $0.day(in: cal) < day } || closures.contains { $0.dayKey < day }
     }
 
     private struct DayGroup { let day: DayKey; let title: String; let items: [TransactionRecord]; let spent: String }
@@ -269,41 +334,6 @@ private struct ProInviteCard: View {
             }
         }
         .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Nhìn lại tuần này
-
-private struct WeekCard: View {
-    let summary: WeeklySummary
-    let primary: Currency
-    let language: AppLanguage
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(language.t(.weekSpent, spentText)).font(.headline)
-            if let id = summary.topCategoryID {
-                let category = CategoryCatalog.resolve(id: id)
-                Text(language.t(.weekTop, category.emoji + " " + category.name(in: language)))
-            }
-            if summary.noSpendDays > 0 {
-                Text(language.t(.weekNoSpend, "\(summary.noSpendDays)"))
-            }
-            Text(language.t(.weekLogged, "\(summary.loggedDays)", "\(summary.elapsedDays)"))
-                .foregroundStyle(.secondary)
-        }
-        .font(.callout)
-        .padding(.vertical, 4)
-    }
-
-    /// Tiền của nơi chi tiêu trước, tiền khác sau, không quy đổi.
-    private var spentText: String {
-        let order = [primary] + Currency.allCases.filter { $0 != primary }
-        let parts = order.compactMap { currency -> String? in
-            guard let sum = summary.spent[currency], sum > 0 else { return nil }
-            return MoneyFormatter.compact(sum, currency: currency, language: language)
-        }
-        return parts.isEmpty ? MoneyFormatter.compact(0, currency: primary, language: language) : parts.joined(separator: " · ")
     }
 }
 
