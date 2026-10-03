@@ -278,6 +278,11 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(twoTokens), "2026-09-20")
         XCTAssertEqual(twoTokens.note, "R8.13.20 ランチ")
         XCTAssertEqual(day(parse("R8.9.30 R8.9.20 ランチ 900")), "2026-09-20", "Ngày tương lai đứng trước một ngày thật")
+        // Mọi token "R…" đều không phải tiền, dù chỉ token hợp lệ đầu tiên được dùng làm ngày.
+        XCTAssertEqual(parse("R8.13.20 R8.9.20 ガム 5").amount, 5, "Không phải 13 yên")
+        XCTAssertEqual(parse("R8.9.20 R8.9.21 ガム 5").amount, 5, "Không phải 9 yên")
+        XCTAssertEqual(parse("R8.9.30 ガム 5").amount, 5, "Token ở tương lai cũng không phải tiền")
+        XCTAssertEqual(parse("R8.9.30 ガム 5").note, "R8.9.30 ガム")
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }

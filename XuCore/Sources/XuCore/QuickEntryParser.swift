@@ -122,7 +122,10 @@ public struct QuickEntryParser: Sendable {
 
         // 3. Số tiền, trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均".
         let dateRanges = dateRange.map { [$0] } ?? []
+        // Không bao giờ là tiền: tên có số ("100均") và mọi token ngày hoá đơn kiểu "R8.9.20" — kể cả token không hợp lệ, ở tương lai hay
+        // đứng sau token đã được dùng làm ngày ("R8.13.20 R8.9.20 ガム 5"): phần giữa các dấu chấm không được đọc thành số thập phân.
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
+            + Self.ranges(of: Self.reiwaShortDateRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
             // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
