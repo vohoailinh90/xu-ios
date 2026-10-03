@@ -47,7 +47,7 @@ String Catalog chỉ còn dùng cho chuỗi **hệ thống tự đọc theo ngô
 
 - **Đọc ảnh hoá đơn Nhật trong app** (Vision OCR): chưa làm. Trước hết chấm độ chính xác bằng trang `prototypes/cham-bien-lai.html`
   (chế độ hoá đơn Nhật). Ý tưởng và chấm điểm tính năng này làm ở App-idea-lab (luật 8), chưa có file tính năng.
-- Số viết bằng chữ Hán (千五百円), năm 令和, thứ trong ngoặc (月): đã hiểu từ 2026-10-02. Còn thiếu kiểu viết tắt trên hoá đơn (`R8.9.30`).
+- Số viết bằng chữ Hán (千五百円), năm 令和, thứ trong ngoặc (月): đã hiểu từ 2026-10-02. Từ 2026-10-03 thêm năm 令和 viết tắt kiểu hoá đơn (`R8.9.20`) và số trộn chữ số với chữ Hán (`1万五千円`); chi tiết ở `docs/04`.
 - Siri tiếng Nhật: câu lệnh gốc tiếng Việt trong `XuShortcuts`, bản tiếng Anh/Nhật trong `App/Xu/AppShortcuts.xcstrings`
   ("Xuで支出を記録", "Xuで家計簿をつける"); CI chạy `scripts/check-app-shortcuts.py`: mỗi câu gốc phải có bản dịch
   en/ja và có mặt trong `en.lproj`/`ja.lproj` của bản build. Tên, câu hỏi

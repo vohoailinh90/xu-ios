@@ -122,7 +122,10 @@ public struct QuickEntryParser: Sendable {
 
         // 3. Số tiền, trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均".
         let dateRanges = dateRange.map { [$0] } ?? []
+        // Không bao giờ là tiền: tên có số ("100均") và mọi token ngày hoá đơn kiểu "R8.9.20" — kể cả token không hợp lệ, ở tương lai hay
+        // đứng sau token đã được dùng làm ngày ("R8.13.20 R8.9.20 ガム 5"): phần giữa các dấu chấm không được đọc thành số thập phân.
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
+            + Self.ranges(of: reiwaShortDateRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
             // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
@@ -200,11 +203,38 @@ public struct QuickEntryParser: Sendable {
     static let amountRegexVietnam = QuickEntryParser.amountRegex(units: QuickEntryParser.vietnamUnits)
     static let amountRegexJapan = QuickEntryParser.amountRegex(units: QuickEntryParser.japanUnits)
 
-    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円", "千五百円". Luôn là yên.
+    /// Số kiểu Nhật: "1万2千円", "1万2000", "1.5万", "3千円", "千円", "千五百円", "1万五千円". Luôn là yên.
     /// Số viết toàn chữ Hán chỉ là số tiền khi ngay sau là 円, để "千葉", "百貨店", "八百屋" không thành số tiền.
+    /// Số trộn chữ số với chữ Hán ("1万五千円", "三万5千円") cũng vậy: phải có cả chữ số thường lẫn chữ số Hán (〇–九, 十) và đứng ngay
+    /// trước 円; viết toàn chữ số thường ("1万5千") không cần 円, như trước. Nhóm: 1 dấu, 2 ¥, 3 số trộn, 4 số thường + 万千百,
+    /// 5 toàn chữ Hán, 6 đơn vị.
     static let kanjiAmountRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)|([〇零一二三四五六七八九十百千万]+)(?=\s?円))\s?(円|yen)?(?![a-z0-9_/])"#
+        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?<![〇零一二三四五六七八九十百千万])(?:"#
+            + #"(?=[0-9.,〇零一二三四五六七八九十百千万]*[〇零一二三四五六七八九十])(?=[0-9.,〇零一二三四五六七八九十百千万]*\d)"#
+            + #"((?:\#(kanjiDigitRun)|[〇零一二三四五六七八九十百千万])++)(?=\s?円)"#
+            + #"|(\#(kanjiDigitRun)[万千百]\#(kanjiUnitRun))"#
+            + #"|([〇零一二三四五六七八九十百千万]+)(?=\s?円))"#
+            + #"\s?(円|yen)?(?![a-z0-9_/])"#
     )
+
+    /// Hai mảnh của số kiểu Nhật dùng chung cho `kanjiAmountRegex` và `kanjiUnitTail` (token "R…"), để hai nơi không lệch nhau.
+    ///
+    /// Phải **không nhập nhằng**. Khớp hỏng (không có 円, có chữ Latin dính sau: "11…1五x", "1万5千5千…x") là trường hợp thường gặp khi dán
+    /// văn bản hay OCR, và `(?:\d+…)+` lồng nhau cho phép chia cùng một dãy chữ số theo vô số cách rồi thử hết: 24 chữ số mất ~3,5 giây, 26 chữ số
+    /// vượt 5 giây, chặn luồng ghi vốn phân tích lại sau mỗi lần sửa. Nên:
+    /// - dãy chữ số lấy **nguyên tử** (`\d++`): chỉ có một cách đọc có nghĩa, vì cắt giữa dãy thì ký tự kế tiếp là chữ số và không qua được
+    ///   `(?![a-z0-9_/])` hay `(?=\s?円)`;
+    /// - sau chữ số, 万 là đuôi (`\d++万?`) còn 千/百 đi nhánh `[千百]` riêng, không cũng là đuôi của `\d++`: cùng tập chuỗi như `\d+[万千百]?|[千百]`
+    ///   nhưng mỗi chuỗi chỉ chia được một cách ("5千5千…" không nở theo hàm mũ).
+    ///
+    /// Và không được **quét lại từ từng ký tự**: số kiểu Nhật chỉ bắt đầu ở đầu một dãy, không ở giữa. `(?<![a-z0-9_/.,])` đã chặn việc bắt đầu giữa dãy chữ số
+    /// hay sau dấu chấm/phẩy nhưng không chặn sau một chữ Hán, nên "五五五…五1x" (hàng nghìn chữ Hán, không có 円) thử bắt đầu ở từng chữ và mỗi lần
+    /// quét lookahead tới hết dãy: bậc hai (8.000 ký tự ~5 giây). Lookbehind thứ hai `(?<![〇零…万])` đặt **sau** dấu/¥ tuỳ chọn (nên "+五万" ngay sau 万 vẫn giữ dấu)
+    /// chặn bắt đầu ngay sau một chữ số Hán/đơn vị; dãy luôn được thử một lần từ đầu và đọc hết một mạch. Mọi số hợp lệ ("十万5千円", "家賃 一万5千円", "+3万") vẫn đọc
+    /// như cũ (đã so với regex cũ bằng fuzz); chỉ khác ở các dạng vốn đã đọc sai, khi dãy tự nó không thành số mà một đoạn đuôi của nó lại thành số:
+    /// "x五千円" (chữ Latin dính trước) từng ra 1.000 yên, "百万5千円" (không có chữ số Hán 〇–九/十 nên không phải số trộn) từng ra 5.000 yên.
+    private static let kanjiDigitRun = #"\d++(?:[.,]\d++)*+"#
+    private static let kanjiUnitRun = #"(?:\d++万?|[千百])*"#
 
     /// Tên có số không phải số tiền: "100均 330" là 330 yên, không phải 100.
     static let numericNameRegex = try! NSRegularExpression(
@@ -219,13 +249,17 @@ public struct QuickEntryParser: Sendable {
         for m in Self.kanjiAmountRegex.matches(in: text, range: ns) {
             guard let range = Self.characterRange(m.range, in: text) else { continue }
             let value: Decimal?
-            if let core = Self.group(m, 3, in: text) {
+            if let mixed = Self.group(m, 3, in: text) {
+                value = Self.parseMixedKanjiNumber(mixed)
+            } else if let core = Self.group(m, 4, in: text) {
                 value = Self.parseKanjiNumber(core)
             } else {
-                value = Self.group(m, 4, in: text).flatMap(Self.parseKanjiDigits)
+                value = Self.group(m, 5, in: text).flatMap(Self.parseKanjiDigits)
             }
-            guard let value, value > 0 else { continue }
+            // Cụm đã nhận là số kiểu Nhật nhưng không hợp lệ ("1五千円": chữ số thường dính chữ số Hán) thì cũng che đi: không đoán, và
+            // regex số thường không được đọc lại "1" trong đó thành 1 yên rồi để "五千円" ở lại ghi chú.
             kanjiRanges.append(range)
+            guard let value, value > 0 else { continue }
             found.append(AmountCandidate(value: Self.int64(value), currency: .jpy, hasUnit: true,
                                          isPlus: Self.group(m, 1, in: text) == "+", range: range))
         }
@@ -341,6 +375,62 @@ public struct QuickEntryParser: Sendable {
         return value > 0 ? Decimal(value) : nil
     }
 
+    /// Số trộn chữ số thường với chữ Hán: "1万五千" → 15000 · "三万5千" → 35000 · "2千五百" → 2500 · "1.5万三千" → 18000.
+    /// Chữ số Hán liền nhau tạo thành số ("二〇〇"); chữ số thường và chữ số Hán không dính liền nhau ("1五" là không hợp lệ).
+    /// Không có cách nói tắt như "1万2" (ở đây luôn đứng trước 円): chữ số lẻ ở cuối cộng thẳng.
+    static func parseMixedKanjiNumber(_ text: String) -> Decimal? {
+        let kanjiDigits: [Character: Int] = ["〇": 0, "零": 0, "一": 1, "二": 2, "三": 3, "四": 4,
+                                             "五": 5, "六": 6, "七": 7, "八": 8, "九": 9]
+        let units: [Character: Decimal] = ["十": 10, "百": 100, "千": 1_000, "万": 10_000]
+        var total: Decimal = 0      // phần đã nhân 万
+        var section: Decimal = 0    // phần dưới 万
+        var pending: Decimal?       // số đang chờ đơn vị
+        var pendingIsKanji = false
+        var ascii = ""
+
+        func takeAscii() -> Bool {
+            guard !ascii.isEmpty else { return true }
+            defer { ascii = "" }
+            guard pending == nil, let number = parseNumber(ascii) else { return false }
+            pending = number
+            pendingIsKanji = false
+            return true
+        }
+
+        for ch in text {
+            if ch.isASCII, ch.isNumber || ch == "." || ch == "," {
+                ascii.append(ch)
+                continue
+            }
+            guard takeAscii() else { return nil }
+            if let digit = kanjiDigits[ch] {
+                if let current = pending {
+                    guard pendingIsKanji else { return nil }
+                    pending = current * 10 + Decimal(digit)
+                } else {
+                    pending = Decimal(digit)
+                    pendingIsKanji = true
+                }
+            } else if let unit = units[ch] {
+                let count = pending
+                pending = nil
+                if unit == 10_000 {
+                    let head = section + (count ?? 0)
+                    guard head > 0 else { return nil }
+                    total += head * unit
+                    section = 0
+                } else {
+                    section += (count ?? 1) * unit
+                }
+            } else {
+                return nil
+            }
+        }
+        guard takeAscii() else { return nil }
+        let value = total + section + (pending ?? 0)
+        return value > 0 ? value : nil
+    }
+
     static func int64(_ value: Decimal) -> Int64 {
         var input = value
         var rounded = Decimal()
@@ -354,6 +444,68 @@ public struct QuickEntryParser: Sendable {
     static let yearFirstDateRegex = try! NSRegularExpression(
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
+
+    /// Cái đứng ngay sau token "R…" để nó là một token riêng. Regex chạy trên chuỗi đã gấp nên chữ Latin luôn là a–z: hết câu, hoặc bất kỳ
+    /// ký tự nào KHÔNG phải chữ Latin, chữ số, `.` `,` `/` `_` `-` (khoảng trắng, dấu câu hay ký hiệu Unicode như "！" "）" "、", mọi chữ Nhật kể cả
+    /// "〆" "々" — chữ Nhật đứng sát số vẫn là ranh giới, như mọi chỗ khác của parser), hoặc dấu chấm/phẩy không dính chữ số. Dính liền chữ số,
+    /// chữ Latin, dấu nối, dấu chấm/phẩy rồi chữ số, thì là phần của một giá hay một mã
+    /// dài hơn ("R2-3-9,000円", "R2-3-1,5tr", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt kê từng cú pháp số tiền. Đơn vị tiền
+    /// (円, 万千百十, đơn vị Latin) không bị loại ở đây mà do `moneyUnitFollowsToken` quyết, vì chúng hay mở đầu một từ ("円山公園", "千葉").
+    private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])[\s\S])"#
+
+    /// Phần đứng sau đơn vị tiền mà `amountRegex` yêu cầu để gắn đơn vị vào số: hậu tố thập phân viết tắt (`\d{1,3}`: "1tr2", "1k5") rồi không có
+    /// chữ Latin, chữ số, `_` hay `/` dính liền ("9円candy", "9k/ngày" thì `amountRegex` không nhận đơn vị). Điều kiện của token dùng đúng ranh giới này
+    /// để việc loại token khỏi ngày và việc đọc số tiền không bất đồng.
+    private static let unitTail = #"(?:\d{1,3})?(?![a-z0-9_/])"#
+
+    /// Đơn vị chữ Hán liền sát token mà `kanjiAmountRegex` thật sự gắn vào số, theo đúng hai nhánh của nó rồi tới ranh giới cuối `(?![a-z0-9_/])`:
+    /// - số thường + 万千百: `[万千百]` rồi các đoạn `\d++万?` hay `[千百]` nối tiếp (`kanjiUnitRun`), tuỳ chọn 円/yen ("9万", "9千円", "9万5000円");
+    /// - số trộn: một dãy chữ số Hán (〇–九, 十, 百, 千, 万) xen các nhóm số thường, có ít nhất một chữ số Hán, và **phải** có 円 ("9十円", "9十五円", "9十万円",
+    ///   "9万五千円"); chữ số thường cuối của token nằm ngay trước dãy nên đã thoả điều kiện "có chữ số thường". Nhánh này chỉ nhìn thấy 円 (`(?=\s?円)`) chứ
+    ///   không đòi gì sau nó: `kanjiAmountRegex` thấy 円 theo sau bởi chữ Latin thì bỏ 円 tuỳ chọn rồi vẫn đọc số ("9十五円candy" là 95 yên, ghi chú "円candy").
+    /// "R2-3-9万candy" không khớp (`kanjiAmountRegex` từ chối "9万" trước "c" và số tiền rơi về số trần), nên không coi là có đơn vị.
+    private static let kanjiUnitTail =
+        #"(?:[万千百]\#(kanjiUnitRun)\s?(?:円|yen)?(?![a-z0-9_/])"#
+        + #"|(?=[万千百\d.,]*[〇零一二三四五六七八九十])(?:[〇零一二三四五六七八九十百千万]|\#(kanjiDigitRun))++\s?円)"#
+
+    /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
+    /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.
+    /// Có đơn vị tiền ngay sau token thì nhóm cuối là giá chứ không phải ngày ("R2-3-9 円", "R2-3-9 k", "R2-3-1tr2", "R2-3-1k5", "R2-3-9千円"):
+    /// - đơn vị chữ Latin, kể cả cách **một** khoảng trắng và hậu tố thập phân viết tắt — đúng quy tắc của `amountRegex` (`\s?`): hai khoảng trắng thì
+    ///   `amountRegex` không gắn đơn vị vào số, nên ở đây cũng không coi là có đơn vị (không thì token bị loại khỏi ngày mà số tiền vẫn đọc thiếu đơn vị);
+    /// - 万/千/百/十 liền sát token ("R2-3-9千円"); cách khoảng trắng thì là chữ đầu của một từ ("R8.9.20 千葉 電車 900");
+    /// - 円 **liền sát** token luôn là đơn vị, bất kể sau nó là gì ("R2-3-9円", "R2-3-9円菓子"); 円 **cách khoảng trắng** chỉ là đơn vị khi sau nó
+    ///   không phải chữ Hán ("R2-3-9 円 ガム" là giá, "R8.9.20 円山公園" là tên).
+    /// Quyết định có chủ ý cho một nhập nhằng thật: "R8.9.20円山公園" (ngày + tên) và "R2-3-9円菓子" (giá + ghi chú) giống hệt nhau về chữ, không
+    /// quy tắc nào đúng cho cả hai. Chọn giữ giá: mất hay đọc sai số tiền là chặn luồng ghi, còn bỏ sót ngày thì khoản vẫn đúng như trước khi có tính
+    /// năng này và thẻ xem trước hiện ngày để người dùng thấy ngay; viết có khoảng trắng ("R8.9.20 円山公園") thì được nhận là ngày.
+    private static func moneyUnitFollowsToken(units: String) -> String {
+        #"(?!\s?(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")"# + unitTail + #")(?!円"# + unitTail + #")(?!\s円(?!\p{Han})"#
+            + unitTail + #")(?!"# + kanjiUnitTail + #")"#
+    }
+
+    /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
+    /// Phải là một token riêng (`receiptTokenEnd`). Ngoại lệ giá (`moneyUnitFollowsToken`: "R2-3-9円" là 9 yên, không phải 09/03/2020) chỉ áp dụng khi
+    /// dấu phân cách trước nhóm cuối là **gạch ngang** `-`: chỉ khi đó `amountRegex` mới đọc được nhóm cuối làm giá. Với `.` thì `amountRegex` đọc
+    /// "3.9円" là số thập phân 3,9, với `/` thì không bắt đầu được số tiền sau `/`; hai dạng đó là cách in ngày hoá đơn quen thuộc nên vẫn là ngày
+    /// ("R8.9.20円山公園 900" là ngày 20/09 và 900 yên). Cũng dùng để che mọi token cùng hình dạng khỏi bước đọc số tiền, kể cả token không phải ngày
+    /// hợp lệ (tương lai, tháng 13, "R8.13.20 R8.9.20 ガム 5"): cùng một regex nên nhận ngày và che không thể bất đồng. Token sai độ dài do OCR
+    /// ("R8.9.200") không được nhận cũng không bị che: che theo hình dạng rộng hơn từng nuốt mất giá của một mã hàng ("R2-3-900 ガム 5").
+    /// Nhóm: 1 năm, 2 tháng, 3 ngày (dạng `-`), 4 ngày (dạng `.` `/`).
+    static func makeReceiptDateRegex(units: String) -> NSRegularExpression {
+        try! NSRegularExpression(
+            pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})"#
+                + #"(?:-(\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken(units: units)
+                + #"|[./](\d{1,2}+)"# + receiptTokenEnd + #")"#
+        )
+    }
+    static let reiwaShortDateRegexVietnam = makeReceiptDateRegex(units: vietnamUnits)
+    static let reiwaShortDateRegexJapan = makeReceiptDateRegex(units: japanUnits)
+
+    /// Regex ngày hoá đơn theo thị trường đang chọn (cùng quy tắc chọn tập đơn vị với `findAmounts`).
+    private var reiwaShortDateRegex: NSRegularExpression {
+        options.market == .japan ? Self.reiwaShortDateRegexJapan : Self.reiwaShortDateRegexVietnam
+    }
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
     static let explicitDateRegex = try! NSRegularExpression(
@@ -442,6 +594,20 @@ public struct QuickEntryParser: Sendable {
            let day = Self.group(m, 3, in: text).flatMap(Int.init),
            let range = Self.characterRange(m.range, in: text),
            let date = makeDate(year: year, month: month, day: day) {
+            return (date, range)
+        }
+
+        // Hoá đơn Nhật in ngày kiểu "R8.9.20". Biên lai không có ngày tương lai, nên ngày sau hôm nay không phải ngày (tránh đọc nhầm một
+        // mã kiểu phiên bản "R2.3.15"); thời Reiwa bắt đầu từ 01/05/2019 nên "R1.1.1" cũng vậy. Token không hợp lệ thì chữ ở lại trong
+        // ghi chú và xét tiếp token sau: "R8.13.20 R8.9.20" lấy ngày thật.
+        let reiwaStart = makeDate(year: 2019, month: 5, day: 1)
+        for m in reiwaShortDateRegex.matches(in: text, range: ns) {
+            guard let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
+                  let month = Self.group(m, 2, in: text).flatMap(Int.init),
+                  let day = (Self.group(m, 3, in: text) ?? Self.group(m, 4, in: text)).flatMap(Int.init),
+                  let range = Self.characterRange(m.range, in: text),
+                  let date = makeDate(year: 2018 + era, month: month, day: day),
+                  date <= today, let reiwaStart, date >= reiwaStart else { continue }
             return (date, range)
         }
 
