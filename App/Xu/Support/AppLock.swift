@@ -82,15 +82,35 @@ final class AppLock {
 }
 
 extension View {
-    /// Che view này khi khoá Face ID đang bật và đang khoá. Dùng cho mọi màn **xem** dữ liệu, không bao giờ cho ô ghi.
+    /// Che view này khi khoá Face ID đang bật và đang khoá. Dùng cho các **sheet** xem dữ liệu, không bao giờ cho ô ghi
+    /// hay khoản quen. Trên Home thì thay riêng các mục xem (`HomeView`), vì khoản quen là đường ghi, không được che.
     func faceIDGate() -> some View { FaceIDGated(content: self) }
+}
+
+/// Biểu tượng khoá, lời nhắn và nút "Mở khoá" — dùng cho lớp phủ của sheet và cho mục thay thế trên Home.
+/// Chỉ khi thật sự đang khoá mới có nút; che tạm (App Switcher) thì chỉ có biểu tượng.
+struct FaceIDLockedContent: View {
+    private let lock = AppLock.shared
+    @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "lock.fill").font(.largeTitle).foregroundStyle(.secondary)
+            if lock.isLocked {
+                Text(language.t(.faceIDLockedHint))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                Button(language.t(.faceIDUnlock)) { Task { await lock.unlock() } }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+    }
 }
 
 /// Là `View` (không phải `ViewModifier`) để giữ `AppLock.shared` như `ProStore.shared` ở các màn khác.
 private struct FaceIDGated<Content: View>: View {
     let content: Content
     private let lock = AppLock.shared
-    @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
 
     var body: some View {
         let covered = lock.isCovered
@@ -99,19 +119,10 @@ private struct FaceIDGated<Content: View>: View {
             .accessibilityHidden(covered)
             .overlay {
                 if covered {
-                    VStack(spacing: 12) {
-                        Image(systemName: "lock.fill").font(.largeTitle).foregroundStyle(.secondary)
-                        if lock.isLocked {
-                            Text(language.t(.faceIDLockedHint))
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.secondary)
-                            Button(language.t(.faceIDUnlock)) { Task { await lock.unlock() } }
-                                .buttonStyle(.borderedProminent)
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemGroupedBackground))
+                    FaceIDLockedContent()
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color(.systemGroupedBackground))
                 }
             }
     }

@@ -19,6 +19,7 @@ ghi quyết định vào tài liệu này trước, rồi sửa cả ba chỗ: p
 | Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`), khoá Face ID bật/tắt (`faceIDLock`, tắt sẵn) | UserDefaults của App Group | App, widget | Không |
 | Ngân sách tháng, "số nhỏ là nghìn" | UserDefaults riêng của app | App | Không |
 | Thông báo nhắc chốt ngày | Lịch thông báo cục bộ của iOS | iOS | Không (không dùng push từ máy chủ) |
+| Tệp CSV tạm khi xuất (`xu-giao-dich.csv`) | Thư mục tạm của app | App, bảng chia sẻ của iOS | Chỉ khi người dùng chọn nơi gửi; xoá khi đóng bảng chia sẻ, và bảng chia sẻ tự đóng khi khoá Face ID |
 
 Các đường dữ liệu đi qua hệ thống của Apple (Xu không nhận gì thêm):
 
