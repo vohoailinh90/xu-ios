@@ -437,7 +437,8 @@ public struct QuickEntryParser: Sendable {
     /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
     /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.
     /// Có đơn vị tiền ngay sau token thì nhóm cuối là giá chứ không phải ngày ("R2-3-9 円", "R2-3-9 k", "R2-3-1tr2", "R2-3-1k5", "R2-3-9千円"):
-    /// - đơn vị chữ Latin, kể cả cách khoảng trắng và hậu tố thập phân viết tắt như `amountRegex`;
+    /// - đơn vị chữ Latin, kể cả cách **một** khoảng trắng và hậu tố thập phân viết tắt — đúng quy tắc của `amountRegex` (`\s?`): hai khoảng trắng thì
+    ///   `amountRegex` không gắn đơn vị vào số, nên ở đây cũng không coi là có đơn vị (không thì token bị loại khỏi ngày mà số tiền vẫn đọc thiếu đơn vị);
     /// - 万/千/百/十 liền sát token ("R2-3-9千円"); cách khoảng trắng thì là chữ đầu của một từ ("R8.9.20 千葉 電車 900");
     /// - 円 **liền sát** token luôn là đơn vị, bất kể sau nó là gì ("R2-3-9円", "R2-3-9円菓子"); 円 **cách khoảng trắng** chỉ là đơn vị khi sau nó
     ///   không phải chữ Hán ("R2-3-9 円 ガム" là giá, "R8.9.20 円山公園" là tên).
@@ -445,7 +446,7 @@ public struct QuickEntryParser: Sendable {
     /// quy tắc nào đúng cho cả hai. Chọn giữ giá: mất hay đọc sai số tiền là chặn luồng ghi, còn bỏ sót ngày thì khoản vẫn đúng như trước khi có tính
     /// năng này và thẻ xem trước hiện ngày để người dùng thấy ngay; viết có khoảng trắng ("R8.9.20 円山公園") thì được nhận là ngày.
     private static func moneyUnitFollowsToken(units: String) -> String {
-        #"(?!\s*(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")(?:\d{1,3})?(?![a-z0-9_]))(?!円)(?!\s+円(?!\p{Han}))(?![万千百十])"#
+        #"(?!\s?(?:"# + units.replacingOccurrences(of: "|円", with: "") + #")(?:\d{1,3})?(?![a-z0-9_]))(?!円)(?!\s円(?!\p{Han}))(?![万千百十])"#
     }
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".

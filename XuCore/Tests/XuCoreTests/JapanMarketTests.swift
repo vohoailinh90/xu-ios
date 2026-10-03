@@ -312,6 +312,9 @@ final class JapanMarketTests: XCTestCase {
         // Ở thị trường Nhật "9 man" là 9 vạn yên: đơn vị, nên "R2-3-9 man" là giá, không phải ngày.
         XCTAssertEqual(parse("R2-3-9 man").amount, 90_000)
         XCTAssertEqual(day(parse("R2-3-9 man")), "2026-09-25")
+        // Hai khoảng trắng: `amountRegex` không gắn đơn vị vào số (chỉ một khoảng trắng), nên token cũng không coi là có đơn vị; hai bước dùng cùng quy tắc.
+        // Quan trọng là không bao giờ ra "9 yên" im lặng (token bị loại khỏi ngày mà số tiền vẫn đọc thiếu đơn vị).
+        XCTAssertNotEqual(parse("R2-3-9  man").amount, 9)
         // Hậu tố thập phân viết tắt ("1tr2", "1k5") là một phần của giá.
         let vietnam = QuickEntryParser(calendar: calendar)
         XCTAssertEqual(vietnam.parse("R2-3-1tr2", now: now).amount, 1_200_000)
