@@ -125,7 +125,7 @@ public struct QuickEntryParser: Sendable {
         // Không bao giờ là tiền: tên có số ("100均") và mọi token ngày hoá đơn kiểu "R8.9.20" — kể cả token không hợp lệ, ở tương lai hay
         // đứng sau token đã được dùng làm ngày ("R8.13.20 R8.9.20 ガム 5"): phần giữa các dấu chấm không được đọc thành số thập phân.
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
-            + Self.ranges(of: Self.reiwaShortDateRegex, in: folded)
+            + Self.ranges(of: Self.receiptDateTokenRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
             // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
@@ -430,6 +430,10 @@ public struct QuickEntryParser: Sendable {
     static let reiwaShortDateRegex = try! NSRegularExpression(
         pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2})(?![0-9a-z_/-])(?!\.\d)"#
     )
+
+    /// Mọi token trông như ngày hoá đơn "R…", rộng hơn `reiwaShortDateRegex`: cả token sai độ dài do OCR hoặc gõ nhầm ("R8.9.200",
+    /// "R8.9.20.5"). Chỉ dùng để che token khỏi bước đọc số tiền; việc nhận có phải ngày hay không do regex nghiêm ngặt ở trên quyết.
+    static let receiptDateTokenRegex = try! NSRegularExpression(pattern: #"(?<![a-z0-9_])r\d+(?:[./-]\d+)+"#)
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
     static let explicitDateRegex = try! NSRegularExpression(

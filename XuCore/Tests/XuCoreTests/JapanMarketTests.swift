@@ -283,6 +283,11 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("R8.9.20 R8.9.21 ガム 5").amount, 5, "Không phải 9 yên")
         XCTAssertEqual(parse("R8.9.30 ガム 5").amount, 5, "Token ở tương lai cũng không phải tiền")
         XCTAssertEqual(parse("R8.9.30 ガム 5").note, "R8.9.30 ガム")
+        // Token sai độ dài (OCR, gõ nhầm) cũng không phải tiền: "9.200" không được đọc thành 9.200 yên.
+        XCTAssertEqual(parse("R8.9.200 ガム 5").amount, 5)
+        XCTAssertEqual(parse("R8.9.200 ガム 5").note, "R8.9.200 ガム")
+        XCTAssertEqual(parse("R8.9.20.5 ガム 5").amount, 5)
+        XCTAssertEqual(day(parse("R8.9.200 ガム 5")), "2026-09-25", "Token sai độ dài không phải ngày")
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }
