@@ -18,6 +18,7 @@ struct XuApp: App {
         WindowGroup {
             HomeView()
                 .onChange(of: scenePhase) {
+                    AppLock.shared.scenePhaseChanged(to: scenePhase)
                     // Mỗi lần quay lại app: nạp thêm lịch nhắc chốt ngày cho các ngày tới.
                     guard scenePhase == .active else { return }
                     ReminderScheduler.refresh()

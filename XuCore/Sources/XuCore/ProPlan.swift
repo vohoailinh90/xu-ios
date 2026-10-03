@@ -24,6 +24,17 @@ public enum ProPlan {
     public static func canViewMonth(_ month: MonthKey, current: MonthKey, isPro: Bool) -> Bool {
         isPro || month >= current
     }
+
+    /// Màn "Theo tuần": bản Free xem tuần hiện tại, Xu Pro xem lại các tuần cũ (docs/02, "toàn bộ lịch sử").
+    /// Danh sách giao dịch và CSV vẫn đủ mọi tuần cho tất cả mọi người. Hai tham số là thứ Hai của từng tuần.
+    public static func canViewWeek(startingOn weekStart: DayKey, currentWeekStart: DayKey, isPro: Bool) -> Bool {
+        isPro || weekStart >= currentWeekStart
+    }
+
+    /// Công tắc khoá Face ID (docs/02, S4) chạm được không: Xu Pro bật/tắt tự do. Bản Free chỉ còn tắt được khoá đã
+    /// bật từ trước (ví dụ sau hoàn tiền) — không bao giờ để người dùng bị khoá ngoài dữ liệu của chính mình.
+    /// Khoá chỉ che việc xem (danh sách, biểu đồ, thói quen, cài đặt, xuất CSV), không bao giờ che ô ghi.
+    public static func canChangeFaceIDLock(isPro: Bool, isEnabled: Bool) -> Bool { isPro || isEnabled }
 }
 
 /// Lời mời Xu Pro (docs/07): đúng một lần, sau 7 ngày dùng liên tục. Không phải paywall: là một thẻ trên Home,

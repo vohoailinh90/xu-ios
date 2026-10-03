@@ -18,13 +18,29 @@ public struct WeeklySummary: Equatable, Sendable {
 
     public var isEmpty: Bool { spent.isEmpty && loggedDays == 0 }
 
+    /// Thứ Hai của tuần chứa `day`.
+    public static func weekStart(of day: DayKey, calendar: Calendar) -> DayKey {
+        let calendar = calendar.gregorianSameTimeZone
+        // Gregorian: 1 = Chủ nhật, 2 = thứ Hai… → lùi về thứ Hai.
+        let weekday = calendar.component(.weekday, from: day.date(in: calendar))
+        return day.adding(days: -((weekday + 5) % 7), calendar: calendar)
+    }
+
+    /// Một tuần bất kỳ (xem lại các tuần cũ, Xu Pro). Tuần đã qua tính đủ 7 ngày; tuần hiện tại chỉ tính tới `today`,
+    /// như `compute`. `weekStart` là thứ Hai của tuần đó (`weekStart(of:calendar:)`).
+    public static func compute(weekStarting weekStart: DayKey, entries: [LedgerEntry], closedDays: Set<DayKey>,
+                               today: DayKey, primary: Currency, calendar: Calendar,
+                               catalog: [CategoryDefinition] = CategoryCatalog.defaults) -> WeeklySummary {
+        let weekEnd = weekStart.adding(days: 6, calendar: calendar)
+        return compute(entries: entries, closedDays: closedDays, today: min(weekEnd, today), primary: primary,
+                       calendar: calendar, catalog: catalog)
+    }
+
     public static func compute(entries: [LedgerEntry], closedDays: Set<DayKey>, today: DayKey,
                                primary: Currency, calendar: Calendar,
                                catalog: [CategoryDefinition] = CategoryCatalog.defaults) -> WeeklySummary {
         let calendar = calendar.gregorianSameTimeZone
-        // Gregorian: 1 = Chủ nhật, 2 = thứ Hai… → lùi về thứ Hai.
-        let weekday = calendar.component(.weekday, from: today.date(in: calendar))
-        let start = today.adding(days: -((weekday + 5) % 7), calendar: calendar)
+        let start = weekStart(of: today, calendar: calendar)
         let end = start.adding(days: 6, calendar: calendar)
 
         let inWeek = entries.filter { $0.day >= start && $0.day <= today }
