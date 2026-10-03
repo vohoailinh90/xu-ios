@@ -426,19 +426,24 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
 
+    /// Ngay sau nhóm số cuối của token "R…" có đơn vị tiền (kể cả hậu tố thập phân viết tắt "1tr2", "1k5", như `amountRegex`) thì nhóm cuối
+    /// là giá chứ không phải ngày: "R2-3-900円", "R2-3-9円", "R2-3-1k5" là mã hàng kèm giá. Dùng chung cho regex nhận ngày và regex che token.
+    private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #")(?:\d{1,3})?(?![a-z0-9_]))"#
+
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
+    /// Không phải ngày khi nhóm cuối có đơn vị tiền ngay sau ("R2-3-9円": 9 yên, không phải 09/03/2020).
     static let reiwaShortDateRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2})(?![0-9a-z_/-])(?!\.\d)"#
+        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)(?![0-9a-z_/-])(?!\.\d)"# + moneyUnitFollowsToken
     )
 
     /// Mọi token trông như ngày hoá đơn "R…" (đủ năm, tháng, ngày: ít nhất ba nhóm số), rộng hơn `reiwaShortDateRegex`: cả token sai độ dài do
     /// OCR hoặc gõ nhầm ("R8.9.200", "R8.9.20.5"). Chỉ dùng để che token khỏi bước đọc số tiền; việc nhận có phải ngày hay không do regex
-    /// nghiêm ngặt ở trên quyết. Không che khi nhóm cuối có đơn vị tiền ngay sau ("R2-3-900円", "R2-3-900k": mã hàng kèm giá) và không
-    /// che khi chỉ có hai nhóm ("R2-900円"): mất số tiền là chặn luồng ghi, nên khi nhập nhằng thì nghiêng về giữ tiền. Dùng `++` (không quay
-    /// lui) để nhóm cuối không bị cắt ngắn cho vừa lúc kiểm tra đơn vị. Giới hạn đã biết: "R2-3-900 ガム 5" (ba nhóm, không đơn vị) về
-    /// chữ không phân biệt được với một ngày hoá đơn sai độ dài, nên vẫn bị che.
+    /// nghiêm ngặt ở trên quyết. Không che khi nhóm cuối có đơn vị tiền ngay sau (`moneyUnitFollowsToken`) và không che khi chỉ có hai nhóm
+    /// ("R2-900円"): mất số tiền là chặn luồng ghi, nên khi nhập nhằng thì nghiêng về giữ tiền. Dùng `++` (không quay lui) để nhóm cuối không
+    /// bị cắt ngắn cho vừa lúc kiểm tra đơn vị. Giới hạn đã biết: "R2-3-900 ガム 5" (ba nhóm, không đơn vị) về chữ không phân biệt được
+    /// với một ngày hoá đơn sai độ dài, nên vẫn bị che.
     static let receiptDateTokenRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_])r\d++[./-]\d++(?:[./-]\d++)++(?!\s*(?:"# + japanUnits + #")(?![a-z0-9_]))"#
+        pattern: #"(?<![a-z0-9_])r\d++[./-]\d++(?:[./-]\d++)++"# + moneyUnitFollowsToken
     )
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).

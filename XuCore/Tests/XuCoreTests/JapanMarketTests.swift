@@ -297,6 +297,14 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("R2-3-900円 ガム 5").amount, 900)
         XCTAssertEqual(parse("R2-3-900 円 ガム 5").amount, 900, "Cách một dấu cách trước 円")
         XCTAssertEqual(QuickEntryParser(calendar: calendar).parse("R2-3-900k", now: now).amount, 900_000)
+        // Nhóm cuối vừa là ngày hợp lệ (1–31) vừa có đơn vị tiền ngay sau: vẫn là giá, không phải 09/03/2020.
+        let nine = parse("R2-3-9円")
+        XCTAssertEqual(nine.amount, 9)
+        XCTAssertEqual(day(nine), "2026-09-25")
+        // Hậu tố thập phân viết tắt ("1tr2", "1k5") là một phần của giá.
+        let vietnam = QuickEntryParser(calendar: calendar)
+        XCTAssertEqual(vietnam.parse("R2-3-1tr2", now: now).amount, 1_200_000)
+        XCTAssertEqual(vietnam.parse("R2-3-1k5", now: now).amount, 1_500)
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }
