@@ -209,7 +209,7 @@ public struct QuickEntryParser: Sendable {
     /// trước 円; viết toàn chữ số thường ("1万5千") không cần 円, như trước. Nhóm: 1 dấu, 2 ¥, 3 số trộn, 4 số thường + 万千百,
     /// 5 toàn chữ Hán, 6 đơn vị.
     static let kanjiAmountRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:"#
+        pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?<![〇零一二三四五六七八九十百千万])(?:"#
             + #"(?=[0-9.,〇零一二三四五六七八九十百千万]*[〇零一二三四五六七八九十])(?=[0-9.,〇零一二三四五六七八九十百千万]*\d)"#
             + #"((?:\#(kanjiDigitRun)|[〇零一二三四五六七八九十百千万])++)(?=\s?円)"#
             + #"|(\#(kanjiDigitRun)[万千百]\#(kanjiUnitRun))"#
@@ -226,6 +226,13 @@ public struct QuickEntryParser: Sendable {
     ///   `(?![a-z0-9_/])` hay `(?=\s?円)`;
     /// - sau chữ số, 万 là đuôi (`\d++万?`) còn 千/百 đi nhánh `[千百]` riêng, không cũng là đuôi của `\d++`: cùng tập chuỗi như `\d+[万千百]?|[千百]`
     ///   nhưng mỗi chuỗi chỉ chia được một cách ("5千5千…" không nở theo hàm mũ).
+    ///
+    /// Và không được **quét lại từ từng ký tự**: số kiểu Nhật chỉ bắt đầu ở đầu một dãy, không ở giữa. `(?<![a-z0-9_/.,])` đã chặn việc bắt đầu giữa dãy chữ số
+    /// hay sau dấu chấm/phẩy nhưng không chặn sau một chữ Hán, nên "五五五…五1x" (hàng nghìn chữ Hán, không có 円) thử bắt đầu ở từng chữ và mỗi lần
+    /// quét lookahead tới hết dãy: bậc hai (8.000 ký tự ~5 giây). Lookbehind thứ hai `(?<![〇零…万])` đặt **sau** dấu/¥ tuỳ chọn (nên "+五万" ngay sau 万 vẫn giữ dấu)
+    /// chặn bắt đầu ngay sau một chữ số Hán/đơn vị; dãy luôn được thử một lần từ đầu và đọc hết một mạch. Mọi số hợp lệ ("十万5千円", "家賃 一万5千円", "+3万") vẫn đọc
+    /// như cũ (đã so với regex cũ bằng fuzz); chỉ khác ở các dạng vốn đã đọc sai, khi dãy tự nó không thành số mà một đoạn đuôi của nó lại thành số:
+    /// "x五千円" (chữ Latin dính trước) từng ra 1.000 yên, "百万5千円" (không có chữ số Hán 〇–九/十 nên không phải số trộn) từng ra 5.000 yên.
     private static let kanjiDigitRun = #"\d++(?:[.,]\d++)*+"#
     private static let kanjiUnitRun = #"(?:\d++万?|[千百])*"#
 

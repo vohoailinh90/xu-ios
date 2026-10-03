@@ -95,10 +95,14 @@ final class JapanMarketTests: XCTestCase {
     }
 
     /// Khớp hỏng của regex số kiểu Nhật (dán văn bản, OCR: chữ số dài rồi chữ Latin hay thiếu 円) từng thử hết mọi cách chia một dãy chữ số:
-    /// 24 chữ số mất ~3,5 giây, 26 chữ số vượt 5 giây. Giờ phải xong ngay, kể cả với dãy dài gấp đôi.
+    /// 24 chữ số mất ~3,5 giây, 26 chữ số vượt 5 giây. Giờ phải xong ngay, kể cả với dãy dài gấp đôi. Dãy rất dài chữ Hán rồi một chữ số (không có 円)
+    /// từng bị quét lại từ từng chữ Hán: bậc hai, 8.000 ký tự ~5 giây.
     func testJapaneseNumberRegexesFailFastOnLongDigitRuns() {
         let digits = String(repeating: "1", count: 64)
         let samples = [
+            String(repeating: "五", count: 20_000) + "1x",                 // không quét lại từ từng chữ Hán
+            String(repeating: "五1", count: 10_000) + "x",
+            String(repeating: "五.", count: 10_000) + "x",
             digits + "五x",                                               // số trộn không có 円
             digits + "五",
             "1万" + digits + "x",                                         // số thường + 万, dãy chữ số dài
