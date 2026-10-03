@@ -1,8 +1,10 @@
 import XCTest
 @testable import XuCore
 
-/// Giờ trong câu nhập: "7h sáng", "sáng 7h", "lúc 19h30" (docs/04, mục "Giờ").
+/// Giờ trong câu nhập: "cà phê 7h sáng 35k", "sáng 7h", "lúc 19h30" (docs/04, mục "Giờ").
 /// Nguyên tắc: chỉ nhận giờ khi người dùng nói rõ đó là một thời điểm; mọi dạng khác giữ nguyên chữ của người dùng.
+/// Hai bảo đảm cấu trúc: chữ buổi chỉ nhận khi không thể là đầu một từ ghép ("tối đa", "sáng tạo"), và giờ không bao giờ
+/// nuốt số tiền duy nhất.
 final class TimeOfDayTests: XCTestCase {
     /// Thứ Sáu 25/09/2026, 12:00 giờ Việt Nam
     var calendar: Calendar!
@@ -21,7 +23,7 @@ final class TimeOfDayTests: XCTestCase {
     private func day(_ result: QuickEntryResult) -> String { DayKey(result.date, calendar: calendar).description }
     private func minutes(_ hour: Int, _ minute: Int = 0) -> Int { hour * 60 + minute }
 
-    // MARK: Cách 1: buổi đứng ngay sau giờ
+    // MARK: Cách 1: buổi đứng ngay sau giờ (sau buổi là hết câu, dấu câu hoặc con số)
 
     func testPeriodAfterTheHour() {
         let r = parse("cà phê 7h sáng 35k")
@@ -31,17 +33,15 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(day(r), "2026-09-25", "Giờ không đổi ngày")
 
         XCTAssertEqual(parse("cà phê 7h30 sáng 35k").minutesOfDay, minutes(7, 30))
-        let b = parse("7 giờ 30 sáng cà phê 35k")
-        XCTAssertEqual(b.minutesOfDay, minutes(7, 30))
-        XCTAssertEqual(b.note, "cà phê")
-        let c = parse("8h15 tối xem phim 120k")
-        XCTAssertEqual(c.minutesOfDay, minutes(20, 15))
-        XCTAssertEqual(c.note, "xem phim")
-        XCTAssertEqual(parse("19h tối grab 52k").minutesOfDay, minutes(19), "Giờ 24h đi với buổi vẫn là giờ")
-        XCTAssertEqual(parse("14h chiều họp 50k").minutesOfDay, minutes(14))
+        let b = parse("xem phim 8h15 tối 120k")
+        XCTAssertEqual(b.minutesOfDay, minutes(20, 15))
+        XCTAssertEqual(b.note, "xem phim")
+        XCTAssertEqual(parse("cà phê 19h tối 52k").minutesOfDay, minutes(19), "Giờ 24h đi với buổi vẫn là giờ")
+        XCTAssertEqual(parse("họp 14h chiều, 50k").minutesOfDay, minutes(14), "Dấu câu sau buổi là ranh giới")
+        XCTAssertEqual(parse("grab 7h tối").minutesOfDay, minutes(19), "Hết câu là ranh giới")
     }
 
-    // MARK: Cách 2: buổi đứng đầu câu hoặc kèm "nay"/"qua"
+    // MARK: Cách 2: buổi đứng đầu câu hoặc kèm "nay"/"qua" (liền sau là chữ số)
 
     func testPeriodAtTheStartOrWithNayQua() {
         let a = parse("sáng 7h cà phê 35k")
@@ -80,7 +80,7 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(parse("lúc 0:30 xe 50k").minutesOfDay, minutes(0, 30))
         XCTAssertEqual(parse("lúc 23h grab 90k").minutesOfDay, minutes(23))
         XCTAssertEqual(parse("lúc 7 giờ 30 cà phê 35k").minutesOfDay, minutes(7, 30))
-        XCTAssertEqual(parse("lúc 7h tối grab 52k").minutesOfDay, minutes(19), "\"lúc\" kèm buổi thì đổi theo buổi")
+        XCTAssertEqual(parse("lúc 7h tối 52k grab").minutesOfDay, minutes(19), "\"lúc\" kèm buổi thì đổi theo buổi")
         let d = parse("lúc 7h tối qua grab 52k")
         XCTAssertEqual(d.minutesOfDay, minutes(19), "Có \"lúc\" thì giờ đã nói rõ: \"tối qua\" là ngày")
         XCTAssertEqual(day(d), "2026-09-24")
@@ -94,12 +94,12 @@ final class TimeOfDayTests: XCTestCase {
 
     func testPeriodsConvertToTwentyFourHour() {
         let cases: [(String, Int)] = [
-            ("5h chiều 50k", minutes(17)), ("1h chiều cơm 45k", minutes(13)), ("7h chiều 50k", minutes(19)),
-            ("12h trưa cơm 45k", minutes(12)), ("11h trưa cơm 45k", minutes(11)), ("1h trưa cơm 45k", minutes(13)),
-            ("13h trưa cơm 45k", minutes(13)), ("5h tối 90k", minutes(17)), ("6h tối 90k", minutes(18)),
-            ("11h tối 90k", minutes(23)), ("22h tối 90k", minutes(22)), ("11h đêm nhậu 200k", minutes(23)),
-            ("12h đêm 50k", minutes(0)), ("2h đêm taxi 100k", minutes(2)), ("23h đêm 50k", minutes(23)),
-            ("1h sáng 20k", minutes(1)), ("9h sáng 20k", minutes(9))
+            ("grab 5h chiều 50k", minutes(17)), ("grab 1h chiều 50k", minutes(13)), ("grab 7h chiều 50k", minutes(19)),
+            ("cơm 12h trưa 45k", minutes(12)), ("cơm 11h trưa 45k", minutes(11)), ("cơm 1h trưa 45k", minutes(13)),
+            ("cơm 13h trưa 45k", minutes(13)), ("nhậu 5h tối 90k", minutes(17)), ("nhậu 6h tối 90k", minutes(18)),
+            ("nhậu 11h tối 90k", minutes(23)), ("nhậu 22h tối 90k", minutes(22)), ("nhậu 11h đêm 200k", minutes(23)),
+            ("xe 12h đêm 50k", minutes(0)), ("taxi 2h đêm 100k", minutes(2)), ("xe 23h đêm 50k", minutes(23)),
+            ("cà phê 1h sáng 20k", minutes(1)), ("cà phê 9h sáng 20k", minutes(9))
         ]
         for (text, expected) in cases {
             XCTAssertEqual(parse(text).minutesOfDay, expected, text)
@@ -108,8 +108,9 @@ final class TimeOfDayTests: XCTestCase {
 
     func testPeriodsThatDoNotFitTheHourAreNotATime() {
         // Mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó; ngoài khoảng đó không đoán (không cộng 12 bừa).
-        for text in ["5h trưa cơm 45k", "7h đêm 50k", "11h chiều 50k", "8h chiều 50k", "1h tối 90k", "12h tối 90k",
-                     "12h sáng 20k", "19h sáng 20k", "20h chiều 50k", "14h tối 50k"] {
+        for text in ["cơm 5h trưa 45k", "xe 7h đêm 50k", "grab 11h chiều 50k", "grab 8h chiều 50k", "grab 1h tối 90k",
+                     "grab 12h tối 90k", "cà phê 12h sáng 20k", "cà phê 19h sáng 20k", "grab 20h chiều 50k",
+                     "grab 14h tối 50k"] {
             XCTAssertNil(parse(text).minutesOfDay, text)
             XCTAssertNotNil(parse(text).amount, text)
         }
@@ -123,26 +124,49 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(r.note, "1h taxi")
     }
 
-    // MARK: Không nói rõ là thời điểm → không phải giờ
+    // MARK: Bảo đảm từ ghép: chữ buổi là đầu của nhiều từ ghép tiếng Việt
 
-    func testPeriodThatOpensADatePhraseDoesNotBelongToTheNumber() {
-        // "sáng nay", "tối qua" là cụm ngày: "2h30" đứng ngay trước nó có thể là thời lượng, nên không phải giờ.
-        let room = parse("thuê phòng trong 2h30 sáng nay 100k")
-        XCTAssertNil(room.minutesOfDay)
-        XCTAssertEqual(day(room), "2026-09-25", "\"sáng nay\" vẫn là ngày hôm nay")
-        XCTAssertEqual(room.note, "thuê phòng trong 2h30", "Thời lượng ở lại trong ghi chú, cụm ngày bỏ như thường")
-        XCTAssertEqual(room.amount, 100_000)
-
-        // Về chữ, "7h tối qua" (giờ + ngày) giống "2h30 sáng nay" (thời lượng + ngày): không đoán. "tối qua 7h" thì rõ.
-        let ambiguous = parse("7h tối qua grab 52k")
-        XCTAssertNil(ambiguous.minutesOfDay)
-        XCTAssertEqual(day(ambiguous), "2026-09-24")
-        XCTAssertEqual(ambiguous.note, "7h grab")
-        XCTAssertEqual(parse("tối qua 7h grab 52k").minutesOfDay, minutes(19))
-
-        for text in ["thuê phòng 2h sáng nay 100k", "học 3h chiều qua 50k"] {
-            XCTAssertNil(parse(text).minutesOfDay, text)
+    func testPeriodWordFollowedByAnotherWordIsAmbiguous() {
+        // "tối đa", "tối ưu", "tối thiểu", "sáng tạo", "sáng kiến"… đều bắt đầu bằng một chữ buổi. Chữ buổi đứng cạnh giờ mà sau
+        // đó là một từ khác thì không chứng minh được nó là buổi: bỏ cả giờ, không đoán AM/PM, ghi chú giữ nguyên.
+        let notes: [(String, String)] = [
+            ("taxi lúc 7h tối đa 100k", "taxi lúc 7h tối đa"), ("lúc 7h sáng tạo logo 500k", "lúc 7h sáng tạo logo"),
+            ("7h sáng tạo logo 500k", "7h sáng tạo logo"), ("cà phê 7h tối ưu 100k", "cà phê 7h tối ưu"),
+            ("grab 7h tối thiểu 50k", "grab 7h tối thiểu"), ("lúc 7h sáng kiến 50k", "lúc 7h sáng kiến"),
+            ("lúc 7h tối ăn phở 45k", "lúc 7h tối ăn phở"), ("7h tối ăn phở 45k", "7h tối ăn phở"),
+            ("cà phê 7h sáng mua 35k", "cà phê 7h sáng mua"), ("7 giờ 30 sáng cà phê 35k", "7 giờ 30 sáng cà phê"),
+            ("8h15 tối xem phim 120k", "8h15 tối xem phim"), ("19h tối grab 52k", "19h tối grab")
+        ]
+        for (text, note) in notes {
+            let r = parse(text)
+            XCTAssertNil(r.minutesOfDay, text)
+            XCTAssertEqual(r.note, note, "Ghi chú giữ nguyên chữ của người dùng: \(text)")
+            XCTAssertNotNil(r.amount, text)
         }
+        // Buổi đứng TRƯỚC giờ thì liền sau nó là chữ số, không thể là đầu từ ghép: vẫn nhận.
+        XCTAssertEqual(parse("tối 7h ăn phở 45k").minutesOfDay, minutes(19))
+    }
+
+    // MARK: Bảo đảm tiền: giờ không bao giờ nuốt số tiền duy nhất
+
+    func testMoneyIsNeverSwallowedByTheTime() {
+        // Che giờ mà không còn số tiền nào, trong khi bỏ giờ thì có: số đó là tiền, không phải phút → bỏ giờ, giữ tiền.
+        let cases: [(String, Int64)] = [
+            ("cà phê lúc 7 giờ 30.000đ", 30_000), ("cà phê lúc 7 giờ 30,000đ", 30_000), ("lúc 7 giờ 30  nghìn", 30_000),
+            ("cà phê lúc 7:30", 30_000), ("cà phê lúc 7 giờ 45", 45_000)
+        ]
+        for (text, amount) in cases {
+            let r = parse(text)
+            XCTAssertNil(r.minutesOfDay, "Giờ bị bỏ để giữ số tiền: \(text)")
+            XCTAssertEqual(r.amount, amount, text)
+        }
+        XCTAssertEqual(parse("cà phê lúc 7 giờ 30.000đ").note, "cà phê lúc 7 giờ")
+        // Còn số tiền khác thì "7 giờ 45" vẫn là giờ.
+        let r = parse("cà phê lúc 7 giờ 45 35k")
+        XCTAssertEqual(r.minutesOfDay, minutes(7, 45))
+        XCTAssertEqual(r.amount, 35_000)
+        XCTAssertEqual(parse("lúc 7:30 phở 45").minutesOfDay, minutes(7, 30))
+        XCTAssertEqual(parse("lúc 7:30 phở 45").amount, 45_000)
     }
 
     func testMoneyUnitAfterTheMinutesKeepsTheAmount() {
@@ -158,14 +182,14 @@ final class TimeOfDayTests: XCTestCase {
             XCTAssertEqual(r.minutesOfDay, minutes(7), "Phút bị từ chối: còn 7 giờ, số tiền giữ nguyên: \(text)")
         }
         XCTAssertEqual(parse("cà phê lúc 7 giờ 30 nghìn").note, "cà phê")
-        // Có số tiền riêng thì "7 giờ 30" vẫn là 7:30, kể cả khi sau còn chữ như "đi".
         XCTAssertEqual(parse("lúc 7 giờ 30 đi chợ 45k").minutesOfDay, minutes(7, 30))
-        XCTAssertEqual(parse("lúc 7 giờ 30 cà phê 35k").minutesOfDay, minutes(7, 30))
         XCTAssertEqual(parse("lúc 7 giờ 30 cà phê 35k").amount, 35_000)
         // Đơn vị rời cũng không biến "7h30" hay "lúc 7:30" thành giờ.
         XCTAssertNil(parse("lúc 7h30 nghìn 5").minutesOfDay)
         XCTAssertNil(parse("lúc 7:30 nghìn").minutesOfDay)
     }
+
+    // MARK: Nhiều dấu cách, chữ phải đủ dấu
 
     func testSeveralSpacesBeforeNayQuaStillMeanADatePhrase() {
         // Văn bản dán vào có thể có nhiều dấu cách: vẫn là "2h30" rồi cụm ngày, không phải 02:30.
@@ -182,26 +206,24 @@ final class TimeOfDayTests: XCTestCase {
         let pronoun = parse("lúc 7h tôi ăn phở 45k")
         XCTAssertEqual(pronoun.minutesOfDay, minutes(7), "\"lúc 7h\" là 7 giờ; \"tôi\" không phải buổi nên không đổi thành 19 giờ")
         XCTAssertEqual(pronoun.note, "tôi ăn phở", "Đại từ ở lại trong ghi chú")
-        let evening = parse("lúc 7h tối ăn phở 45k")
-        XCTAssertEqual(evening.minutesOfDay, minutes(19))
-        XCTAssertEqual(evening.note, "ăn phở")
 
         let bare = parse("7h tôi ăn phở 45k")
         XCTAssertNil(bare.minutesOfDay)
         XCTAssertEqual(bare.note, "7h tôi ăn phở")
-        XCTAssertEqual(parse("7h tối ăn phở 45k").minutesOfDay, minutes(19))
         XCTAssertNil(parse("11h đem hàng 50k").minutesOfDay, "\"đem\" không phải \"đêm\"")
-        XCTAssertEqual(parse("11h đêm nhậu 50k").minutesOfDay, minutes(23))
+        XCTAssertEqual(parse("cà phê 11h đêm 50k").minutesOfDay, minutes(23))
         XCTAssertNil(parse("tôi 7h đi làm 50k").minutesOfDay, "\"tôi\" đầu câu không phải buổi")
 
-        XCTAssertEqual(parse("Lúc 7h Tối ăn 45k").minutesOfDay, minutes(19), "Hoa thường không quan trọng")
-        XCTAssertEqual(parse("7h TỐI ăn 45k").minutesOfDay, minutes(19))
+        XCTAssertEqual(parse("cà phê 7h TỐI 35k").minutesOfDay, minutes(19), "Hoa thường không quan trọng")
+        XCTAssertEqual(parse("Lúc 7h30 grab 52k").minutesOfDay, minutes(7, 30))
 
         // Gõ không dấu thì không đoán (như số bằng chữ): "toi" có thể là "tôi" hay "tối", "sang" là "sang" hay "sáng".
-        for text in ["cà phê 7h sang 35k", "7h toi ăn phở 45k", "luc 19h30 grab 52k", "sang 7h cà phê 35k", "toi 7h grab 52k"] {
+        for text in ["cà phê 7h sang 35k", "grab 7h toi 52k", "luc 19h30 grab 52k", "sang 7h cà phê 35k", "toi 7h grab 52k"] {
             XCTAssertNil(parse(text).minutesOfDay, text)
         }
     }
+
+    // MARK: Không nói rõ là thời điểm → không phải giờ
 
     func testPeriodInTheMiddleOfTheSentenceIsNotEvidence() {
         // Buổi nằm giữa câu là chữ của ghi chú ("ăn tối", "đèn sáng", "cà phê sáng"); con số cạnh nó có thể là thời lượng.
@@ -231,6 +253,26 @@ final class TimeOfDayTests: XCTestCase {
         }
         XCTAssertEqual(parse("tỷ lệ 1:20 phí 50k").note, "tỷ lệ 1:20 phí")
         XCTAssertEqual(parse("7:30 phở 45").amount, 45_000, "Câu cũ không đổi kết quả")
+    }
+
+    func testPeriodThatOpensADatePhraseDoesNotBelongToTheNumber() {
+        // "sáng nay", "tối qua" là cụm ngày: "2h30" đứng ngay trước nó có thể là thời lượng, nên không phải giờ.
+        let room = parse("thuê phòng trong 2h30 sáng nay 100k")
+        XCTAssertNil(room.minutesOfDay)
+        XCTAssertEqual(day(room), "2026-09-25", "\"sáng nay\" vẫn là ngày hôm nay")
+        XCTAssertEqual(room.note, "thuê phòng trong 2h30", "Thời lượng ở lại trong ghi chú, cụm ngày bỏ như thường")
+        XCTAssertEqual(room.amount, 100_000)
+
+        // Về chữ, "7h tối qua" (giờ + ngày) giống "2h30 sáng nay" (thời lượng + ngày): không đoán. "tối qua 7h" thì rõ.
+        let ambiguous = parse("7h tối qua grab 52k")
+        XCTAssertNil(ambiguous.minutesOfDay)
+        XCTAssertEqual(day(ambiguous), "2026-09-24")
+        XCTAssertEqual(ambiguous.note, "7h grab")
+        XCTAssertEqual(parse("tối qua 7h grab 52k").minutesOfDay, minutes(19))
+
+        for text in ["thuê phòng 2h sáng nay 100k", "học 3h chiều qua 50k"] {
+            XCTAssertNil(parse(text).minutesOfDay, text)
+        }
     }
 
     func testBareClockFormsAreNotATime() {

@@ -117,15 +117,28 @@ public struct QuickEntryParser: Sendable {
             dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
 
-        // 2. Giờ ("7h sáng", "19h30", "7:30")
-        let time = findTime(in: folded, original: original)
+        // 2. Giờ ("7h sáng", "lúc 19h30")
+        var time = findTime(in: folded, original: original)
 
         // 3. Số tiền (trên chuỗi đã che vùng ngày, vùng giờ và tên cửa hàng có số như "100均"):
-        // che giờ để "30" trong "7:30" không thành số tiền.
-        let masked = Self.mask(foldedChars, ranges: (dateRange.map { [$0] } ?? []) + (time.map { [$0.range] } ?? [])
-                                   + Self.ranges(of: Self.numericNameRegex, in: folded))
+        // che giờ để "30" trong "lúc 7:30" không thành số tiền.
+        let dateRanges = dateRange.map { [$0] } ?? []
+        let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
+        var candidates = findAmounts(
+            in: Self.mask(foldedChars, ranges: dateRanges + (time.map { [$0.range] } ?? []) + numericNames),
+            original: original)
+        // Giờ không bao giờ nuốt số tiền duy nhất: che giờ mà không còn số tiền nào, trong khi bỏ giờ thì có ("lúc 7 giờ 30.000đ",
+        // "lúc 7 giờ 30  nghìn"), nghĩa là số đó là tiền, không phải phút. Mất số tiền là chặn luồng ghi, nên bỏ giờ.
+        // Một bất biến chung thay cho việc đoán từng cách viết tiền (dấu phân nhóm, nhiều dấu cách, đơn vị lạ…).
+        if time != nil, candidates.isEmpty {
+            let withoutTime = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
+            if !withoutTime.isEmpty {
+                time = nil
+                candidates = withoutTime
+            }
+        }
         return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange, time: time,
-                        candidates: findAmounts(in: masked, original: original))
+                        candidates: candidates)
     }
 
     /// Thu/chi và danh mục: dấu "+" hoặc danh mục thu nhập là khoản thu. Có "+" mà danh mục đoán được là khoản chi
@@ -549,8 +562,8 @@ public struct QuickEntryParser: Sendable {
     }
 
     /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**, bằng đúng một trong ba cách:
-    /// - buổi đứng **ngay sau** giờ ("7h sáng", "8h15 tối");
-    /// - buổi đứng **đầu câu** hoặc kèm "nay"/"qua" ("sáng 7h", "chiều nay 3h", "tối qua 7h");
+    /// - buổi đứng **ngay sau** giờ, mà sau buổi là hết câu, dấu câu hoặc con số ("cà phê 7h sáng 35k", "grab 7h tối");
+    /// - buổi đứng **đầu câu** hoặc kèm "nay"/"qua" ("sáng 7h cà phê 35k", "chiều nay 3h", "tối qua 7h");
     /// - "lúc"/"vào lúc" ("lúc 19h30", "vào lúc 7:30", "lúc 7h tối qua").
     /// Dạng dấu hai chấm ("7:30") chỉ nhận khi có "lúc". Mọi dạng khác bị bỏ qua, kể cả buổi nằm giữa câu: "ăn tối 7h",
     /// "đèn sáng 20h", "tỷ lệ 1:20 sáng nay" — buổi ở đó là chữ của ghi chú, còn con số có thể là thời lượng ("thuê phòng
@@ -577,9 +590,20 @@ public struct QuickEntryParser: Sendable {
                 lead != nil || Self.group(m, 3, in: text) != nil || chars[..<range.lowerBound].allSatisfy(\.isWhitespace)
             } ?? false
             let postRange = Self.characterRange(m.range(at: 8), in: text)
-            var post = Self.spelled(postRange, in: original, as: Self.periodSpellings) != nil ? Self.group(m, 8, in: text) : nil
-            if post != nil, lead == nil, let postRange, Self.startsWithDateWord(chars, from: postRange.upperBound) {
-                post = nil   // "2h30 sáng nay": "sáng" mở đầu cụm ngày, không phải buổi của con số
+            var post: String?
+            if let postRange, Self.spelled(postRange, in: original, as: Self.periodSpellings) != nil {
+                // Chữ buổi đứng sau giờ chỉ nhận khi cấu trúc chứng minh nó không phải đầu một từ ghép: sau nó là hết câu, dấu
+                // câu hoặc con số. Sau nó là một từ khác ("tối đa", "tối ưu", "sáng tạo", "tối ăn") thì mơ hồ: bỏ cả giờ,
+                // không đoán AM/PM. Sau nó là "nay"/"qua" thì nó mở đầu cụm ngày ("2h30 sáng nay"): chỉ nhận khi có "lúc".
+                switch Self.follower(of: chars, from: postRange.upperBound) {
+                case .boundary:
+                    post = Self.group(m, 8, in: text)
+                case .dateWord:
+                    guard lead != nil else { continue }
+                    post = Self.group(m, 8, in: text)
+                case .word:
+                    continue
+                }
             }
             let period = post ?? (usablePre ? Self.group(m, 2, in: text) : nil)
             guard hour <= 23, minute <= 59 else { continue }
@@ -607,16 +631,24 @@ public struct QuickEntryParser: Sendable {
         return range
     }
 
-    /// Sau `index` là khoảng trắng (một hay nhiều) rồi "nay"/"qua" đứng riêng: buổi ngay trước đó mở đầu một cụm ngày
-    /// ("sáng nay", "tối qua").
-    static func startsWithDateWord(_ chars: [Character], from index: Int) -> Bool {
+    /// Cái đứng sau một chữ buổi (bỏ qua mọi khoảng trắng).
+    enum PeriodFollower {
+        /// Hết câu, dấu câu, ký hiệu hoặc chữ số: chữ buổi không thể là đầu của một từ ghép.
+        case boundary
+        /// "nay"/"qua": chữ buổi mở đầu một cụm ngày ("sáng nay", "tối qua").
+        case dateWord
+        /// Một từ khác: chữ buổi có thể là đầu của từ ghép ("tối đa", "tối ưu", "sáng tạo").
+        case word
+    }
+
+    static func follower(of chars: [Character], from index: Int) -> PeriodFollower {
         var start = index
         while start < chars.count, chars[start].isWhitespace { start += 1 }
-        guard start > index else { return false }
+        guard start < chars.count, chars[start].isLetter else { return .boundary }
         var end = start
         while end < chars.count, chars[end].isLetter || chars[end].isNumber { end += 1 }
         let word = String(chars[start..<end])
-        return word == "nay" || word == "qua"
+        return word == "nay" || word == "qua" ? .dateWord : .word
     }
 
     /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó (giờ 12h hoặc 24h):
