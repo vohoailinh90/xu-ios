@@ -4,15 +4,15 @@
 // Chạy: `swift scripts/spike-ocr.swift` (macOS có Xcode). CI chạy ở .github/workflows/spike-ocr.yml.
 //
 // Giới hạn — đọc kỹ trước khi dùng kết quả:
-// - Ảnh là mẫu **tự dựng** (dữ liệu giả, chữ sạch, phông hệ thống), không phải ảnh chụp màn hình thật của ngân hàng nào.
-//   Kết quả ở đây là **cận trên**: Vision đọc tệ trên chữ sạch thì chắc chắn tệ trên ảnh thật; đọc tốt ở đây chưa chứng minh gì
-//   về ảnh thật (phông riêng, chữ xám nhỏ, biểu tượng, ảnh nén). Độ chính xác trên ảnh thật phải chấm bằng
-//   prototypes/cham-bien-lai.html với ≥ 50 ảnh của chính chủ dự án.
-// - Chạy trên macOS của máy chủ CI, không phải iPhone: danh sách ngôn ngữ và độ chính xác có thể khác trên iOS 17/18. Chỉ là
-//   chỉ báo; kiểm lại trên máy thật.
+// - Ảnh là mẫu **tự dựng** (dữ liệu giả, phông hệ thống), không phải ảnh chụp màn hình thật của ngân hàng nào. Có thêm các biến thể gần
+//   ảnh thật hơn (nén JPEG, thu nhỏ, chữ nhỏ và nhạt) nhưng vẫn là mô phỏng. Kết quả ở đây là **cận trên có điều kiện**: đọc tệ ở đây thì chắc
+//   chắn tệ trên ảnh thật; đọc tốt ở đây chưa chứng minh gì về ảnh thật (phông riêng, biểu tượng, nền chuyển màu, ảnh qua Zalo/Messenger).
+//   Độ chính xác trên ảnh thật phải chấm bằng prototypes/cham-bien-lai.html với ≥ 50 ảnh của chính chủ dự án.
+// - Chạy trên macOS của máy chủ CI, không phải iPhone: danh sách ngôn ngữ, độ chính xác và tốc độ có thể khác trên iOS 17/18.
 import CoreGraphics
 import CoreText
 import Foundation
+import ImageIO
 import Vision
 
 // MARK: - Mẫu (toàn bộ là dữ liệu giả)
@@ -86,31 +86,71 @@ func drawText(_ text: String, ctx: CGContext, size: CGFloat, bold: Bool, color: 
 }
 
 /// Một màn hình 390 pt rộng (iPhone), `scale` là số điểm ảnh mỗi pt (2x/3x). Chữ nhãn xám, giá trị đậm hơn, số tiền to ở giữa.
-func render(_ sample: Sample, dark: Bool, scale: CGFloat) -> CGImage? {
+/// `small`: chữ nhỏ (nhãn 11 pt, giá trị 12 pt, số tiền 22 pt) và nhãn rất nhạt — kiểu màn hình dày thông tin.
+func render(_ sample: Sample, dark: Bool, scale: CGFloat, small: Bool) -> CGImage? {
     let width = 390 * scale
-    let step = 36 * scale
+    let step = (small ? 28 : 36) * scale
     let height = CGFloat(sample.rows.count) * step + 170 * scale
     guard let ctx = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8, bytesPerRow: 0,
                               space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
     else { return nil }
     let background = dark ? CGColor(red: 0.07, green: 0.08, blue: 0.09, alpha: 1) : CGColor(red: 1, green: 1, blue: 1, alpha: 1)
     let strong = dark ? CGColor(red: 0.92, green: 0.93, blue: 0.94, alpha: 1) : CGColor(red: 0.08, green: 0.09, blue: 0.11, alpha: 1)
-    let muted = dark ? CGColor(red: 0.58, green: 0.6, blue: 0.63, alpha: 1) : CGColor(red: 0.45, green: 0.47, blue: 0.5, alpha: 1)
+    let mutedLevel: CGFloat = small ? (dark ? 0.42 : 0.62) : (dark ? 0.58 : 0.45)
+    let muted = CGColor(red: mutedLevel, green: mutedLevel + 0.01, blue: mutedLevel + 0.03, alpha: 1)
     ctx.setFillColor(background)
     ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
     let margin = 20 * scale
     var y = height - 50 * scale
-    drawText(sample.headline, ctx: ctx, size: 16 * scale, bold: true, color: strong, y: y, align: .center, canvasWidth: width, margin: margin)
+    drawText(sample.headline, ctx: ctx, size: (small ? 13 : 16) * scale, bold: true, color: strong, y: y, align: .center, canvasWidth: width, margin: margin)
     y -= 56 * scale
-    drawText(sample.amount, ctx: ctx, size: 30 * scale, bold: true, color: strong, y: y, align: .center, canvasWidth: width, margin: margin)
+    drawText(sample.amount, ctx: ctx, size: (small ? 22 : 30) * scale, bold: true, color: strong, y: y, align: .center, canvasWidth: width, margin: margin)
     y -= 56 * scale
     for row in sample.rows {
-        drawText(row.label, ctx: ctx, size: 14 * scale, bold: false, color: muted, y: y, align: .left, canvasWidth: width, margin: margin)
-        drawText(row.value, ctx: ctx, size: 15 * scale, bold: false, color: strong, y: y, align: .right, canvasWidth: width, margin: margin)
+        drawText(row.label, ctx: ctx, size: (small ? 11 : 14) * scale, bold: false, color: muted, y: y, align: .left, canvasWidth: width, margin: margin)
+        drawText(row.value, ctx: ctx, size: (small ? 12 : 15) * scale, bold: false, color: strong, y: y, align: .right, canvasWidth: width, margin: margin)
         y -= step
     }
     return ctx.makeImage()
 }
+
+func downscale(_ image: CGImage, factor: CGFloat) -> CGImage? {
+    let w = max(1, Int(CGFloat(image.width) * factor))
+    let h = max(1, Int(CGFloat(image.height) * factor))
+    guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+    else { return nil }
+    ctx.interpolationQuality = .medium
+    ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+    return ctx.makeImage()
+}
+
+/// Nén JPEG rồi giải nén lại, như ảnh đi qua Zalo/Messenger.
+func jpeg(_ image: CGImage, quality: CGFloat) -> CGImage? {
+    let data = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil) else { return nil }
+    CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary)
+    guard CGImageDestinationFinalize(destination), let source = CGImageSourceCreateWithData(data, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+}
+
+struct Variant {
+    let name: String
+    let make: (Sample, Bool) -> CGImage?
+}
+
+let variants: [Variant] = [
+    Variant(name: "sạch 3x") { render($0, dark: $1, scale: 3, small: false) },
+    Variant(name: "sạch 2x") { render($0, dark: $1, scale: 2, small: false) },
+    Variant(name: "JPEG 40%") { s, d in render(s, dark: d, scale: 3, small: false).flatMap { jpeg($0, quality: 0.4) } },
+    Variant(name: "thu nhỏ 50% + JPEG 50%") { s, d in
+        render(s, dark: d, scale: 3, small: false).flatMap { downscale($0, factor: 0.5) }.flatMap { jpeg($0, quality: 0.5) }
+    },
+    Variant(name: "chữ nhỏ, nhãn nhạt 3x") { render($0, dark: $1, scale: 3, small: true) },
+    Variant(name: "chữ nhỏ, nhãn nhạt + thu nhỏ 50% + JPEG 50%") { s, d in
+        render(s, dark: d, scale: 3, small: true).flatMap { downscale($0, factor: 0.5) }.flatMap { jpeg($0, quality: 0.5) }
+    }
+]
 
 // MARK: - OCR
 
@@ -121,17 +161,23 @@ struct Config {
     let languages: [String]?
 }
 
+struct Line {
+    let text: String
+    let box: CGRect   // toạ độ chuẩn hoá của Vision, gốc ở góc dưới trái
+}
+
 var cpuOnly = false
 
-func recognize(_ image: CGImage, _ config: Config) throws -> [String] {
+func recognize(_ image: CGImage, _ config: Config) throws -> [Line] {
     let request = VNRecognizeTextRequest()
     request.recognitionLevel = config.level
     request.usesLanguageCorrection = config.correction
     if let languages = config.languages { request.recognitionLanguages = languages }
     if cpuOnly { request.usesCPUOnly = true }
     try VNImageRequestHandler(cgImage: image, options: [:]).perform([request])
-    let observations = (request.results ?? []).sorted { $0.boundingBox.midY > $1.boundingBox.midY }
-    return observations.compactMap { $0.topCandidates(1).first?.string }
+    return (request.results ?? []).compactMap { observation in
+        observation.topCandidates(1).first.map { Line(text: $0.string, box: observation.boundingBox) }
+    }
 }
 
 func fold(_ text: String) -> String {
@@ -144,6 +190,20 @@ func numbers(in text: String) -> [String] {
     numberToken.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap { m in
         Range(m.range, in: text).map { String(text[$0]).filter(\.isNumber) }
     }
+}
+
+/// Gom các ô chữ cùng một hàng (khoảng cách dọc giữa tâm nhỏ hơn 0,6 chiều cao chữ), trong hàng sắp từ trái sang phải.
+func groupRows(_ lines: [Line]) -> [[Line]] {
+    var groups: [[Line]] = []
+    for line in lines.sorted(by: { $0.box.midY > $1.box.midY }) {
+        if let reference = groups.last?.first,
+           abs(reference.box.midY - line.box.midY) < max(reference.box.height, line.box.height) * 0.6 {
+            groups[groups.count - 1].append(line)
+        } else {
+            groups.append([line])
+        }
+    }
+    return groups.map { $0.sorted { $0.box.minX < $1.box.minX } }
 }
 
 // MARK: - Chạy
@@ -161,18 +221,17 @@ let vietnamese = accurateLanguages.first { $0.lowercased().hasPrefix("vi") }
 print("Có tiếng Việt (accurate): \(vietnamese ?? "KHÔNG")")
 
 var configs = [
-    Config(name: "accurate · sửa lỗi theo ngôn ngữ · mặc định", level: .accurate, correction: true, languages: nil),
-    Config(name: "accurate · không sửa lỗi · mặc định", level: .accurate, correction: false, languages: nil),
-    Config(name: "fast · sửa lỗi · mặc định", level: .fast, correction: true, languages: nil),
-    Config(name: "accurate · sửa lỗi · en-US", level: .accurate, correction: true, languages: ["en-US"])
+    Config(name: "accurate · sửa lỗi · mặc định", level: .accurate, correction: true, languages: nil),
+    Config(name: "accurate · không sửa lỗi · mặc định", level: .accurate, correction: false, languages: nil)
 ]
 if let vietnamese {
     configs.append(Config(name: "accurate · sửa lỗi · \(vietnamese)", level: .accurate, correction: true, languages: [vietnamese]))
     configs.append(Config(name: "accurate · không sửa lỗi · \(vietnamese)", level: .accurate, correction: false, languages: [vietnamese]))
 }
+configs.append(Config(name: "fast · sửa lỗi · mặc định", level: .fast, correction: true, languages: nil))
 
 // Thử một lần; nếu máy chủ ảo không có GPU/ANE thì dùng CPU.
-if let warmup = render(samples[0], dark: false, scale: 3) {
+if let warmup = render(samples[0], dark: false, scale: 3, small: false) {
     do { _ = try recognize(warmup, configs[0]) } catch {
         print("Lần thử đầu lỗi (\(error)); thử lại bằng CPU")
         cpuOnly = true
@@ -185,68 +244,92 @@ if let warmup = render(samples[0], dark: false, scale: 3) {
 print("Chạy bằng CPU: \(cpuOnly)")
 
 struct Tally {
-    var exact = 0
-    var folded = 0
-    var total = 0
+    var imagesRun = 0
+    var amountExact = 0
+    var amountDigits = 0
+    var amountByHeight = 0   // dòng chữ cao nhất có chữ số đúng là số tiền
+    var fields: [Kind: (exact: Int, folded: Int, total: Int)] = [:]
+    var pairs = 0            // nhãn và giá trị cùng một hàng sau khi gom theo toạ độ
+    var pairsTotal = 0
+    var millis = 0.0
 }
 
-var tallies: [String: [Kind: Tally]] = [:]
-var amountDigitsOK: [String: Int] = [:]
-var amountTotal = 0
+var tallies: [String: Tally] = [:]   // khoá: "biến thể | cấu hình"
 var misses: [String] = []
-var shown: Set<String> = []
-let variants: [(dark: Bool, scale: CGFloat)] = [(false, 2), (false, 3), (true, 2), (true, 3)]
+var rawShown = 0
 
-for sample in samples {
-    for variant in variants {
-        guard let image = render(sample, dark: variant.dark, scale: variant.scale) else { continue }
-        let expected = [(Kind.amount, sample.amount)] + sample.rows.map { ($0.kind, $0.value) }
-        amountTotal += 1
-        for config in configs {
-            let lines: [String]
-            do { lines = try recognize(image, config) } catch {
-                print("Lỗi OCR (\(config.name), \(sample.title)): \(error)")
-                continue
-            }
-            let joined = lines.joined(separator: "\n")
-            let joinedFolded = fold(joined)
-            for (kind, value) in expected {
-                var tally = tallies[config.name, default: [:]][kind, default: Tally()]
-                tally.total += 1
-                let isExact = joined.contains(value)
-                if isExact { tally.exact += 1 }
-                if joinedFolded.contains(fold(value)) { tally.folded += 1 }
-                tallies[config.name, default: [:]][kind] = tally
-                if kind == .amount {
-                    let want = value.filter(\.isNumber)
-                    if numbers(in: joined).contains(want) { amountDigitsOK[config.name, default: 0] += 1 }
+for variant in variants {
+    for config in configs {
+        var tally = Tally()
+        for sample in samples {
+            for dark in [false, true] {
+                guard let image = variant.make(sample, dark) else { continue }
+                let started = Date()
+                let lines: [Line]
+                do { lines = try recognize(image, config) } catch {
+                    print("Lỗi OCR (\(variant.name), \(config.name), \(sample.title)): \(error)")
+                    continue
                 }
-                if !isExact, config.name == configs[0].name, misses.count < 24 {
-                    misses.append("[\(sample.title) · \(variant.dark ? "tối" : "sáng") · \(Int(variant.scale))x · \(kind.rawValue)] cần \"\(value)\"")
+                tally.millis += Date().timeIntervalSince(started) * 1000
+                tally.imagesRun += 1
+                let joined = lines.map(\.text).joined(separator: "\n")
+                let joinedFolded = fold(joined)
+
+                // Số tiền: nguyên văn, đúng các chữ số, và "dòng chữ cao nhất".
+                if joined.contains(sample.amount) { tally.amountExact += 1 }
+                let want = sample.amount.filter(\.isNumber)
+                if numbers(in: joined).contains(want) { tally.amountDigits += 1 }
+                let tallest = lines.filter { $0.text.contains(where: \.isNumber) }.max { $0.box.height < $1.box.height }
+                if let tallest, numbers(in: tallest.text).contains(want) { tally.amountByHeight += 1 }
+                else if config.name == configs[0].name, misses.count < 30 {
+                    misses.append("[\(variant.name) · \(sample.title) · \(dark ? "tối" : "sáng")] số tiền cần \"\(sample.amount)\", dòng cao nhất: \"\(tallest?.text ?? "(không có)")\"")
                 }
-            }
-            let key = "\(sample.title)|\(variant.dark)|\(variant.scale)|\(config.name)"
-            if sample.title == samples[0].title, variant.scale == 3, !shown.contains(key),
-               config.name == configs[0].name || config.name == configs.last?.name {
-                shown.insert(key)
-                print("\n--- OCR thô: \(sample.title) · \(variant.dark ? "tối" : "sáng") · 3x · \(config.name) ---")
-                print(joined)
+
+                // Các trường còn lại.
+                for row in sample.rows {
+                    var entry = tally.fields[row.kind] ?? (0, 0, 0)
+                    entry.total += 1
+                    if joined.contains(row.value) { entry.exact += 1 }
+                    if joinedFolded.contains(fold(row.value)) { entry.folded += 1 }
+                    tally.fields[row.kind] = entry
+                }
+
+                // Ghép nhãn–giá trị theo hàng.
+                let rows = groupRows(lines).map { fold($0.map(\.text).joined(separator: " | ")) }
+                for row in sample.rows {
+                    tally.pairsTotal += 1
+                    if rows.contains(where: { $0.contains(fold(row.label)) && $0.contains(fold(row.value)) }) { tally.pairs += 1 }
+                }
+
+                // Một bản OCR thô để xem bằng mắt: ảnh đã nén, cấu hình đầu.
+                if variant.name.hasPrefix("thu nhỏ 50% + JPEG") , config.name == configs[0].name, sample.title == samples[0].title, rawShown < 2 {
+                    rawShown += 1
+                    print("\n--- OCR thô (theo thứ tự Vision trả về): \(variant.name) · \(dark ? "tối" : "sáng") · \(config.name) ---")
+                    for line in lines { print(String(format: "  y=%.3f h=%.3f x=%.3f  %@", line.box.midY, line.box.height, line.box.minX, line.text)) }
+                }
             }
         }
+        tallies["\(variant.name) | \(config.name)"] = tally
     }
 }
 
-print("\n=== KẾT QUẢ (đúng nguyên văn / đúng khi bỏ dấu, trên tổng số) — ảnh tự dựng, CHỈ LÀ CẬN TRÊN ===")
-for config in configs {
-    print("\n\(config.name)")
-    let perKind = tallies[config.name, default: [:]]
-    for kind in Kind.allCases {
-        let t = perKind[kind, default: Tally()]
-        print("  \(kind.rawValue.padding(toLength: 9, withPad: " ", startingAt: 0)) nguyên văn \(t.exact)/\(t.total) · bỏ dấu \(t.folded)/\(t.total)")
+func percent(_ a: Int, _ b: Int) -> String { b == 0 ? "-" : "\(a)/\(b)" }
+
+print("\n=== KẾT QUẢ — ảnh tự dựng, CHỈ LÀ CHỈ BÁO. Mỗi ô: đúng/tổng ===")
+for variant in variants {
+    print("\n## \(variant.name)")
+    for config in configs {
+        guard let t = tallies["\(variant.name) | \(config.name)"] else { continue }
+        let f = { (kind: Kind) -> String in
+            let e = t.fields[kind] ?? (0, 0, 0)
+            return "\(percent(e.exact, e.total)) (bỏ dấu \(percent(e.folded, e.total)))"
+        }
+        print("- \(config.name) · \(String(format: "%.0f", t.imagesRun == 0 ? 0 : t.millis / Double(t.imagesRun))) ms/ảnh")
+        print("    số tiền: nguyên văn \(percent(t.amountExact, t.imagesRun)) · đúng chữ số \(percent(t.amountDigits, t.imagesRun)) · chọn theo dòng cao nhất \(percent(t.amountByHeight, t.imagesRun))")
+        print("    ngày giờ \(f(.datetime)) · tên \(f(.name)) · nội dung \(f(.note)) · mã \(f(.id)) · ghép nhãn–giá trị \(percent(t.pairs, t.pairsTotal))")
     }
-    print("  số tiền đúng các chữ số: \(amountDigitsOK[config.name, default: 0])/\(amountTotal)")
 }
 
-print("\n=== Chỗ sai của cấu hình đầu (tối đa 24) ===")
+print("\n=== Chỗ chọn sai số tiền theo dòng cao nhất, cấu hình đầu (tối đa 30) ===")
 for miss in misses { print(miss) }
 if misses.isEmpty { print("(không có)") }
