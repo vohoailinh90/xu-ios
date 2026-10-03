@@ -118,7 +118,7 @@ public struct QuickEntryParser: Sendable {
         }
 
         // 2. Giờ ("7h sáng", "19h30", "7:30")
-        let time = findTime(in: folded)
+        let time = findTime(in: folded, original: original)
 
         // 3. Số tiền (trên chuỗi đã che vùng ngày, vùng giờ và tên cửa hàng có số như "100均"):
         // che giờ để "30" trong "7:30" không thành số tiền.
@@ -550,9 +550,11 @@ public struct QuickEntryParser: Sendable {
     /// "đèn sáng 20h", "tỷ lệ 1:20 sáng nay" — buổi ở đó là chữ của ghi chú, còn con số có thể là thời lượng ("thuê phòng
     /// 2h30"), tỷ lệ, hay số khác. Buổi theo sau mà lại mở đầu "nay"/"qua" thì thuộc về cụm ngày, không bổ nghĩa cho con số
     /// ("thuê phòng 2h30 sáng nay": thời lượng rồi ngày; "7h tối qua" cũng vậy, về chữ không phân biệt được) — trừ khi có "lúc".
+    /// Chữ buổi và "lúc" phải viết **đủ dấu**: bản đã gấp dấu không phân biệt được "tôi" (đại từ) với "tối", "đem" với "đêm"
+    /// ("lúc 7h tôi ăn phở" là 7 giờ, không phải 19 giờ), nên đối chiếu với chuỗi gốc — như `SpokenAmounts` chỉ nhận chữ số có dấu.
     /// Danh sách loại trừ thì không bao giờ đủ; nhầm giờ làm ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì khoản
     /// vẫn đúng ngày như trước.
-    func findTime(in text: String) -> TimeHit? {
+    func findTime(in text: String, original: [Character]) -> TimeHit? {
         let ns = NSRange(text.startIndex..., in: text)
         let chars = Array(text)
         for m in Self.timeRegex.matches(in: text, range: ns) {
@@ -562,14 +564,14 @@ public struct QuickEntryParser: Sendable {
             let minuteText = Self.group(m, 5, in: text) ?? Self.group(m, 6, in: text) ?? Self.group(m, 7, in: text)
             let minute = minuteText.flatMap(Int.init) ?? 0
             let isClockStyle = Self.group(m, 7, in: text) != nil
-            let lead = Self.characterRange(m.range(at: 1), in: text)
-            let pre = Self.characterRange(m.range(at: 2), in: text)
+            let lead = Self.spelled(Self.characterRange(m.range(at: 1), in: text), in: original, as: Self.leadSpellings)
+            let pre = Self.spelled(Self.characterRange(m.range(at: 2), in: text), in: original, as: Self.periodSpellings)
             // Buổi đứng trước chỉ là bằng chứng khi nó mở đầu câu, kèm "nay"/"qua", hoặc có "lúc"; còn lại là chữ của ghi chú.
             let usablePre = pre.map { range in
                 lead != nil || Self.group(m, 3, in: text) != nil || chars[..<range.lowerBound].allSatisfy(\.isWhitespace)
             } ?? false
-            var post = Self.group(m, 8, in: text)
             let postRange = Self.characterRange(m.range(at: 8), in: text)
+            var post = Self.spelled(postRange, in: original, as: Self.periodSpellings) != nil ? Self.group(m, 8, in: text) : nil
             if post != nil, lead == nil, let postRange, Self.startsWithDateWord(chars, from: postRange.upperBound) {
                 post = nil   // "2h30 sáng nay": "sáng" mở đầu cụm ngày, không phải buổi của con số
             }
@@ -579,7 +581,7 @@ public struct QuickEntryParser: Sendable {
             guard let hour24 = Self.hour24(hour, period: period) else { continue }
             let lower = lead?.lowerBound ?? (usablePre ? pre?.lowerBound : nil) ?? hourRange.lowerBound
             var upper = whole.upperBound
-            if post == nil, let postRange {   // buổi đã bị loại: cụm giờ kết thúc trước nó, chữ buổi ở lại cho cụm ngày
+            if post == nil, let postRange {   // chữ sau giờ không phải buổi của nó ("tôi", "sáng nay"): cụm giờ kết thúc trước nó
                 upper = postRange.lowerBound
                 while upper > hourRange.upperBound, chars[upper - 1].isWhitespace { upper -= 1 }
             }
@@ -588,12 +590,26 @@ public struct QuickEntryParser: Sendable {
         return nil
     }
 
-    /// Sau `index` là một khoảng trắng rồi "nay"/"qua" đứng riêng: buổi ngay trước đó mở đầu một cụm ngày ("sáng nay", "tối qua").
+    /// Chữ buổi viết đủ dấu. Chuỗi đã gấp dấu coi "tôi" như "tối", "đem" như "đêm", "sang" như "sáng".
+    static let periodSpellings: Set<String> = ["sáng", "trưa", "chiều", "tối", "đêm"]
+    static let leadSpellings: Set<String> = ["lúc", "vào lúc"]
+
+    /// `range` nếu chữ gốc (không phân biệt hoa thường) ở đó đúng là một trong `allowed`, còn không thì `nil`.
+    static func spelled(_ range: Range<Int>?, in original: [Character], as allowed: Set<String>) -> Range<Int>? {
+        guard let range, range.upperBound <= original.count,
+              allowed.contains(String(original[range]).lowercased()) else { return nil }
+        return range
+    }
+
+    /// Sau `index` là khoảng trắng (một hay nhiều) rồi "nay"/"qua" đứng riêng: buổi ngay trước đó mở đầu một cụm ngày
+    /// ("sáng nay", "tối qua").
     static func startsWithDateWord(_ chars: [Character], from index: Int) -> Bool {
-        guard index < chars.count, chars[index].isWhitespace else { return false }
-        var end = index + 1
+        var start = index
+        while start < chars.count, chars[start].isWhitespace { start += 1 }
+        guard start > index else { return false }
+        var end = start
         while end < chars.count, chars[end].isLetter || chars[end].isNumber { end += 1 }
-        let word = String(chars[(index + 1)..<end])
+        let word = String(chars[start..<end])
         return word == "nay" || word == "qua"
     }
 

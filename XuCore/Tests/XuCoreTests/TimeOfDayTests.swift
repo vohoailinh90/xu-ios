@@ -145,6 +145,42 @@ final class TimeOfDayTests: XCTestCase {
         }
     }
 
+    func testSeveralSpacesBeforeNayQuaStillMeanADatePhrase() {
+        // Văn bản dán vào có thể có nhiều dấu cách: vẫn là "2h30" rồi cụm ngày, không phải 02:30.
+        for text in ["thuê phòng trong 2h30 sáng  nay 100k", "thuê phòng 2h sáng   qua 100k"] {
+            let r = parse(text)
+            XCTAssertNil(r.minutesOfDay, text)
+            XCTAssertEqual(r.amount, 100_000, text)
+        }
+        XCTAssertEqual(parse("thuê phòng trong 2h30 sáng  nay 100k").note, "thuê phòng trong 2h30 sáng nay")
+    }
+
+    func testPeriodWordsAndLucMustBeWrittenWithAccents() {
+        // Chuỗi đã gấp dấu coi "tôi" như "tối", "đem" như "đêm": phải đối chiếu với chữ gốc. Đại từ "tôi" không phải buổi.
+        let pronoun = parse("lúc 7h tôi ăn phở 45k")
+        XCTAssertEqual(pronoun.minutesOfDay, minutes(7), "\"lúc 7h\" là 7 giờ; \"tôi\" không phải buổi nên không đổi thành 19 giờ")
+        XCTAssertEqual(pronoun.note, "tôi ăn phở", "Đại từ ở lại trong ghi chú")
+        let evening = parse("lúc 7h tối ăn phở 45k")
+        XCTAssertEqual(evening.minutesOfDay, minutes(19))
+        XCTAssertEqual(evening.note, "ăn phở")
+
+        let bare = parse("7h tôi ăn phở 45k")
+        XCTAssertNil(bare.minutesOfDay)
+        XCTAssertEqual(bare.note, "7h tôi ăn phở")
+        XCTAssertEqual(parse("7h tối ăn phở 45k").minutesOfDay, minutes(19))
+        XCTAssertNil(parse("11h đem hàng 50k").minutesOfDay, "\"đem\" không phải \"đêm\"")
+        XCTAssertEqual(parse("11h đêm nhậu 50k").minutesOfDay, minutes(23))
+        XCTAssertNil(parse("tôi 7h đi làm 50k").minutesOfDay, "\"tôi\" đầu câu không phải buổi")
+
+        XCTAssertEqual(parse("Lúc 7h Tối ăn 45k").minutesOfDay, minutes(19), "Hoa thường không quan trọng")
+        XCTAssertEqual(parse("7h TỐI ăn 45k").minutesOfDay, minutes(19))
+
+        // Gõ không dấu thì không đoán (như số bằng chữ): "toi" có thể là "tôi" hay "tối", "sang" là "sang" hay "sáng".
+        for text in ["cà phê 7h sang 35k", "7h toi ăn phở 45k", "luc 19h30 grab 52k", "sang 7h cà phê 35k", "toi 7h grab 52k"] {
+            XCTAssertNil(parse(text).minutesOfDay, text)
+        }
+    }
+
     func testPeriodInTheMiddleOfTheSentenceIsNotEvidence() {
         // Buổi nằm giữa câu là chữ của ghi chú ("ăn tối", "đèn sáng", "cà phê sáng"); con số cạnh nó có thể là thời lượng.
         let notes: [(String, String)] = [

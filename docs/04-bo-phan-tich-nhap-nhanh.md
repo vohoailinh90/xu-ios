@@ -140,6 +140,10 @@ Cụm giờ (cả `lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú. K
 - Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó (giờ 12h hoặc 24h): `sáng` 1–11 ·
   `trưa` 10–13 và 1–3 (→ 13–15) · `chiều` 1–7 (→ 13–19) và 13–18 · `tối` 5–11 (→ 17–23) và 17–23 · `đêm` 9–11 (→ 21–23), 12 (→ 0), 0–5, 21–23.
   Ngoài khoảng đó (`5h trưa`, `11h chiều`, `1h tối`, `12h sáng`, `19h sáng`) thì không phải giờ, không cộng 12 bừa.
+- **Chữ buổi và `lúc` phải viết đủ dấu**, đối chiếu với chữ gốc: chuỗi đã bỏ dấu coi `tôi` (đại từ) như `tối`, `đem` như `đêm`, `sang` như `sáng`
+  (`lúc 7h tôi ăn phở 45k` là 7 giờ, ghi chú giữ `tôi ăn phở`; không phải 19 giờ). Gõ không dấu (`7h toi`, `luc 19h30`) thì không đoán, như `SpokenAmounts`
+  chỉ nhận chữ số có dấu. Hoa thường không quan trọng (`7h TỐI`).
+- `nay`/`qua` có thể cách chữ buổi bằng nhiều dấu cách (văn bản dán vào): `2h30 sáng  nay` vẫn là thời lượng rồi ngày.
 - Với `lúc` mà không có buổi thì giờ là số viết ra, 0–23 (`lúc 7h` → 07:00, `lúc 19h` → 19:00); muốn chiều/tối thì thêm buổi (`lúc 7h tối`).
 - Phút dính liền `h` (`7h30`); riêng "giờ" cho một dấu cách (`7 giờ 30`). `7h 35k` là `7h` rồi `35k`; `7 giờ 30k` là 30k, không phải 7:30.
   Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
