@@ -279,12 +279,21 @@ final class TimeOfDayTests: XCTestCase {
             XCTAssertEqual(r.amount, 50_000, text)
         }
         XCTAssertEqual(parse("lúc 7h tôi   qua quán 50k").minutesOfDay, minutes(7), "\"lúc 7h\" vẫn là 7 giờ")
+        // "quá" (too), "quà" (gift) bỏ dấu cũng thành "qua": không phải "qua" của cụm ngày, cả với ngày, giờ lẫn ghi chú.
+        let tooMuch = parse("đèn sáng quá 7h giá 500k")
+        XCTAssertNil(tooMuch.minutesOfDay, "\"sáng quá 7h\" không phải \"sáng qua 7h\"")
+        XCTAssertEqual(day(tooMuch), "2026-09-25")
+        XCTAssertEqual(tooMuch.note, "đèn sáng quá 7h giá", "Giữ nguyên chữ của người dùng")
+        XCTAssertEqual(tooMuch.amount, 500_000)
+        XCTAssertNil(parse("lúc 7h tối quà 100k").minutesOfDay, "\"tối quà\" là chữ khác sau buổi: mơ hồ, không đoán")
         // Gõ không dấu, đủ dấu hay viết hoa vẫn là cụm ngày.
         let dates: [(String, String, String)] = [
             ("toi qua an pho 50k", "2026-09-24", "an pho"), ("tối qua ăn phở 50k", "2026-09-24", "ăn phở"),
             ("TOI QUA an pho 50k", "2026-09-24", "an pho"), ("dem qua cafe 35k", "2026-09-24", "cafe"),
             ("hom  qua cà phê 35k", "2026-09-24", "cà phê"), ("hôm   qua cà phê 35k", "2026-09-24", "cà phê"),
-            ("sáng qua cà phê 35k", "2026-09-24", "cà phê"), ("cà phê 35k hom kia", "2026-09-23", "cà phê")
+            ("sáng qua cà phê 35k", "2026-09-24", "cà phê"), ("cà phê 35k hom kia", "2026-09-23", "cà phê"),
+            // Chữ Latin toàn khổ của bàn phím Nhật vẫn nhận như trước (so sánh sau khi thu về nửa khổ, giữ dấu).
+            ("ＴＯＩ ＱＵＡ ăn phở 50k", "2026-09-24", "ăn phở")
         ]
         for (text, date, note) in dates {
             let r = parse(text)

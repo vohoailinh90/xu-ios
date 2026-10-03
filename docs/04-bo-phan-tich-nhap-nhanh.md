@@ -106,7 +106,9 @@ Enter vẫn lưu **một** khoản như cũ — nút tách chỉ là thêm một
 
 Cụm ngày tiếng Việt (`tối qua`, `đêm qua`, `sáng nay`…) nhận một hay nhiều khoảng trắng giữa các chữ, và mỗi chữ phải là **bỏ dấu hoàn toàn** (`toi qua`, gõ không dấu)
 hoặc **đúng chữ đủ dấu** (`tối qua`). Dấu khác là một từ khác: `tôi qua quán 50k` (đại từ + qua) và `đem qua nhà bạn 50k` (mang sang) không phải `tối qua`/`đêm qua`,
-không đổi ngày và giữ nguyên ghi chú — cùng nguyên tắc với chữ buổi trong cụm giờ. Gõ không dấu thì vẫn không phân biệt được (`toi qua` là `tối qua`).
+không đổi ngày và giữ nguyên ghi chú — cùng nguyên tắc với chữ buổi trong cụm giờ. Gõ không dấu thì vẫn không phân biệt được (`toi qua` là `tối qua`). Chữ Latin toàn khổ của bàn phím Nhật (`ＴＯＩ ＱＵＡ`) được thu về nửa khổ trước khi so.
+`nay`/`qua` cũng phải đúng chữ gốc: `quá` (quá đắt), `quà` bỏ dấu cũng thành `qua` nhưng không phải cụm ngày, nên `đèn sáng quá 7h giá 500k` không có giờ lẫn ngày,
+ghi chú giữ nguyên — cụm giờ, cụm ngày và ghi chú luôn hiểu cùng một câu.
 
 Mẹo: trong lịch Gregorian của Foundation, `weekday` 1 = Chủ nhật, 2 = thứ Hai… 7 = thứ Bảy — **trùng khớp với cách người Việt gọi "thứ 2…thứ 7"**, nên chuyển đổi rất gọn.
 
