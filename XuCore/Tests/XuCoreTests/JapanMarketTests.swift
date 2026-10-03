@@ -292,6 +292,11 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("R2-900円").amount, 900)
         XCTAssertEqual(parse("R2-900円 ガム 5").amount, 900, "Số có 円 vẫn thắng số trần")
         XCTAssertEqual(day(parse("R2-900円 ガム 5")), "2026-09-25", "Hai nhóm số không phải ngày")
+        // Ba nhóm số mà nhóm cuối có đơn vị tiền ngay sau ("R2-3-900円": mã hàng kèm giá) là giá, không phải ngày hoá đơn sai độ dài.
+        XCTAssertEqual(parse("R2-3-900円").amount, 900)
+        XCTAssertEqual(parse("R2-3-900円 ガム 5").amount, 900)
+        XCTAssertEqual(parse("R2-3-900 円 ガム 5").amount, 900, "Cách một dấu cách trước 円")
+        XCTAssertEqual(QuickEntryParser(calendar: calendar).parse("R2-3-900k", now: now).amount, 900_000)
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }

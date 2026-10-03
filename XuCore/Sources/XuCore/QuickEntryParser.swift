@@ -433,8 +433,13 @@ public struct QuickEntryParser: Sendable {
 
     /// Mọi token trông như ngày hoá đơn "R…" (đủ năm, tháng, ngày: ít nhất ba nhóm số), rộng hơn `reiwaShortDateRegex`: cả token sai độ dài do
     /// OCR hoặc gõ nhầm ("R8.9.200", "R8.9.20.5"). Chỉ dùng để che token khỏi bước đọc số tiền; việc nhận có phải ngày hay không do regex
-    /// nghiêm ngặt ở trên quyết. Hai nhóm thì không che: "R2-900円" là mã hàng kèm giá, như trước khi có tính năng ngày hoá đơn.
-    static let receiptDateTokenRegex = try! NSRegularExpression(pattern: #"(?<![a-z0-9_])r\d+[./-]\d+(?:[./-]\d+)+"#)
+    /// nghiêm ngặt ở trên quyết. Không che khi nhóm cuối có đơn vị tiền ngay sau ("R2-3-900円", "R2-3-900k": mã hàng kèm giá) và không
+    /// che khi chỉ có hai nhóm ("R2-900円"): mất số tiền là chặn luồng ghi, nên khi nhập nhằng thì nghiêng về giữ tiền. Dùng `++` (không quay
+    /// lui) để nhóm cuối không bị cắt ngắn cho vừa lúc kiểm tra đơn vị. Giới hạn đã biết: "R2-3-900 ガム 5" (ba nhóm, không đơn vị) về
+    /// chữ không phân biệt được với một ngày hoá đơn sai độ dài, nên vẫn bị che.
+    static let receiptDateTokenRegex = try! NSRegularExpression(
+        pattern: #"(?<![a-z0-9_])r\d++[./-]\d++(?:[./-]\d++)++(?!\s*(?:"# + japanUnits + #")(?![a-z0-9_]))"#
+    )
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
     static let explicitDateRegex = try! NSRegularExpression(
