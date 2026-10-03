@@ -543,13 +543,15 @@ public struct QuickEntryParser: Sendable {
     }
 
     /// Giờ đầu tiên trong câu. Chỉ nhận khi người dùng **nói rõ đó là một thời điểm**, bằng đúng một trong ba cách:
-    /// - buổi đứng **ngay sau** giờ ("7h sáng", "8h15 tối", "7h tối qua");
+    /// - buổi đứng **ngay sau** giờ ("7h sáng", "8h15 tối");
     /// - buổi đứng **đầu câu** hoặc kèm "nay"/"qua" ("sáng 7h", "chiều nay 3h", "tối qua 7h");
-    /// - "lúc"/"vào lúc" ("lúc 19h30", "vào lúc 7:30").
+    /// - "lúc"/"vào lúc" ("lúc 19h30", "vào lúc 7:30", "lúc 7h tối qua").
     /// Dạng dấu hai chấm ("7:30") chỉ nhận khi có "lúc". Mọi dạng khác bị bỏ qua, kể cả buổi nằm giữa câu: "ăn tối 7h",
     /// "đèn sáng 20h", "tỷ lệ 1:20 sáng nay" — buổi ở đó là chữ của ghi chú, còn con số có thể là thời lượng ("thuê phòng
-    /// 2h30"), tỷ lệ, hay số khác. Danh sách loại trừ thì không bao giờ đủ; nhầm giờ làm ghi chú mất chữ và `occurredAt` sai,
-    /// còn bỏ sót giờ thì khoản vẫn đúng ngày như trước.
+    /// 2h30"), tỷ lệ, hay số khác. Buổi theo sau mà lại mở đầu "nay"/"qua" thì thuộc về cụm ngày, không bổ nghĩa cho con số
+    /// ("thuê phòng 2h30 sáng nay": thời lượng rồi ngày; "7h tối qua" cũng vậy, về chữ không phân biệt được) — trừ khi có "lúc".
+    /// Danh sách loại trừ thì không bao giờ đủ; nhầm giờ làm ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì khoản
+    /// vẫn đúng ngày như trước.
     func findTime(in text: String) -> TimeHit? {
         let ns = NSRange(text.startIndex..., in: text)
         let chars = Array(text)
@@ -566,14 +568,33 @@ public struct QuickEntryParser: Sendable {
             let usablePre = pre.map { range in
                 lead != nil || Self.group(m, 3, in: text) != nil || chars[..<range.lowerBound].allSatisfy(\.isWhitespace)
             } ?? false
-            let period = Self.group(m, 8, in: text) ?? (usablePre ? Self.group(m, 2, in: text) : nil)
+            var post = Self.group(m, 8, in: text)
+            let postRange = Self.characterRange(m.range(at: 8), in: text)
+            if post != nil, lead == nil, let postRange, Self.startsWithDateWord(chars, from: postRange.upperBound) {
+                post = nil   // "2h30 sáng nay": "sáng" mở đầu cụm ngày, không phải buổi của con số
+            }
+            let period = post ?? (usablePre ? Self.group(m, 2, in: text) : nil)
             guard hour <= 23, minute <= 59 else { continue }
             guard lead != nil || (period != nil && !isClockStyle) else { continue }
             guard let hour24 = Self.hour24(hour, period: period) else { continue }
             let lower = lead?.lowerBound ?? (usablePre ? pre?.lowerBound : nil) ?? hourRange.lowerBound
-            return TimeHit(minutes: hour24 * 60 + minute, range: lower..<whole.upperBound)
+            var upper = whole.upperBound
+            if post == nil, let postRange {   // buổi đã bị loại: cụm giờ kết thúc trước nó, chữ buổi ở lại cho cụm ngày
+                upper = postRange.lowerBound
+                while upper > hourRange.upperBound, chars[upper - 1].isWhitespace { upper -= 1 }
+            }
+            return TimeHit(minutes: hour24 * 60 + minute, range: lower..<upper)
         }
         return nil
+    }
+
+    /// Sau `index` là một khoảng trắng rồi "nay"/"qua" đứng riêng: buổi ngay trước đó mở đầu một cụm ngày ("sáng nay", "tối qua").
+    static func startsWithDateWord(_ chars: [Character], from index: Int) -> Bool {
+        guard index < chars.count, chars[index].isWhitespace else { return false }
+        var end = index + 1
+        while end < chars.count, chars[end].isLetter || chars[end].isNumber { end += 1 }
+        let word = String(chars[(index + 1)..<end])
+        return word == "nay" || word == "qua"
     }
 
     /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó (giờ 12h hoặc 24h):

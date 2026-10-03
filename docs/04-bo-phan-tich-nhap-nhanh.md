@@ -122,9 +122,9 @@ Nhầm giờ làm ghi chú mất chữ và `occurredAt` sai; bỏ sót giờ th�
 
 | Cách nói rõ | Ví dụ | Giờ · ghi chú còn lại |
 |---|---|---|
-| 1. Buổi đứng **ngay sau** giờ | `cà phê 7h sáng 35k` · `8h15 tối xem phim 120k` · `7h tối qua grab 52k` · `19h tối grab 52k` | 07:00 `cà phê` · 20:15 `xem phim` · 19:00, hôm qua, `grab` · 19:00 `grab` |
+| 1. Buổi đứng **ngay sau** giờ | `cà phê 7h sáng 35k` · `8h15 tối xem phim 120k` · `19h tối grab 52k` | 07:00 `cà phê` · 20:15 `xem phim` · 19:00 `grab` |
 | 2. Buổi đứng **đầu câu**, hoặc kèm `nay`/`qua` | `sáng 7h cà phê 35k` · `chiều nay 3h trà sữa 45k` · `tối qua 7h taxi 100k` | 07:00 `cà phê` · 15:00 hôm nay `trà sữa` · 19:00 hôm qua `taxi` |
-| 3. `lúc` / `vào lúc` | `đi chợ lúc 7h30 100k` · `vào lúc 7:30 phở 45` · `lúc 23h30 hôm qua 50k` | 07:30 `đi chợ` · 07:30 `phở` · 23:30 hôm qua |
+| 3. `lúc` / `vào lúc` | `đi chợ lúc 7h30 100k` · `vào lúc 7:30 phở 45` · `lúc 23h30 hôm qua 50k` · `lúc 7h tối qua grab 52k` | 07:30 `đi chợ` · 07:30 `phở` · 23:30 hôm qua · 19:00 hôm qua `grab` |
 
 Cụm giờ (cả `lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú. Không nhận (giờ = không có, ghi chú giữ nguyên):
 
@@ -134,6 +134,7 @@ Cụm giờ (cả `lúc` và buổi đứng đầu câu) bỏ khỏi ghi chú. K
 | `thuê phòng 2h30 100k`, `thuê phòng trong 2:30 100k`, `pin dùng được 20h giá 500k`, `tỷ lệ 1:20 phí 50k` | thời lượng / tỷ lệ |
 | `ăn tối 7h 80k`, `ăn sáng 7h30 35k`, `đèn sáng 20h giá 500k`, `cà phê sáng 7h 35k` | buổi nằm giữa câu là chữ của ghi chú, không phải bằng chứng |
 | `7:30 sáng cà phê 35k`, `in bản đồ tỷ lệ 1:20 sáng nay 50k` | dạng dấu hai chấm chỉ nhận khi có `lúc` (`sáng nay` vẫn là ngày hôm nay) |
+| `thuê phòng trong 2h30 sáng nay 100k`, `7h tối qua grab 52k`, `học 3h chiều qua 50k` | buổi theo sau mà mở đầu `nay`/`qua` thuộc về cụm ngày, không bổ nghĩa cho con số: về chữ, `2h30 sáng nay` (thời lượng + ngày) và `7h tối qua` (giờ + ngày) không phân biệt được, nên không đoán (ngày vẫn đúng, số ở lại trong ghi chú). `tối qua 7h` thì rõ, và có `lúc` thì cũng rõ (`lúc 7h tối qua`) |
 | `tối qua 1h taxi 100k` | giờ sau nửa đêm, có thể là 1 giờ sáng nay: mơ hồ (ngày vẫn là hôm qua, `1h` ở lại trong ghi chú) |
 
 - Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó (giờ 12h hoặc 24h): `sáng` 1–11 ·
