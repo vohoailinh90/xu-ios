@@ -135,6 +135,11 @@ struct HomeView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 QuickEntryBar(focusTrigger: focusTrigger, hasDraft: $hasDraft)
+                    // Chỉ che tạm lúc app không ở phía trước (ảnh App Switcher cũng chụp cả nháp và bản xem trước).
+                    // Đang khoá mà app đang mở thì ô ghi vẫn dùng bình thường: `isShielded` không bật lúc `.active`.
+                    // Phủ lên chứ không gỡ ra, nên không mất chữ đang gõ hay con trỏ.
+                    .overlay { if lock.isShielded { Color(.systemBackground) } }
+                    .accessibilityHidden(lock.isShielded)
             }
             .sheet(isPresented: $showSettings) { SettingsView().faceIDGate() }
             .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft).faceIDGate() }
