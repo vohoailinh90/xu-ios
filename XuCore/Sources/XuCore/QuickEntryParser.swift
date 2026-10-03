@@ -377,7 +377,12 @@ public struct QuickEntryParser: Sendable {
             ("昨日", -1), ("きのう", -1), ("昨夜", -1), ("昨晩", -1), ("ゆうべ", -1),
             ("今日", 0), ("きょう", 0), ("今朝", 0), ("けさ", 0), ("今夜", 0), ("今晩", 0)
         ]
-        return latin.map { (try! NSRegularExpression(pattern: QuickEntryParser.wordStart + $0.0 + QuickEntryParser.wordEnd), $0.1) }
+        // Khoảng trắng giữa hai chữ là một hay nhiều (dấu cách, tab, NBSP…), cùng quy tắc với cụm giờ ("tối  qua  7h"): cụm ngày và
+        // cụm giờ phải hiểu cùng một câu như nhau, không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
+        return latin.map {
+            (try! NSRegularExpression(pattern: QuickEntryParser.wordStart + $0.0.replacingOccurrences(of: " ", with: #"\s+"#)
+                                        + QuickEntryParser.wordEnd), $0.1)
+        }
             + japanese.map { (try! NSRegularExpression(pattern: NSRegularExpression.escapedPattern(for: $0.0)), $0.1) }
     }()
 

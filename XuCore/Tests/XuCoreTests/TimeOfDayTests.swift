@@ -256,7 +256,33 @@ final class TimeOfDayTests: XCTestCase {
             XCTAssertNil(r.minutesOfDay, text)
             XCTAssertEqual(r.amount, 100_000, text)
         }
-        XCTAssertEqual(parse("thuê phòng trong 2h30 sáng  nay 100k").note, "thuê phòng trong 2h30 sáng nay")
+        // Cụm ngày cũng nhận nhiều khoảng trắng: "sáng  nay" là hôm nay, "sáng   qua" là hôm qua, thời lượng ở lại trong ghi chú.
+        let today = parse("thuê phòng trong 2h30 sáng  nay 100k")
+        XCTAssertEqual(today.note, "thuê phòng trong 2h30")
+        XCTAssertEqual(day(today), "2026-09-25")
+        let yesterday = parse("thuê phòng 2h sáng   qua 100k")
+        XCTAssertEqual(yesterday.note, "thuê phòng 2h")
+        XCTAssertEqual(day(yesterday), "2026-09-24")
+    }
+
+    func testDatePhraseAndTimeReadTheSameSpacing() {
+        // Cụm giờ nhận nhiều khoảng trắng thì cụm ngày bên trong nó cũng phải nhận: không thì giờ ăn mất chữ của ngày mà ngày vẫn là hôm nay.
+        let cases: [(String, Int, String, String)] = [
+            ("tối  qua  7h taxi 100k", 19, "2026-09-24", "taxi"),
+            ("tối\tqua 7h taxi 100k", 19, "2026-09-24", "taxi"),
+            ("tối\u{00A0}qua\u{00A0}7h taxi 100k", 19, "2026-09-24", "taxi"),
+            ("lúc 7h tối  qua grab 52k", 19, "2026-09-24", "grab"),
+            ("chiều  nay  3h trà sữa 45k", 15, "2026-09-25", "trà sữa")
+        ]
+        for (text, hour, date, note) in cases {
+            let r = parse(text)
+            XCTAssertEqual(r.minutesOfDay, minutes(hour), text)
+            XCTAssertEqual(day(r), date, "Ngày theo cụm \"qua\"/\"nay\": \(text)")
+            XCTAssertEqual(r.note, note, "Không sót chữ của cụm ngày: \(text)")
+        }
+        // Không có giờ: cụm ngày nhiều khoảng trắng vẫn là ngày.
+        XCTAssertEqual(day(parse("hôm   qua cà phê 35k")), "2026-09-24")
+        XCTAssertEqual(day(parse("cà phê 35k last   night")), "2026-09-24")
     }
 
     func testPeriodWordsAndLucMustBeWrittenWithAccents() {
