@@ -648,6 +648,13 @@ public struct QuickEntryParser: Sendable {
     static func follower(of chars: [Character], from index: Int) -> PeriodFollower {
         var start = index
         while start < chars.count, chars[start].isWhitespace { start += 1 }
+        // Dấu câu dính liền chữ buổi rồi tới ngay một chữ cái ("tối-đa", "sáng-tạo", "tối/đa", "tối'đa") nối hai chữ thành một
+        // từ ghép: dấu câu không chứng minh chữ buổi đã kết thúc. Có khoảng trắng quanh dấu ("tối - đa", "tối, đa") thì dấu là
+        // dấu câu thật.
+        if start == index, start + 1 < chars.count,
+           !chars[start].isLetter, !chars[start].isNumber, !chars[start].isWhitespace, chars[start + 1].isLetter {
+            return .word
+        }
         guard start < chars.count, chars[start].isLetter else { return .boundary }
         var end = start
         while end < chars.count, chars[end].isLetter || chars[end].isNumber { end += 1 }

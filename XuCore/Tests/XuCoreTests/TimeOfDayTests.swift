@@ -147,6 +147,25 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(parse("tối 7h ăn phở 45k").minutesOfDay, minutes(19))
     }
 
+    func testPunctuationGluedToThePeriodWordDoesNotEndIt() {
+        // Dấu nối dính liền chữ buổi rồi tới chữ cái ("tối-đa", "sáng-tạo") vẫn là một từ ghép: không phải ranh giới.
+        let notes: [(String, String)] = [
+            ("taxi lúc 7h tối-đa 100k", "taxi lúc 7h tối-đa"), ("lúc 7h sáng-tạo logo 500k", "lúc 7h sáng-tạo logo"),
+            ("cà phê 7h sáng/tạo 35k", "cà phê 7h sáng/tạo"), ("grab 7h tối'đa 50k", "grab 7h tối'đa")
+        ]
+        for (text, note) in notes {
+            let r = parse(text)
+            XCTAssertNil(r.minutesOfDay, text)
+            XCTAssertEqual(r.note, note, "Ghi chú giữ nguyên chữ của người dùng: \(text)")
+            XCTAssertNotNil(r.amount, text)
+        }
+        // Dấu câu thật (có khoảng trắng sau hoặc quanh dấu, hay theo sau là số) vẫn kết thúc chữ buổi.
+        for text in ["cà phê 7h sáng, mua 35k", "cà phê 7h sáng - 35k", "cà phê 7h sáng. 35k", "cà phê 7h sáng,35k"] {
+            XCTAssertEqual(parse(text).minutesOfDay, minutes(7), text)
+            XCTAssertEqual(parse(text).amount, 35_000, text)
+        }
+    }
+
     // MARK: Bảo đảm tiền: giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn
 
     func testMinutesNeverContinueAnAmount() {
