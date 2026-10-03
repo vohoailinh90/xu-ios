@@ -283,11 +283,10 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("R8.9.20 R8.9.21 ガム 5").amount, 5, "Không phải 9 yên")
         XCTAssertEqual(parse("R8.9.30 ガム 5").amount, 5, "Token ở tương lai cũng không phải tiền")
         XCTAssertEqual(parse("R8.9.30 ガム 5").note, "R8.9.30 ガム")
-        // Token sai độ dài (OCR, gõ nhầm) cũng không phải tiền: "9.200" không được đọc thành 9.200 yên.
-        XCTAssertEqual(parse("R8.9.200 ガム 5").amount, 5)
-        XCTAssertEqual(parse("R8.9.200 ガム 5").note, "R8.9.200 ガム")
-        XCTAssertEqual(parse("R8.9.20.5 ガム 5").amount, 5)
+        // Token sai độ dài (OCR, gõ nhầm: "R8.9.200", "R8.9.20.5") không phải ngày và cũng không bị che: che theo hình dạng rộng hơn từng nuốt
+        // mất giá của một mã hàng ("R2-3-9,000円"). Giới hạn đã biết, ghi ở docs/04.
         XCTAssertEqual(day(parse("R8.9.200 ガム 5")), "2026-09-25", "Token sai độ dài không phải ngày")
+        XCTAssertEqual(day(parse("R8.9.20.5 ガム 5")), "2026-09-25")
         // Chỉ hai nhóm số ("R2-900円": mã hàng kèm giá) không phải token ngày: số tiền giữ nguyên như trước.
         XCTAssertEqual(parse("R2-900円").amount, 900)
         XCTAssertEqual(parse("R2-900円 ガム 5").amount, 900, "Số có 円 vẫn thắng số trần")
@@ -309,6 +308,14 @@ final class JapanMarketTests: XCTestCase {
         let vietnam = QuickEntryParser(calendar: calendar)
         XCTAssertEqual(vietnam.parse("R2-3-1tr2", now: now).amount, 1_200_000)
         XCTAssertEqual(vietnam.parse("R2-3-1k5", now: now).amount, 1_500)
+        // Phần còn lại của giá dùng cú pháp tiền của parser (dấu nhóm, thập phân, số sau đơn vị Hán): dính liền token thì không phải ngày.
+        XCTAssertEqual(parse("R2-3-9,000円").amount, 9_000)
+        XCTAssertEqual(day(parse("R2-3-9,000円")), "2026-09-25")
+        XCTAssertEqual(parse("R2-3-9万5000円").amount, 95_000)
+        XCTAssertEqual(vietnam.parse("R2-3-1,5tr", now: now).amount, 1_500_000)
+        // Dấu câu không dính chữ số vẫn kết thúc token.
+        XCTAssertEqual(day(parse("R8.9.20, ランチ 900")), "2026-09-20")
+        XCTAssertEqual(day(parse("ランチ 900 (R8.9.20)")), "2026-09-20")
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }

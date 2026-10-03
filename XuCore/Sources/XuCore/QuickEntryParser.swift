@@ -125,7 +125,7 @@ public struct QuickEntryParser: Sendable {
         // Không bao giờ là tiền: tên có số ("100均") và mọi token ngày hoá đơn kiểu "R8.9.20" — kể cả token không hợp lệ, ở tương lai hay
         // đứng sau token đã được dùng làm ngày ("R8.13.20 R8.9.20 ガム 5"): phần giữa các dấu chấm không được đọc thành số thập phân.
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
-            + Self.ranges(of: Self.receiptDateTokenRegex, in: folded)
+            + Self.ranges(of: Self.reiwaShortDateRegex, in: folded)
         var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
         if let hit = time {
             // Giờ không bao giờ lấy mất tiền, theo đúng hai cách:
@@ -426,25 +426,22 @@ public struct QuickEntryParser: Sendable {
         pattern: #"(?<![0-9/-])(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?![0-9/-])"#
     )
 
-    /// Ngay sau nhóm số cuối của token "R…" có đơn vị tiền (kể cả hậu tố thập phân viết tắt "1tr2", "1k5", như `amountRegex`, và chữ Hán 万/千/百
-    /// của số kiểu Nhật) thì nhóm cuối là giá chứ không phải ngày: "R2-3-900円", "R2-3-9円", "R2-3-1k5", "R2-3-9万円" là mã hàng kèm giá.
-    /// Dùng chung cho regex nhận ngày và regex che token.
+    /// Cái đứng ngay sau token "R…" để nó là một token riêng: hết câu, khoảng trắng, hoặc dấu câu (dấu chấm/phẩy không dính chữ số). Mọi thứ dính
+    /// liền khác ("R2-3-9,000円", "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200") là phần của một số tiền hay một mã dài hơn, không phải ngày hoá đơn.
+    /// Nhờ vậy không cần liệt kê từng cú pháp số tiền (dấu nhóm, thập phân, số sau đơn vị Hán…) để tránh nhận nhầm giá thành ngày.
+    private static let receiptTokenEnd = #"(?=$|\s|[;:)）、。]|[.,](?!\d))"#
+
+    /// Sau token (kể cả cách khoảng trắng) có đơn vị tiền — kể cả hậu tố thập phân viết tắt "1tr2", "1k5" như `amountRegex`, và 万/千/百 của số kiểu
+    /// Nhật — thì nhóm cuối là giá chứ không phải ngày: "R2-3-9 円", "R2-3-9 k" là mã hàng kèm giá.
     private static let moneyUnitFollowsToken = #"(?!\s*(?:"# + japanUnits + #"|[万千百])(?:\d{1,3})?(?![a-z0-9_]))"#
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
-    /// Không phải ngày khi nhóm cuối có đơn vị tiền ngay sau ("R2-3-9円": 9 yên, không phải 09/03/2020).
+    /// Phải là một token riêng (`receiptTokenEnd`) và không có đơn vị tiền ngay sau (`moneyUnitFollowsToken`): "R2-3-9円" là 9 yên, không phải
+    /// 09/03/2020. Cũng dùng để che mọi token cùng hình dạng khỏi bước đọc số tiền, kể cả token không phải ngày hợp lệ (tương lai, tháng 13,
+    /// "R8.13.20 R8.9.20 ガム 5"): cùng một regex nên nhận ngày và che không thể bất đồng. Token sai độ dài do OCR ("R8.9.200") không được
+    /// nhận cũng không bị che: che theo hình dạng rộng hơn từng nuốt mất giá của một mã hàng ("R2-3-900 ガム 5").
     static let reiwaShortDateRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)(?![0-9a-z_/-])(?!\.\d)"# + moneyUnitFollowsToken
-    )
-
-    /// Mọi token trông như ngày hoá đơn "R…" (đủ năm, tháng, ngày: ít nhất ba nhóm số), rộng hơn `reiwaShortDateRegex`: cả token sai độ dài do
-    /// OCR hoặc gõ nhầm ("R8.9.200", "R8.9.20.5"). Chỉ dùng để che token khỏi bước đọc số tiền; việc nhận có phải ngày hay không do regex
-    /// nghiêm ngặt ở trên quyết. Không che khi nhóm cuối có đơn vị tiền ngay sau (`moneyUnitFollowsToken`) và không che khi chỉ có hai nhóm
-    /// ("R2-900円"): mất số tiền là chặn luồng ghi, nên khi nhập nhằng thì nghiêng về giữ tiền. Dùng `++` (không quay lui) để nhóm cuối không
-    /// bị cắt ngắn cho vừa lúc kiểm tra đơn vị. Giới hạn đã biết: "R2-3-900 ガム 5" (ba nhóm, không đơn vị) về chữ không phân biệt được
-    /// với một ngày hoá đơn sai độ dài, nên vẫn bị che.
-    static let receiptDateTokenRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_])r\d++[./-]\d++(?:[./-]\d++)++"# + moneyUnitFollowsToken
+        pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken
     )
 
     /// "12/9", "12/9/2026" — ngày/tháng ở Việt Nam, tháng/ngày ở Nhật (`Market.dayFirst`).
