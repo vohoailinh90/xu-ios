@@ -429,9 +429,10 @@ public struct QuickEntryParser: Sendable {
     /// Cái đứng ngay sau token "R…" để nó là một token riêng. Regex chạy trên chuỗi đã gấp nên chữ Latin luôn là a–z: hết câu, hoặc bất kỳ
     /// ký tự nào KHÔNG phải chữ Latin, chữ số, `.` `,` `/` `_` `-` (khoảng trắng, dấu câu hay ký hiệu Unicode như "！" "）" "、", mọi chữ Nhật kể cả
     /// "〆" "々" — chữ Nhật đứng sát số vẫn là ranh giới, như mọi chỗ khác của parser), hoặc dấu chấm/phẩy không dính chữ số. Dính liền chữ số,
-    /// chữ Latin, dấu nối, dấu chấm/phẩy rồi chữ số, hay chữ Hán của số tiền 万千百十円 thì là phần của một giá hay một mã dài hơn ("R2-3-9,000円",
-    /// "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt kê từng cú pháp số tiền.
-    private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])(?![万千百十円])[\s\S])"#
+    /// chữ Latin, dấu nối, dấu chấm/phẩy rồi chữ số, hay 万千百十 (cùng cú pháp `\d+[万千百]` mà `kanjiAmountRegex` đọc là số tiền) thì là phần của
+    /// một giá hay một mã dài hơn ("R2-3-9,000円", "R2-3-1,5tr", "R2-3-9万5000円", "R8.9.200"), không phải ngày hoá đơn. Nhờ vậy không cần liệt
+    /// kê từng cú pháp số tiền. Riêng 円 không bị loại ở đây mà do `moneyUnitFollowsToken` quyết, vì 円 hay mở đầu một từ ("R8.9.20円山公園").
+    private static let receiptTokenEnd = #"(?=$|[.,](?!\d)|(?![a-z0-9_.,/-])(?![万千百十])[\s\S])"#
 
     /// Chữ Latin của các đơn vị tiền: `japanUnits` bỏ 円 (xử lý riêng vì 円 hay mở đầu một từ: "円山公園").
     private static let latinMoneyUnits = japanUnits.replacingOccurrences(of: "|円", with: "")
