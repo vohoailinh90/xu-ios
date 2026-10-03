@@ -211,11 +211,23 @@ public struct QuickEntryParser: Sendable {
     static let kanjiAmountRegex = try! NSRegularExpression(
         pattern: #"(?<![a-z0-9_/.,])([+-]?)(¥\s?)?(?:"#
             + #"(?=[0-9.,〇零一二三四五六七八九十百千万]*[〇零一二三四五六七八九十])(?=[0-9.,〇零一二三四五六七八九十百千万]*\d)"#
-            + #"((?:\d+(?:[.,]\d+)*|[〇零一二三四五六七八九十百千万])+)(?=\s?円)"#
-            + #"|(\d+(?:[.,]\d+)*[万千百](?:\d+[万千百]?|[千百])*)"#
+            + #"((?:\#(kanjiDigitRun)|[〇零一二三四五六七八九十百千万])++)(?=\s?円)"#
+            + #"|(\#(kanjiDigitRun)[万千百]\#(kanjiUnitRun))"#
             + #"|([〇零一二三四五六七八九十百千万]+)(?=\s?円))"#
             + #"\s?(円|yen)?(?![a-z0-9_/])"#
     )
+
+    /// Hai mảnh của số kiểu Nhật dùng chung cho `kanjiAmountRegex` và `kanjiUnitTail` (token "R…"), để hai nơi không lệch nhau.
+    ///
+    /// Phải **không nhập nhằng**. Khớp hỏng (không có 円, có chữ Latin dính sau: "11…1五x", "1万5千5千…x") là trường hợp thường gặp khi dán
+    /// văn bản hay OCR, và `(?:\d+…)+` lồng nhau cho phép chia cùng một dãy chữ số theo vô số cách rồi thử hết: 24 chữ số mất ~3,5 giây, 26 chữ số
+    /// vượt 5 giây, chặn luồng ghi vốn phân tích lại sau mỗi lần sửa. Nên:
+    /// - dãy chữ số lấy **nguyên tử** (`\d++`): chỉ có một cách đọc có nghĩa, vì cắt giữa dãy thì ký tự kế tiếp là chữ số và không qua được
+    ///   `(?![a-z0-9_/])` hay `(?=\s?円)`;
+    /// - sau chữ số, 万 là đuôi (`\d++万?`) còn 千/百 đi nhánh `[千百]` riêng, không cũng là đuôi của `\d++`: cùng tập chuỗi như `\d+[万千百]?|[千百]`
+    ///   nhưng mỗi chuỗi chỉ chia được một cách ("5千5千…" không nở theo hàm mũ).
+    private static let kanjiDigitRun = #"\d++(?:[.,]\d++)*+"#
+    private static let kanjiUnitRun = #"(?:\d++万?|[千百])*"#
 
     /// Tên có số không phải số tiền: "100均 330" là 330 yên, không phải 100.
     static let numericNameRegex = try! NSRegularExpression(
@@ -440,14 +452,14 @@ public struct QuickEntryParser: Sendable {
     private static let unitTail = #"(?:\d{1,3})?(?![a-z0-9_/])"#
 
     /// Đơn vị chữ Hán liền sát token mà `kanjiAmountRegex` thật sự gắn vào số, theo đúng hai nhánh của nó rồi tới ranh giới cuối `(?![a-z0-9_/])`:
-    /// - số thường + 万千百: `[万千百]` rồi các đoạn `\d+[万千百]?` hay `[千百]` nối tiếp, tuỳ chọn 円/yen ("9万", "9千円", "9万5000円");
+    /// - số thường + 万千百: `[万千百]` rồi các đoạn `\d++万?` hay `[千百]` nối tiếp (`kanjiUnitRun`), tuỳ chọn 円/yen ("9万", "9千円", "9万5000円");
     /// - số trộn: một dãy chữ số Hán (〇–九, 十, 百, 千, 万) xen các nhóm số thường, có ít nhất một chữ số Hán, và **phải** có 円 ("9十円", "9十五円", "9十万円",
     ///   "9万五千円"); chữ số thường cuối của token nằm ngay trước dãy nên đã thoả điều kiện "có chữ số thường". Nhánh này chỉ nhìn thấy 円 (`(?=\s?円)`) chứ
     ///   không đòi gì sau nó: `kanjiAmountRegex` thấy 円 theo sau bởi chữ Latin thì bỏ 円 tuỳ chọn rồi vẫn đọc số ("9十五円candy" là 95 yên, ghi chú "円candy").
     /// "R2-3-9万candy" không khớp (`kanjiAmountRegex` từ chối "9万" trước "c" và số tiền rơi về số trần), nên không coi là có đơn vị.
     private static let kanjiUnitTail =
-        #"(?:[万千百](?:\d+[万千百]?|[千百])*\s?(?:円|yen)?(?![a-z0-9_/])"#
-        + #"|(?=[万千百\d.,]*[〇零一二三四五六七八九十])(?:[〇零一二三四五六七八九十百千万]|\d+(?:[.,]\d+)*)+\s?円)"#
+        #"(?:[万千百]\#(kanjiUnitRun)\s?(?:円|yen)?(?![a-z0-9_/])"#
+        + #"|(?=[万千百\d.,]*[〇零一二三四五六七八九十])(?:[〇零一二三四五六七八九十百千万]|\#(kanjiDigitRun))++\s?円)"#
 
     /// Biểu thức "không có đơn vị tiền ngay sau" cho token "R…", theo đơn vị của thị trường (`units`): "man"/"sen" chỉ là đơn vị ở thị trường Nhật,
     /// không thì "R8.9.20 mận 900" (đã gấp dấu thành "man") bị coi là có đơn vị. 円 xử lý riêng nên bỏ khỏi danh sách chữ Latin.

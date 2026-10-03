@@ -94,6 +94,31 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(parse("1万2 服").amount, 12_000)
     }
 
+    /// Khớp hỏng của regex số kiểu Nhật (dán văn bản, OCR: chữ số dài rồi chữ Latin hay thiếu 円) từng thử hết mọi cách chia một dãy chữ số:
+    /// 24 chữ số mất ~3,5 giây, 26 chữ số vượt 5 giây. Giờ phải xong ngay, kể cả với dãy dài gấp đôi.
+    func testJapaneseNumberRegexesFailFastOnLongDigitRuns() {
+        let digits = String(repeating: "1", count: 64)
+        let samples = [
+            digits + "五x",                                               // số trộn không có 円
+            digits + "五",
+            "1万" + digits + "x",                                         // số thường + 万, dãy chữ số dài
+            "1万" + String(repeating: "5千", count: 64) + "x",             // 千 lặp lại
+            "1万" + String(repeating: "5万", count: 64) + "x",
+            "1,2" + String(repeating: ",1", count: 64) + "五x",            // nhóm phân cách
+            "r2-3-9五" + digits + "x",                                    // token "R…": đuôi đơn vị chữ Hán
+            "r2-3-9万" + String(repeating: "5千", count: 64) + "x",
+            "r2-3-9十" + String(repeating: "1,", count: 64) + "x"
+        ]
+        let start = Date()
+        for text in samples {
+            let range = NSRange(text.startIndex..., in: text)
+            _ = QuickEntryParser.kanjiAmountRegex.firstMatch(in: text, range: range)
+            _ = QuickEntryParser.reiwaShortDateRegexJapan.firstMatch(in: text, range: range)
+            _ = QuickEntryParser.reiwaShortDateRegexVietnam.firstMatch(in: text, range: range)
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(start), 2, "Phải xong ngay; trước khi sửa là hàng giây tới vô hạn")
+    }
+
     func testKanjiInNamesIsNotAnAmount() {
         XCTAssertEqual(parse("千葉 電車 450").amount, 450)
         XCTAssertEqual(parse("千葉 電車 450").note, "千葉 電車")
