@@ -450,13 +450,18 @@ public struct QuickEntryParser: Sendable {
     }
 
     /// "R8.9.30", "R08.09.30", "R8/9/30" — năm 令和 viết tắt kiểu hoá đơn (R = 令和; 令和元年 = 2019). Đã gấp nên "R" là "r".
-    /// Phải là một token riêng (`receiptTokenEnd`) và không có đơn vị tiền ngay sau (`moneyUnitFollowsToken`): "R2-3-9円" là 9 yên, không phải
-    /// 09/03/2020. Cũng dùng để che mọi token cùng hình dạng khỏi bước đọc số tiền, kể cả token không phải ngày hợp lệ (tương lai, tháng 13,
-    /// "R8.13.20 R8.9.20 ガム 5"): cùng một regex nên nhận ngày và che không thể bất đồng. Token sai độ dài do OCR ("R8.9.200") không được
-    /// nhận cũng không bị che: che theo hình dạng rộng hơn từng nuốt mất giá của một mã hàng ("R2-3-900 ガム 5").
+    /// Phải là một token riêng (`receiptTokenEnd`). Ngoại lệ giá (`moneyUnitFollowsToken`: "R2-3-9円" là 9 yên, không phải 09/03/2020) chỉ áp dụng khi
+    /// dấu phân cách trước nhóm cuối là **gạch ngang** `-`: chỉ khi đó `amountRegex` mới đọc được nhóm cuối làm giá. Với `.` thì `amountRegex` đọc
+    /// "3.9円" là số thập phân 3,9, với `/` thì không bắt đầu được số tiền sau `/`; hai dạng đó là cách in ngày hoá đơn quen thuộc nên vẫn là ngày
+    /// ("R8.9.20円山公園 900" là ngày 20/09 và 900 yên). Cũng dùng để che mọi token cùng hình dạng khỏi bước đọc số tiền, kể cả token không phải ngày
+    /// hợp lệ (tương lai, tháng 13, "R8.13.20 R8.9.20 ガム 5"): cùng một regex nên nhận ngày và che không thể bất đồng. Token sai độ dài do OCR
+    /// ("R8.9.200") không được nhận cũng không bị che: che theo hình dạng rộng hơn từng nuốt mất giá của một mã hàng ("R2-3-900 ガム 5").
+    /// Nhóm: 1 năm, 2 tháng, 3 ngày (dạng `-`), 4 ngày (dạng `.` `/`).
     static func makeReceiptDateRegex(units: String) -> NSRegularExpression {
         try! NSRegularExpression(
-            pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})[./-](\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken(units: units)
+            pattern: #"(?<![a-z0-9_])r(\d{1,2})[./-](\d{1,2})"#
+                + #"(?:-(\d{1,2}+)"# + receiptTokenEnd + moneyUnitFollowsToken(units: units)
+                + #"|[./](\d{1,2}+)"# + receiptTokenEnd + #")"#
         )
     }
     static let reiwaShortDateRegexVietnam = makeReceiptDateRegex(units: vietnamUnits)
@@ -564,7 +569,7 @@ public struct QuickEntryParser: Sendable {
         for m in reiwaShortDateRegex.matches(in: text, range: ns) {
             guard let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
                   let month = Self.group(m, 2, in: text).flatMap(Int.init),
-                  let day = Self.group(m, 3, in: text).flatMap(Int.init),
+                  let day = (Self.group(m, 3, in: text) ?? Self.group(m, 4, in: text)).flatMap(Int.init),
                   let range = Self.characterRange(m.range, in: text),
                   let date = makeDate(year: 2018 + era, month: month, day: day),
                   date <= today, let reiwaStart, date >= reiwaStart else { continue }

@@ -346,13 +346,23 @@ final class JapanMarketTests: XCTestCase {
         XCTAssertEqual(day(maruyama), "2026-09-20", "Có khoảng trắng: 円山公園 là tên")
         XCTAssertEqual(maruyama.amount, 900, "Không phải 9 yên")
         XCTAssertEqual(maruyama.note, "円山公園")
-        // Nhập nhằng thật, quyết định có chủ ý: 円 liền sát token luôn là đơn vị. "R2-3-9円菓子" là giá 9 yên + ghi chú "菓子" (không mất số tiền);
-        // "R8.9.20円山公園" giống hệt về chữ nên cùng một kết quả (giá, không có ngày): viết cách khoảng trắng thì được nhận là ngày.
+        // Dấu phân cách trước nhóm cuối quyết định cách đọc: chỉ với gạch ngang `-` thì `amountRegex` mới đọc được nhóm cuối làm giá, nên chỉ khi đó
+        // 円 liền sát token mới là đơn vị ("R2-3-9円菓子" là giá 9 yên + ghi chú). Dạng `.` và `/` là cách in ngày hoá đơn quen thuộc: vẫn là ngày,
+        // và "R8.9.20円山公園 900" là ngày 20/09 + 900 yên.
         let sweets = parse("R2-3-9円菓子")
         XCTAssertEqual(sweets.amount, 9)
         XCTAssertEqual(day(sweets), "2026-09-25")
         XCTAssertEqual(sweets.note, "R2-3-菓子", "Chỉ số tiền 9円 bị bỏ khỏi ghi chú")
-        XCTAssertEqual(day(parse("R8.9.20円山公園 900")), "2026-09-25", "Nhập nhằng: giữ giá, bỏ sót ngày")
+        let adjacent = parse("R8.9.20円山公園 900")
+        XCTAssertEqual(day(adjacent), "2026-09-20")
+        XCTAssertEqual(adjacent.amount, 900, "Không phải 9 yên")
+        // Với `.` hay `/` mà nhóm cuối có 円, `amountRegex` không đọc được nhóm cuối làm giá ("3.9円" là số thập phân 3,9; sau `/` không bắt đầu được
+        // số tiền): coi là ngày, không bao giờ ra 4 yên hay 3.900 yên im lặng.
+        for text in ["R2.3.9円", "R2/3/9円"] {
+            let r = parse(text)
+            XCTAssertEqual(day(r), "2020-03-09", text)
+            XCTAssertNil(r.amount, "Không phải 4 yên: \(text)")
+        }
         // Nhưng chữ Hán của số tiền sát token thì không: "R2-3-9万5000円" và "R2-3-9十円" là giá.
         XCTAssertEqual(day(parse("R2-3-9十円")), "2026-09-25")
         XCTAssertEqual(parse("R2-3-9十円").amount, 90)
