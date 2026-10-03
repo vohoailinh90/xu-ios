@@ -151,7 +151,9 @@ final class TimeOfDayTests: XCTestCase {
         // Dấu nối dính liền chữ buổi rồi tới chữ cái ("tối-đa", "sáng-tạo") vẫn là một từ ghép: không phải ranh giới.
         let notes: [(String, String)] = [
             ("taxi lúc 7h tối-đa 100k", "taxi lúc 7h tối-đa"), ("lúc 7h sáng-tạo logo 500k", "lúc 7h sáng-tạo logo"),
-            ("cà phê 7h sáng/tạo 35k", "cà phê 7h sáng/tạo"), ("grab 7h tối'đa 50k", "grab 7h tối'đa")
+            ("cà phê 7h sáng/tạo 35k", "cà phê 7h sáng/tạo"), ("grab 7h tối'đa 50k", "grab 7h tối'đa"),
+            // Cả chuỗi dấu dính liền (gõ/dán thừa dấu) cũng vậy, không chỉ đúng một dấu.
+            ("taxi lúc 7h tối--đa 100k", "taxi lúc 7h tối--đa"), ("lúc 7h sáng..tạo logo 500k", "lúc 7h sáng..tạo logo")
         ]
         for (text, note) in notes {
             let r = parse(text)
@@ -160,9 +162,26 @@ final class TimeOfDayTests: XCTestCase {
             XCTAssertNotNil(r.amount, text)
         }
         // Dấu câu thật (có khoảng trắng sau hoặc quanh dấu, hay theo sau là số) vẫn kết thúc chữ buổi.
-        for text in ["cà phê 7h sáng, mua 35k", "cà phê 7h sáng - 35k", "cà phê 7h sáng. 35k", "cà phê 7h sáng,35k"] {
+        for text in ["cà phê 7h sáng, mua 35k", "cà phê 7h sáng - 35k", "cà phê 7h sáng. 35k", "cà phê 7h sáng,35k",
+                     "cà phê 7h sáng.. 35k", "cà phê 7h sáng -- 35k"] {
             XCTAssertEqual(parse(text).minutesOfDay, minutes(7), text)
             XCTAssertEqual(parse(text).amount, 35_000, text)
+        }
+    }
+
+    func testExtraSpacesBetweenTheTimeWordsStillMeanTheSame() {
+        // Văn bản dán hoặc gõ thừa khoảng trắng: giờ, buổi, "lúc", "nay"/"qua" vẫn dính nhau như một khoảng trắng.
+        XCTAssertEqual(parse("taxi lúc 7h  tối 100k").minutesOfDay, minutes(19), "không được rơi về 07:00 và để \"tối\" lại ghi chú")
+        XCTAssertEqual(parse("taxi lúc 7h  tối 100k").note, "taxi")
+        let cases: [(String, Int, Int, String)] = [
+            ("cà phê 7h   sáng 35k", 7, 0, "cà phê"), ("lúc 7  giờ 30 cà phê 35k", 7, 30, "cà phê"),
+            ("vào  lúc 7h30 phở 45k", 7, 30, "phở"), ("sáng   7h cà phê 35k", 7, 0, "cà phê"),
+            ("chiều  nay  3h trà sữa 45k", 15, 0, "trà sữa")
+        ]
+        for (text, hour, minute, note) in cases {
+            let r = parse(text)
+            XCTAssertEqual(r.minutesOfDay, minutes(hour, minute), text)
+            XCTAssertEqual(r.note, note, "Cụm giờ bỏ khỏi ghi chú: \(text)")
         }
     }
 

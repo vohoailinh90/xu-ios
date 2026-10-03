@@ -133,9 +133,9 @@ Cụm giờ (cả `lúc`, `vào lúc` và buổi đứng đầu câu) bỏ khỏ
 
 **Bảo đảm 1, từ ghép:** chữ buổi chỉ nhận khi cấu trúc chứng minh nó không phải đầu một từ ghép: liền sau nó là chữ số (cách 2, không thể là từ ghép) hoặc
 sau nó là hết câu/dấu câu/con số (cách 1). Chữ buổi đứng cạnh giờ mà sau đó là **một từ khác** thì mơ hồ: bỏ cả giờ, không đoán AM/PM.
-`taxi lúc 7h tối đa 100k` và `lúc 7h sáng tạo logo 500k` không có giờ, ghi chú giữ nguyên. Dấu câu **dính liền** chữ buổi rồi tới ngay một chữ cái
-(`tối-đa`, `sáng-tạo`, `tối'đa`) cũng nối thành một từ ghép, không phải ranh giới; dấu có khoảng trắng sau hoặc quanh nó (`7h sáng, mua`, `7h sáng - 35k`)
-hay theo sau là số (`7h sáng,35k`) thì là dấu câu thật. Cái giá: `7h tối ăn phở 45k` (giờ, buổi, rồi một từ) không nhận;
+`taxi lúc 7h tối đa 100k` và `lúc 7h sáng tạo logo 500k` không có giờ, ghi chú giữ nguyên. Chuỗi dấu câu **dính liền** chữ buổi (một hay nhiều dấu) rồi tới ngay một chữ cái
+(`tối-đa`, `sáng-tạo`, `tối'đa`, `tối--đa`) cũng nối thành một từ ghép, không phải ranh giới; dấu có khoảng trắng sau hoặc quanh nó (`7h sáng, mua`, `7h sáng - 35k`)
+hay theo sau là số (`7h sáng,35k`) thì là dấu câu thật. Khoảng trắng giữa các thành phần của cụm giờ (`7h  tối`, `vào  lúc`, `sáng  nay`) có thể là một hay nhiều. Cái giá: `7h tối ăn phở 45k` (giờ, buổi, rồi một từ) không nhận;
 viết `tối 7h ăn phở 45k` hoặc `ăn phở 7h tối 45k` thì được.
 
 **Bảo đảm 2, tiền:** **giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn** (số có đơn vị đầu tiên, nếu không thì số trần lớn nhất — đúng như `parse`).

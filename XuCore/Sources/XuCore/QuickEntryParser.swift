@@ -547,10 +547,10 @@ public struct QuickEntryParser: Sendable {
     /// Giờ và phút dính liền ("7h30"), trừ "giờ": "7 giờ 30". "7h 35k" là 7h và 30k, không phải 7h30.
     /// Regex chỉ *tìm* ứng viên; có nhận là giờ hay không do `findTime` quyết.
     static let timeRegex = try! NSRegularExpression(
-        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s)?luc)\s)?(?:(sang|trua|chieu|toi|dem)(?:\s(nay|qua))?\s)?(\d{1,2})"#
-            + #"(?:h(\d{2}"# + moneyUnitAhead + #")?|\s?gio(?:\s?(\d{2})(?![a-z0-9_])"# + moneyUnitAhead + #")?|:(\d{2}"#
+        pattern: #"(?<![a-z0-9_/:.,])(?:((?:vao\s+)?luc)\s+)?(?:(sang|trua|chieu|toi|dem)(?:\s+(nay|qua))?\s+)?(\d{1,2})"#
+            + #"(?:h(\d{2}"# + moneyUnitAhead + #")?|\s*gio(?:\s*(\d{2})(?![a-z0-9_])"# + moneyUnitAhead + #")?|:(\d{2}"#
             + moneyUnitAhead + #"))"#
-            + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
+            + #"(?:\s*(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
     )
 
     /// Sau hai chữ số phút không được tiếp tục cú pháp số tiền: không có dấu nhóm/thập phân ("30.000đ", "30,5 triệu") và không có đơn
@@ -630,9 +630,10 @@ public struct QuickEntryParser: Sendable {
 
     /// `range` nếu chữ gốc (không phân biệt hoa thường) ở đó đúng là một trong `allowed`, còn không thì `nil`.
     static func spelled(_ range: Range<Int>?, in original: [Character], as allowed: Set<String>) -> Range<Int>? {
-        guard let range, range.upperBound <= original.count,
-              allowed.contains(String(original[range]).lowercased()) else { return nil }
-        return range
+        guard let range, range.upperBound <= original.count else { return nil }
+        // Nhiều khoảng trắng giữa hai chữ ("vào  lúc") vẫn là một cụm.
+        let word = String(original[range]).lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return allowed.contains(word) ? range : nil
     }
 
     /// Cái đứng sau một chữ buổi (bỏ qua mọi khoảng trắng).
@@ -648,12 +649,13 @@ public struct QuickEntryParser: Sendable {
     static func follower(of chars: [Character], from index: Int) -> PeriodFollower {
         var start = index
         while start < chars.count, chars[start].isWhitespace { start += 1 }
-        // Dấu câu dính liền chữ buổi rồi tới ngay một chữ cái ("tối-đa", "sáng-tạo", "tối/đa", "tối'đa") nối hai chữ thành một
-        // từ ghép: dấu câu không chứng minh chữ buổi đã kết thúc. Có khoảng trắng quanh dấu ("tối - đa", "tối, đa") thì dấu là
-        // dấu câu thật.
-        if start == index, start + 1 < chars.count,
-           !chars[start].isLetter, !chars[start].isNumber, !chars[start].isWhitespace, chars[start + 1].isLetter {
-            return .word
+        // Chuỗi dấu câu dính liền chữ buổi rồi tới ngay một chữ cái ("tối-đa", "sáng-tạo", "tối/đa", "tối'đa", "tối--đa") nối hai
+        // chữ thành một từ ghép: dấu câu không chứng minh chữ buổi đã kết thúc, dù có một hay nhiều dấu. Có khoảng trắng quanh
+        // dấu ("tối - đa", "tối, đa") thì dấu là dấu câu thật.
+        if start == index {
+            var symbols = start
+            while symbols < chars.count, !chars[symbols].isLetter, !chars[symbols].isNumber, !chars[symbols].isWhitespace { symbols += 1 }
+            if symbols > start, symbols < chars.count, chars[symbols].isLetter { return .word }
         }
         guard start < chars.count, chars[start].isLetter else { return .boundary }
         var end = start
