@@ -70,7 +70,7 @@ public struct QuickEntryParser: Sendable {
         var amount: Int64?
         var currency = options.market.currency
         var signedIncome = false
-        if let pick = explicit.first ?? analysis.candidates.max(by: { $0.value < $1.value }) {
+        if let pick = Self.chosenAmount(analysis.candidates) {
             amount = pick.value
             currency = pick.currency
             signedIncome = pick.isPlus
@@ -117,24 +117,23 @@ public struct QuickEntryParser: Sendable {
             dateRange = Self.extendDateRange(hit.range, in: foldedChars)
         }
 
-        // 2. Giờ ("7h sáng", "lúc 19h30")
+        // 2. Giờ ("cà phê 7h sáng 35k", "lúc 19h30")
         var time = findTime(in: folded, original: original)
 
-        // 3. Số tiền (trên chuỗi đã che vùng ngày, vùng giờ và tên cửa hàng có số như "100均"):
-        // che giờ để "30" trong "lúc 7:30" không thành số tiền.
+        // 3. Số tiền, trên chuỗi đã che vùng ngày và tên cửa hàng có số như "100均".
         let dateRanges = dateRange.map { [$0] } ?? []
         let numericNames = Self.ranges(of: Self.numericNameRegex, in: folded)
-        var candidates = findAmounts(
-            in: Self.mask(foldedChars, ranges: dateRanges + (time.map { [$0.range] } ?? []) + numericNames),
-            original: original)
-        // Giờ không bao giờ nuốt số tiền duy nhất: che giờ mà không còn số tiền nào, trong khi bỏ giờ thì có ("lúc 7 giờ 30.000đ",
-        // "lúc 7 giờ 30  nghìn"), nghĩa là số đó là tiền, không phải phút. Mất số tiền là chặn luồng ghi, nên bỏ giờ.
-        // Một bất biến chung thay cho việc đoán từng cách viết tiền (dấu phân nhóm, nhiều dấu cách, đơn vị lạ…).
-        if time != nil, candidates.isEmpty {
-            let withoutTime = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
-            if !withoutTime.isEmpty {
+        var candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + numericNames), original: original)
+        if let hit = time {
+            // Giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn ("2 ly cà phê lúc 7 giờ 30.000đ", "cà phê lúc 7:30"):
+            // số đó là tiền, không phải phút. Mất số tiền là chặn luồng ghi, nên bỏ giờ. Một bất biến chung thay cho việc đoán
+            // từng cách viết tiền (dấu phân nhóm, nhiều dấu cách, đơn vị lạ, số trần vô can như "2 ly"…).
+            if let chosen = Self.chosenAmount(candidates), chosen.range.overlaps(hit.range) {
                 time = nil
-                candidates = withoutTime
+            } else {
+                // Giữ giờ thì che nó đi để "30" trong "lúc 7:30" không thành số tiền.
+                candidates = findAmounts(in: Self.mask(foldedChars, ranges: dateRanges + [hit.range] + numericNames),
+                                         original: original)
             }
         }
         return Analysis(original: original, folded: foldedChars, date: date, dateRange: dateRange, time: time,
@@ -158,6 +157,11 @@ public struct QuickEntryParser: Sendable {
         let hasUnit: Bool
         let isPlus: Bool
         let range: Range<Int>
+    }
+
+    /// Số tiền `parse` sẽ chọn: số có đơn vị đầu tiên; không có thì số trần lớn nhất.
+    static func chosenAmount(_ candidates: [AmountCandidate]) -> AmountCandidate? {
+        candidates.first(where: \.hasUnit) ?? candidates.max(by: { $0.value < $1.value })
     }
 
     /// Ranh giới từ chỉ xét chữ Latin và số: chữ Nhật đứng sát số vẫn là ranh giới ("コーヒー350円").
@@ -549,10 +553,10 @@ public struct QuickEntryParser: Sendable {
             + #"(?:\s?(sang|trua|chieu|toi|dem)(?![a-z0-9_]))?(?![a-z0-9_/])"#
     )
 
-    /// Sau hai chữ số phút không được là một đơn vị tiền, kể cả đứng rời ("7 giờ 30 nghìn", "30 triệu", "30 yên"): đó là số tiền,
-    /// không phải phút. Phút bị từ chối thì "lúc 7 giờ 30 nghìn" thành 7 giờ và 30 nghìn, như người viết định nói; giờ không
-    /// bao giờ nuốt số tiền, vì mất số tiền là chặn luồng ghi.
-    private static let moneyUnitAhead = #"(?!\s?(?:"# + japanUnits + #")(?![a-z0-9_]))"#
+    /// Sau hai chữ số phút không được tiếp tục cú pháp số tiền: không có dấu nhóm/thập phân ("30.000đ", "30,5 triệu") và không có đơn
+    /// vị tiền sau bất kỳ khoảng trắng nào ("7 giờ 30 nghìn", "30  triệu", "30 yên"): đó là số tiền, không phải phút. Phút bị từ
+    /// chối thì "lúc 7 giờ 30 nghìn" thành 7 giờ và 30 nghìn, như người viết định nói. Chốt chặn cuối là bất biến ở `analyze`.
+    private static let moneyUnitAhead = #"(?![.,]\d)(?!\s*(?:"# + japanUnits + #")(?![a-z0-9_]))"#
 
     struct TimeHit {
         /// Số phút từ 0:00.

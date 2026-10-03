@@ -136,10 +136,11 @@ sau nó là hết câu/dấu câu/con số (cách 1). Chữ buổi đứng cạn
 `taxi lúc 7h tối đa 100k` và `lúc 7h sáng tạo logo 500k` không có giờ, ghi chú giữ nguyên. Cái giá: `7h tối ăn phở 45k` (giờ, buổi, rồi một từ) không nhận;
 viết `tối 7h ăn phở 45k` hoặc `ăn phở 7h tối 45k` thì được.
 
-**Bảo đảm 2, tiền:** **giờ không bao giờ nuốt số tiền duy nhất.** Che cụm giờ mà không còn số tiền nào, trong khi bỏ giờ thì có (`cà phê lúc 7 giờ 30.000đ`,
-`lúc 7 giờ 30  nghìn`, `cà phê lúc 7 giờ 45`), nghĩa là số đó là tiền, không phải phút: bỏ giờ, giữ tiền. Một bất biến chung thay cho việc đoán từng cách viết
-tiền (dấu phân nhóm, nhiều dấu cách, đơn vị lạ…). Thêm vào đó, sau hai chữ số phút không được là một đơn vị tiền kể cả đứng rời (`7 giờ 30 nghìn`, `30 triệu`, `30 yên`):
-phút bị từ chối thì `cà phê lúc 7 giờ 30 nghìn` là 07:00 và 30.000.
+**Bảo đảm 2, tiền:** **giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn** (số có đơn vị đầu tiên, nếu không thì số trần lớn nhất — đúng như `parse`).
+Nếu cụm giờ che con số đó thì số đó là tiền, không phải phút: bỏ giờ, giữ tiền (`cà phê lúc 7:30`, `2 ly cà phê lúc 7 giờ 45`). Bỏ giờ thì quay về đúng kết quả như trước khi có
+tính năng giờ. Một bất biến chung (ở `analyze`) thay cho việc đoán từng cách viết tiền: dấu phân nhóm, nhiều dấu cách, đơn vị lạ, số trần vô can như `2 ly`.
+Ở gốc, phút chỉ là phút khi sau nó **không tiếp tục cú pháp số tiền**: không có `.000`/`,5` (`30.000đ`, `30,5 triệu`) và không có đơn vị tiền sau bất kỳ khoảng trắng nào
+(`7 giờ 30 nghìn`, `30  triệu`, `30 yên`). Phút bị từ chối thì `cà phê lúc 7 giờ 30.000đ` là 07:00 và 30.000; `2 ly cà phê lúc 7 giờ 30.000đ` cũng vậy (`2 ly` ở lại trong ghi chú).
 
 Không nhận (giờ = không có, ghi chú giữ nguyên):
 

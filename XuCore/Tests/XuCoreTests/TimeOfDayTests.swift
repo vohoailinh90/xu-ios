@@ -147,21 +147,41 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(parse("tối 7h ăn phở 45k").minutesOfDay, minutes(19))
     }
 
-    // MARK: Bảo đảm tiền: giờ không bao giờ nuốt số tiền duy nhất
+    // MARK: Bảo đảm tiền: giờ không bao giờ lấy mất con số mà bộ phân tích tiền sẽ chọn
 
-    func testMoneyIsNeverSwallowedByTheTime() {
-        // Che giờ mà không còn số tiền nào, trong khi bỏ giờ thì có: số đó là tiền, không phải phút → bỏ giờ, giữ tiền.
+    func testMinutesNeverContinueAnAmount() {
+        // Phút dính vào cú pháp số tiền ("30.000đ", "30,5 triệu", "30  nghìn") không phải phút: còn 7 giờ, số tiền giữ nguyên.
+        // Số trần vô can ("2 ly", "3 người") ở đầu câu không được làm mất bảo đảm này.
         let cases: [(String, Int64)] = [
-            ("cà phê lúc 7 giờ 30.000đ", 30_000), ("cà phê lúc 7 giờ 30,000đ", 30_000), ("lúc 7 giờ 30  nghìn", 30_000),
-            ("cà phê lúc 7:30", 30_000), ("cà phê lúc 7 giờ 45", 45_000)
+            ("cà phê lúc 7 giờ 30.000đ", 30_000), ("cà phê lúc 7 giờ 30,000đ", 30_000),
+            ("2 ly cà phê lúc 7 giờ 30.000đ", 30_000), ("3 người ăn lúc 7 giờ 30.000đ", 30_000),
+            ("2 ly cà phê lúc 7 giờ 30,5 triệu", 30_500_000), ("lúc 7 giờ 30  nghìn", 30_000),
+            ("2 ly cà phê lúc 7 giờ 30  nghìn", 30_000)
+        ]
+        for (text, amount) in cases {
+            let r = parse(text)
+            XCTAssertEqual(r.amount, amount, text)
+            XCTAssertEqual(r.minutesOfDay, minutes(7), "Phút bị từ chối: còn 7 giờ, số tiền giữ nguyên: \(text)")
+        }
+        XCTAssertEqual(parse("2 ly cà phê lúc 7 giờ 30.000đ").note, "2 ly cà phê", "Số lượng ở lại trong ghi chú")
+        // Dạng "7h30" và "lúc 7:30" không có đường lùi về chỉ-có-giờ: không có giờ.
+        XCTAssertNil(parse("lúc 7h30.000đ").minutesOfDay)
+        XCTAssertNil(parse("lúc 7:30.000đ").minutesOfDay)
+    }
+
+    func testTimeNeverTakesTheNumberTheAmountParserWouldPick() {
+        // Bất biến chốt chặn: nếu giờ che mất con số mà `parse` sẽ chọn làm số tiền thì số đó là tiền, không phải phút: bỏ giờ.
+        // Bỏ giờ thì quay về đúng kết quả như trước khi có tính năng giờ; không bao giờ làm mất khả năng ghi.
+        let cases: [(String, Int64)] = [
+            ("cà phê lúc 7:30", 30_000), ("cà phê lúc 7 giờ 45", 45_000),
+            ("2 ly cà phê lúc 7:30", 30_000), ("2 ly cà phê lúc 7 giờ 45", 45_000)
         ]
         for (text, amount) in cases {
             let r = parse(text)
             XCTAssertNil(r.minutesOfDay, "Giờ bị bỏ để giữ số tiền: \(text)")
             XCTAssertEqual(r.amount, amount, text)
         }
-        XCTAssertEqual(parse("cà phê lúc 7 giờ 30.000đ").note, "cà phê lúc 7 giờ")
-        // Còn số tiền khác thì "7 giờ 45" vẫn là giờ.
+        // Có số tiền khác (có đơn vị, hoặc lớn hơn) thì "7 giờ 45", "lúc 7:30" vẫn là giờ và không bị coi là tiền.
         let r = parse("cà phê lúc 7 giờ 45 35k")
         XCTAssertEqual(r.minutesOfDay, minutes(7, 45))
         XCTAssertEqual(r.amount, 35_000)
