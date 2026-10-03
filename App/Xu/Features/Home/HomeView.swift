@@ -64,6 +64,10 @@ struct HomeView: View {
                 if !chips.isEmpty {
                     Section {
                         ChipRow(chips: chips, language: language)
+                            // Luôn dùng được khi app đang mở (đường ghi một chạm). Chỉ che tạm lúc app không ở phía
+                            // trước, vì ảnh App Switcher sẽ lộ tên và số tiền của khoản quen.
+                            .overlay { if lock.isShielded { Color(.secondarySystemGroupedBackground) } }
+                            .accessibilityHidden(lock.isShielded)
                     } header: {
                         HStack {
                             Text(language.t(.quickChips))
