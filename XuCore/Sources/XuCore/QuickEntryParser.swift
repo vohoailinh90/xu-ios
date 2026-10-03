@@ -542,9 +542,10 @@ public struct QuickEntryParser: Sendable {
         let range: Range<Int>
     }
 
-    /// Giờ đầu tiên trong câu. "2h" trơn có thể là thời lượng ("phòng 2h", "gói 24h"), nên chỉ nhận khi có buổi
-    /// ("7h sáng"), có phút ("7h30", "7:30") hoặc giờ từ 13 trở lên ("19h"). Nhầm giờ thì khoản vẫn đúng ngày và
-    /// thấy ngay trên thẻ xem trước; nhưng không đoán bừa thì ghi chú giữ nguyên chữ của người dùng.
+    /// Giờ đầu tiên trong câu. "2h", "2h30", "2 giờ 30" có thể là thời lượng ("thuê phòng 2h30", "gói 24h"), nên chỉ nhận khi
+    /// có buổi ("7h sáng"), giờ từ 13 trở lên ("19h30") hoặc viết dạng đồng hồ có dấu hai chấm ("7:30"). Phút dính liền
+    /// "h" không đủ làm bằng chứng. Nhầm giờ thì ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì thấy ngay trên
+    /// thẻ xem trước: nên không đoán bừa.
     func findTime(in text: String) -> TimeHit? {
         let ns = NSRange(text.startIndex..., in: text)
         for m in Self.timeRegex.matches(in: text, range: ns) {
@@ -555,27 +556,30 @@ public struct QuickEntryParser: Sendable {
             let minute = minuteText.flatMap(Int.init) ?? 0
             let period = Self.group(m, 6, in: text) ?? Self.group(m, 1, in: text)
             guard hour <= 23, minute <= 59, !(hour == 0 && period != nil) else { continue }
-            guard period != nil || minuteText != nil || hour >= 13 else { continue }
+            let isClockStyle = Self.group(m, 5, in: text) != nil
+            guard period != nil || isClockStyle || hour >= 13 else { continue }
             guard let hour24 = Self.hour24(hour, period: period) else { continue }
             return TimeHit(minutes: hour24 * 60 + minute, range: hourRange.lowerBound..<whole.upperBound)
         }
         return nil
     }
 
-    /// Giờ viết theo buổi → giờ 24h: "7h tối" → 19, "12h trưa" → 12, "12h đêm" → 0, "1h chiều" → 13.
-    /// Giờ từ 13 trở lên thì buổi mâu thuẫn ("19h sáng"): giữ 19. `nil` nếu buổi và giờ không đi với nhau ("5h trưa").
+    /// Giờ viết theo buổi → giờ 24h, chỉ trong khoảng người ta thật sự nói với buổi đó: sáng 1–11, trưa 10–12 và 1–3
+    /// (→ 13–15), chiều 1–7 (→ 13–19), tối 5–11 (→ 17–23), đêm 9–11 (→ 21–23), 12 (→ 0) và 1–5. Ví dụ "7h tối" → 19,
+    /// "12h trưa" → 12, "12h đêm" → 0. Giờ từ 13 trở lên thì buổi mâu thuẫn ("19h sáng"): giữ 19.
+    /// `nil` nếu buổi và giờ không đi với nhau ("11h chiều", "1h tối", "12h sáng", "5h trưa"): không phải giờ.
     static func hour24(_ hour: Int, period: String?) -> Int? {
         guard let period, hour <= 12 else { return hour }
         switch period {
         case "sang":
-            return hour == 12 ? 0 : hour
+            return (1...11).contains(hour) ? hour : nil
         case "trua":
             if (10...12).contains(hour) { return hour }
             return (1...3).contains(hour) ? hour + 12 : nil
         case "chieu":
-            return hour == 12 ? 12 : hour + 12
+            return (1...7).contains(hour) ? hour + 12 : nil
         case "toi":
-            return hour == 12 ? 0 : hour + 12
+            return (5...11).contains(hour) ? hour + 12 : nil
         case "dem":
             if hour == 12 { return 0 }
             if (9...11).contains(hour) { return hour + 12 }

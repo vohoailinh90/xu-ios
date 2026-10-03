@@ -43,19 +43,20 @@ final class TimeOfDayTests: XCTestCase {
     func testMinutesAndFormats() {
         XCTAssertEqual(parse("19h30 grab 52k").minutesOfDay, minutes(19, 30))
         XCTAssertEqual(parse("19h30 grab 52k").note, "grab")
-        XCTAssertEqual(parse("7:30 cà phê 35k").minutesOfDay, minutes(7, 30))
-        XCTAssertEqual(parse("7 giờ 30 cà phê 35k").minutesOfDay, minutes(7, 30))
-        XCTAssertEqual(parse("7 giờ 30 cà phê 35k").note, "cà phê")
-        XCTAssertEqual(parse("0h30 xe 50k").minutesOfDay, minutes(0, 30))
+        XCTAssertEqual(parse("7:30 cà phê 35k").minutesOfDay, minutes(7, 30), "Dạng đồng hồ có dấu hai chấm tự đủ")
+        XCTAssertEqual(parse("0:30 xe 50k").minutesOfDay, minutes(0, 30))
+        XCTAssertEqual(parse("7 giờ 30 sáng cà phê 35k").minutesOfDay, minutes(7, 30))
+        XCTAssertEqual(parse("7 giờ 30 sáng cà phê 35k").note, "cà phê")
         XCTAssertEqual(parse("23h grab 90k").minutesOfDay, minutes(23), "Từ 13 giờ trở lên không cần buổi")
     }
 
     func testPeriodsConvertToTwentyFourHour() {
         let cases: [(String, Int)] = [
-            ("5h chiều 50k", minutes(17)), ("1h chiều cơm 45k", minutes(13)), ("12h trưa cơm 45k", minutes(12)),
-            ("11h trưa cơm 45k", minutes(11)), ("1h trưa cơm 45k", minutes(13)), ("6h tối 90k", minutes(18)),
-            ("12h tối 90k", minutes(0)), ("11h đêm nhậu 200k", minutes(23)), ("12h đêm 50k", minutes(0)),
-            ("2h đêm taxi 100k", minutes(2)), ("12h sáng 20k", minutes(0)), ("9h sáng 20k", minutes(9)),
+            ("5h chiều 50k", minutes(17)), ("1h chiều cơm 45k", minutes(13)), ("7h chiều 50k", minutes(19)),
+            ("12h trưa cơm 45k", minutes(12)), ("11h trưa cơm 45k", minutes(11)), ("1h trưa cơm 45k", minutes(13)),
+            ("5h tối 90k", minutes(17)), ("6h tối 90k", minutes(18)), ("11h tối 90k", minutes(23)),
+            ("11h đêm nhậu 200k", minutes(23)), ("12h đêm 50k", minutes(0)), ("2h đêm taxi 100k", minutes(2)),
+            ("1h sáng 20k", minutes(1)), ("9h sáng 20k", minutes(9)),
             ("19h sáng 20k", minutes(19))   // buổi mâu thuẫn với giờ: giữ 19h
         ]
         for (text, expected) in cases {
@@ -64,9 +65,33 @@ final class TimeOfDayTests: XCTestCase {
     }
 
     func testPeriodsThatDoNotFitTheHourAreNotATime() {
-        XCTAssertNil(parse("5h trưa cơm 45k").minutesOfDay, "5 giờ trưa không có")
+        // Mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó; ngoài khoảng đó không đoán (không cộng 12 bừa).
+        for text in ["5h trưa cơm 45k", "7h đêm 50k", "11h chiều 50k", "8h chiều 50k", "1h tối 90k", "12h tối 90k",
+                     "12h sáng 20k"] {
+            XCTAssertNil(parse(text).minutesOfDay, text)
+            XCTAssertNotNil(parse(text).amount, text)
+        }
         XCTAssertEqual(parse("5h trưa cơm 45k").amount, 45_000)
-        XCTAssertNil(parse("7h đêm 50k").minutesOfDay)
+    }
+
+    func testAfterMidnightPhrasingIsLeftAlone() {
+        // "tối qua 1h" có thể là 1 giờ sáng nay: mơ hồ nên không đoán. Ngày vẫn là hôm qua, "1h" ở lại trong ghi chú.
+        let r = parse("tối qua 1h taxi 100k")
+        XCTAssertNil(r.minutesOfDay)
+        XCTAssertEqual(day(r), "2026-09-24")
+        XCTAssertEqual(r.note, "1h taxi")
+    }
+
+    func testDurationsWrittenWithMinutesAreNotATime() {
+        // Phút dính liền "h" không đủ làm bằng chứng: "2h30" thường là thời lượng, và nhầm thì mất chữ trong ghi chú.
+        for text in ["thuê phòng 2h30 100k", "thuê xe 1h15 80k", "0h30 xe 50k", "7 giờ 30 cà phê 35k"] {
+            XCTAssertNil(parse(text).minutesOfDay, text)
+        }
+        let room = parse("thuê phòng 2h30 100k")
+        XCTAssertEqual(room.amount, 100_000)
+        XCTAssertEqual(room.note, "thuê phòng 2h30", "Ghi chú giữ nguyên chữ của người dùng")
+        XCTAssertEqual(parse("19h30 grab 52k").minutesOfDay, minutes(19, 30), "Từ 13 giờ trở lên thì là giờ")
+        XCTAssertEqual(parse("ăn sáng 7h30 35k").minutesOfDay, minutes(7, 30), "Có buổi thì là giờ")
     }
 
     // MARK: Ngày và giờ đi cùng nhau
@@ -168,19 +193,5 @@ final class TimeOfDayTests: XCTestCase {
         let parts = parser.split("cà phê 7h sáng 35k", now: now)
         XCTAssertEqual(parts.count, 1)
         XCTAssertEqual(parts.first?.minutesOfDay, minutes(7))
-    }
-
-    // MARK: Tốc độ
-
-    /// Mục tiêu trong docs/04: 10.000 lần `parse` dưới 1 giây trên iPhone đời cũ nhất hỗ trợ. Bản này chạy ở cấu hình
-    /// Debug trên máy CI nên chỉ chặn hồi quy lớn (trần rộng) và in số đo; đo chính thức phải làm trên máy thật.
-    func testParsingTenThousandSentencesIsNotSlow() {
-        let sentences = ["cà phê 35k", "grab 52k hôm qua", "1tr2 tiền nhà", "lương +15tr", "7h sáng ăn phở 45k",
-                         "ăn trưa 45k tip 5k", "thu 2 cà phê ba mươi lăm nghìn", "コーヒー 350円", "tối qua nhậu 200k"]
-        let start = Date()
-        for i in 0..<10_000 { _ = parser.parse(sentences[i % sentences.count], now: now) }
-        let elapsed = Date().timeIntervalSince(start)
-        print("[perf] 10.000 lần parse (Debug, máy CI): \(String(format: "%.2f", elapsed)) giây")
-        XCTAssertLessThan(elapsed, 30, "Parse chậm bất thường: kiểm tra regex mới thêm")
     }
 }

@@ -119,21 +119,23 @@ ngày khác: 12:00). Thẻ xem trước hiện "Hôm qua · 19:00" để ngườ
 |---|---|---|
 | `cà phê 7h sáng 35k` | 07:00 | `cà phê` (buổi đứng **sau** giờ thì bỏ cùng giờ) |
 | `ăn tối 7h 80k` | 19:00 | `ăn tối` (buổi đứng **trước** giờ ở lại: là chữ của ghi chú, bỏ thì mất danh mục) |
-| `19h30 grab 52k`, `7:30 phở 45`, `7 giờ 30 cà phê 35k` | 19:30 · 07:30 · 07:30 | `grab` · `phở` · `cà phê` |
+| `19h30 grab 52k`, `7:30 phở 45`, `7 giờ 30 sáng cà phê 35k` | 19:30 · 07:30 · 07:30 | `grab` · `phở` · `cà phê` |
 | `7h tối qua grab 52k` | 19:00, ngày hôm qua | `grab` — "tối" vừa là buổi vừa nằm trong "tối qua" |
 | `chiều nay 3h trà sữa 45k` | 15:00, hôm nay | `trà sữa` |
 | `23h30 hôm qua 50k` | 23:30, ngày hôm qua | |
 
-- Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`. `sáng`: 12h → 0h. `trưa`: 10–12h giữ, 1–3h → 13–15h. `chiều`: +12 (12h giữ 12).
-  `tối`: +12 (12h → 0h). `đêm`: 9–11h → 21–23h, 12h → 0h, 1–5h giữ. Buổi không đi với giờ (`5h trưa`, `7h đêm`) thì không phải giờ.
-  Từ 13h trở lên thì buổi mâu thuẫn (`19h sáng`): giữ 19h.
-- **Không đoán bừa:** `7h`, `2h` trơn có thể là thời lượng (`phòng 2h`, `gói 24h`) nên chỉ nhận khi có buổi (`7h sáng`), có phút
-  (`7h30`, `7:30`, `7 giờ 30`) hoặc từ 13h trở lên (`19h`). `7h 35k` là `7h` rồi `35k`: phút phải dính liền (`7h30`), riêng "giờ" cho một dấu cách
-  (`7 giờ 30`) và `7 giờ 30k` là 30k, không phải 7:30. Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
+- Buổi: `sáng`, `trưa`, `chiều`, `tối`, `đêm`; mỗi buổi chỉ nhận khoảng giờ người ta thật sự nói với nó: `sáng` 1–11h, `trưa` 10–12h giữ
+  và 1–3h → 13–15h, `chiều` 1–7h → 13–19h, `tối` 5–11h → 17–23h, `đêm` 9–11h → 21–23h, 12h → 0h, 1–5h giữ. Ngoài khoảng đó (`5h trưa`,
+  `11h chiều`, `1h tối`, `12h sáng`) thì không phải giờ, không cộng 12 bừa. Từ 13h trở lên thì buổi mâu thuẫn (`19h sáng`): giữ 19h.
+  `tối qua 1h` có thể là 1 giờ sáng nay: mơ hồ nên không đoán (ngày vẫn là hôm qua, `1h` ở lại trong ghi chú).
+- **Không đoán bừa:** `7h`, `2h`, `2h30`, `2 giờ 30` có thể là thời lượng (`thuê phòng 2h30`, `gói 24h`) nên chỉ nhận khi có buổi (`7h sáng`),
+  từ 13h trở lên (`19h`, `19h30`) hoặc viết dạng đồng hồ có dấu hai chấm (`7:30`). **Phút dính liền "h" không đủ làm bằng chứng**:
+  nhầm thì ghi chú mất chữ và `occurredAt` sai, còn bỏ sót giờ thì thấy ngay trên thẻ xem trước. `7h 35k` là `7h` rồi `35k`
+  (phút phải dính liền); `7 giờ 30k` là 30k, không phải 7:30. Giờ không hợp lệ (`24h`, `25:61`) hoặc dính chữ (`wifi7h30`) thì bỏ qua.
 - Số trong vùng giờ không bao giờ là số tiền: `7:30 phở 45` → 45.000 (không phải 30).
 - Chưa làm: giờ kiểu Nhật (`7時30分`), kiểu Anh (`7am`, `7pm`), sửa giờ trên màn sửa khoản.
-- Tốc độ: `testParsingTenThousandSentencesIsNotSlow` đo 10.000 lần `parse`, in số đo ở log CI (Debug, máy CI) và chỉ chặn hồi quy lớn.
-  Mục tiêu < 1 giây trên iPhone đời cũ nhất hỗ trợ vẫn phải đo trên máy thật.
+- Tốc độ: `analyze` thêm một regex cho giờ. `QuickEntryParserTests/testPerformance` (`measure`) đã theo dõi; mục tiêu < 1 giây cho 10.000 lần
+  `parse` trên iPhone đời cũ nhất hỗ trợ vẫn phải đo trên máy thật (CI chạy Debug trên máy Mac nên không đại diện).
 
 ## Danh mục
 
@@ -208,7 +210,7 @@ Ranh giới từ chỉ xét chữ Latin và số, nên chữ Nhật đứng sát
 - [x] Từ lóng tiền `lít`, `xị`, `chai`: **không hỗ trợ** (quyết định 2026-10-03). Giá trị khác nhau theo vùng và dễ nhầm
   ("2 lít xăng"). Xu chỉ hiểu cách viết chuẩn: `k`, `nghìn`, `tr`, `triệu`, số bằng chữ.
 - [x] Giờ: "7h sáng" → gán giờ cho `occurredAt` — 2026-10-03.
-- [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ. (Đã có phép đo trong test để theo dõi hồi quy; phải đo trên máy thật.)
+- [ ] Đo hiệu năng: 10.000 lần `parse` phải < 1 giây trên iPhone đời cũ nhất hỗ trợ. (Đã có `testPerformance` để theo dõi; phải đo trên máy thật.)
 - [ ] Bộ dữ liệu thật: cho phép người dùng (tự nguyện) gửi các câu parser hiểu sai để bổ sung test.
 - [x] Tiếng Nhật: số viết bằng chữ Hán (`千五百円`), năm 令和, thứ trong ngoặc (`(月)`) — 2026-10-02.
 - [ ] Tiếng Nhật: năm 令和 viết tắt kiểu hoá đơn (`R8.9.30`), số chữ Hán trộn chữ số (`1万五千円`).
