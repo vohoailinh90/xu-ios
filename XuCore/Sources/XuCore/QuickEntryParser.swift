@@ -234,8 +234,10 @@ public struct QuickEntryParser: Sendable {
             } else {
                 value = Self.group(m, 5, in: text).flatMap(Self.parseKanjiDigits)
             }
-            guard let value, value > 0 else { continue }
+            // Cụm đã nhận là số kiểu Nhật nhưng không hợp lệ ("1五千円": chữ số thường dính chữ số Hán) thì cũng che đi: không đoán, và
+            // regex số thường không được đọc lại "1" trong đó thành 1 yên rồi để "五千円" ở lại ghi chú.
             kanjiRanges.append(range)
+            guard let value, value > 0 else { continue }
             found.append(AmountCandidate(value: Self.int64(value), currency: .jpy, hasUnit: true,
                                          isPlus: Self.group(m, 1, in: text) == "+", range: range))
         }
@@ -516,14 +518,17 @@ public struct QuickEntryParser: Sendable {
             return (date, range)
         }
 
-        // Hoá đơn Nhật in ngày kiểu "R8.9.30". Biên lai không có ngày tương lai, nên ngày sau hôm nay không phải ngày
-        // (tránh đọc nhầm một mã kiểu phiên bản "R2.3.15"); khi đó chữ ở lại trong ghi chú.
-        if let m = Self.reiwaShortDateRegex.firstMatch(in: text, range: ns),
-           let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
-           let month = Self.group(m, 2, in: text).flatMap(Int.init),
-           let day = Self.group(m, 3, in: text).flatMap(Int.init),
-           let range = Self.characterRange(m.range, in: text),
-           let date = makeDate(year: 2018 + era, month: month, day: day), date <= today {
+        // Hoá đơn Nhật in ngày kiểu "R8.9.20". Biên lai không có ngày tương lai, nên ngày sau hôm nay không phải ngày (tránh đọc nhầm một
+        // mã kiểu phiên bản "R2.3.15"); thời Reiwa bắt đầu từ 01/05/2019 nên "R1.1.1" cũng vậy. Token không hợp lệ thì chữ ở lại trong
+        // ghi chú và xét tiếp token sau: "R8.13.20 R8.9.20" lấy ngày thật.
+        let reiwaStart = makeDate(year: 2019, month: 5, day: 1)
+        for m in Self.reiwaShortDateRegex.matches(in: text, range: ns) {
+            guard let era = Self.group(m, 1, in: text).flatMap(Int.init), era >= 1,
+                  let month = Self.group(m, 2, in: text).flatMap(Int.init),
+                  let day = Self.group(m, 3, in: text).flatMap(Int.init),
+                  let range = Self.characterRange(m.range, in: text),
+                  let date = makeDate(year: 2018 + era, month: month, day: day),
+                  date <= today, let reiwaStart, date >= reiwaStart else { continue }
             return (date, range)
         }
 

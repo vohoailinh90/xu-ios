@@ -81,6 +81,12 @@ final class JapanMarketTests: XCTestCase {
         let party = parse("5人で1万五千円")
         XCTAssertEqual(party.amount, 15_000, "Số người đứng trước không thành số tiền")
         XCTAssertEqual(party.note, "5人で")
+        // Chữ số thường dính liền chữ số Hán không phải số hợp lệ: không đoán, và số thường không được đọc lại "1" trong đó.
+        let invalid = parse("1五千円 ランチ")
+        XCTAssertNil(invalid.amount, "Không đoán: không phải 1 yên, cũng không phải 5.000")
+        XCTAssertEqual(invalid.note, "1五千円 ランチ", "Chữ ở lại trong ghi chú")
+        let vietnam = QuickEntryParser(calendar: calendar).parse("1五千円 ランチ", now: now)
+        XCTAssertNil(vietnam.amount, "Thị trường Việt Nam cũng không đọc thành 1.000đ")
         // Dạng cũ không đổi.
         XCTAssertEqual(parse("家賃 6万5千円").amount, 65_000)
         XCTAssertEqual(parse("1万500円").amount, 10_500)
@@ -261,6 +267,17 @@ final class JapanMarketTests: XCTestCase {
             XCTAssertTrue(r.note.hasPrefix("R"), "Ghi chú giữ nguyên chữ của người dùng: \(text)")
             XCTAssertEqual(r.amount, 900, text)
         }
+        // Thời Reiwa bắt đầu từ 01/05/2019: ngày trước đó không phải ngày.
+        for text in ["R1.1.1 ランチ 900", "R1.4.30 ランチ 900"] {
+            XCTAssertEqual(day(parse(text)), "2026-09-25", text)
+            XCTAssertTrue(parse(text).note.hasPrefix("R1"), text)
+        }
+        XCTAssertEqual(day(parse("R1.5.1 ランチ 900")), "2019-05-01")
+        // Token đầu không hợp lệ thì xét tiếp token sau: ngày thật vẫn được nhận.
+        let twoTokens = parse("R8.13.20 R8.9.20 ランチ 900")
+        XCTAssertEqual(day(twoTokens), "2026-09-20")
+        XCTAssertEqual(twoTokens.note, "R8.13.20 ランチ")
+        XCTAssertEqual(day(parse("R8.9.30 R8.9.20 ランチ 900")), "2026-09-20", "Ngày tương lai đứng trước một ngày thật")
         // "R" phải đứng riêng: không đọc giữa một từ.
         XCTAssertEqual(day(parse("CAR8.9.20 ランチ 900")), "2026-09-25")
     }
