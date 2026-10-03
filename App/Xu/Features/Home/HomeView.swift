@@ -47,7 +47,8 @@ struct HomeView: View {
                                   currency: market.currency, language: language)
                     }
                 }
-                if showProInvite {
+                // Thẻ mời Pro kể lịch sử dùng ("đã ghi chép 7 ngày liền") nên cũng nằm sau khoá. Không phải đường ghi.
+                if showProInvite && !covered {
                     Section {
                         ProInviteCard(language: language) {
                             proInviteDismissed = true
