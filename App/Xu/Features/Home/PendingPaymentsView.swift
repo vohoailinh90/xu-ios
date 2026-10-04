@@ -20,15 +20,21 @@ struct PendingPaymentsCard: View {
 
 /// Các khoản Apple Pay Xu không tự ghi vì hết lượt miễn phí, giữ trên máy (`PendingPayments`) để người dùng ghi sau.
 /// "Ghi" lưu thành khoản chi bình thường: người dùng chủ động chạm, tức ghi tay, nên **không** bị đếm lượt. "Bỏ" xoá khoản khỏi danh sách.
+/// Thêm/xoá chỉ đụng khoá của đúng khoản đó (`AppSettings`), nên tác vụ nền thêm khoản lúc danh sách đang mở không bị đè.
 struct PendingPaymentsView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppSettings.Key.language, store: AppSettings.defaults) private var language: AppLanguage = .vi
-    @AppStorage(AppSettings.Key.pendingPayments, store: AppSettings.defaults) private var data = Data()
+    /// Đổi mỗi khi danh sách đổi (kể cả do tác vụ nền thêm khoản): danh sách đọc lại.
+    @AppStorage(AppSettings.Key.pendingPaymentsRevision, store: AppSettings.defaults) private var revision = ""
 
-    private var pending: PendingPayments { PendingPayments(jsonData: data) }
+    private var currentPending: PendingPayments {
+        _ = revision   // phụ thuộc rõ vào mã đổi, để danh sách đọc lại khi có thay đổi
+        return AppSettings.pendingPayments
+    }
 
     var body: some View {
+        let pending = currentPending
         NavigationStack {
             List {
                 Section {
@@ -74,13 +80,13 @@ struct PendingPaymentsView: View {
     }
 
     private func remove(_ item: PendingPayment) {
-        var list = pending
-        list.remove(id: item.id)
-        data = list.jsonData
+        AppSettings.removePendingPayment(item)
     }
 
     @MainActor
     private func save(_ item: PendingPayment) {
+        // Khoản đã được ghi hay bỏ rồi (chạm đúp, màn chưa vẽ lại) thì không ghi lần nữa.
+        guard AppSettings.hasPendingPayment(item) else { return }
         let matched = Ledger.parser(in: context).matcher.match(note: item.merchant)
         let categoryID = (matched?.kind == .expense ? matched?.id : nil) ?? CategoryCatalog.otherExpenseID
         let time = Calendar.current.dateComponents([.hour, .minute], from: item.date)

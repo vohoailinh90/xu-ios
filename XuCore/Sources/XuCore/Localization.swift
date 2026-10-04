@@ -653,7 +653,7 @@ public enum L10n: String, CaseIterable, Sendable {
                 en: "Delete any entry from the list. Deleting the app removes Xu's data from this device. If you back up your iPhone (to iCloud or a computer), Xu's data may be included in that backup like any other app's.",
                 ja: "記録は一覧からいつでも削除できます。アプリを削除すると、この端末からXuのデータが消えます。iPhoneのバックアップ(iCloudまたはコンピュータ)を有効にしている場合、ほかのアプリと同様にXuのデータも含まれることがあります。")
         case .privacyUpdated:
-            LocalizedText(vi: "Cập nhật: 02/10/2026", en: "Updated: October 2, 2026", ja: "更新日: 2026年10月2日")
+            LocalizedText(vi: "Cập nhật: 04/10/2026", en: "Updated: October 4, 2026", ja: "更新日: 2026年10月4日")
 
         case .csvHeader:
             // ngày (ngày lịch như trong app) … thời điểm ghi (ISO 8601, kèm lệch múi giờ của máy lúc xuất)

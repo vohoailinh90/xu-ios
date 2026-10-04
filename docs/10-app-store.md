@@ -4,7 +4,7 @@
 > Giới hạn dùng ở đây: tên 30 ký tự, phụ đề 30, văn bản quảng cáo 170, mô tả 4000; **từ khoá 100 byte** (UTF-8 — chữ Nhật
 > 3 byte, chữ Việt có dấu 2–3 byte mỗi chữ). Dãy từ khoá dưới đây đều ≤ 100 byte. **Cần kiểm tra** giới hạn và quy định
 > metadata mới nhất của Apple trước khi nộp. Câu tiếng Nhật nên nhờ người bản ngữ đọc lại.
-> Cập nhật 2026-10-02.
+> Cập nhật 2026-10-04.
 
 ## Nguyên tắc
 

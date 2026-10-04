@@ -16,7 +16,8 @@ struct HomeView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @AppStorage(AppSettings.Key.proInviteDay, store: AppSettings.defaults) private var proInviteDay = ""
     @AppStorage(AppSettings.Key.proInviteDismissed, store: AppSettings.defaults) private var proInviteDismissed = false
-    @AppStorage(AppSettings.Key.pendingPayments, store: AppSettings.defaults) private var pendingPaymentsData = Data()
+    /// Đổi mỗi khi danh sách khoản Apple Pay chờ ghi đổi (tác vụ nền thêm, danh sách xoá): Home đọc lại số khoản.
+    @AppStorage(AppSettings.Key.pendingPaymentsRevision, store: AppSettings.defaults) private var pendingPaymentsRevision = ""
 
     private let lock = AppLock.shared
 
@@ -65,9 +66,10 @@ struct HomeView: View {
                     }
                 }
                 // Khoản Apple Pay bản Free không tự ghi vì hết lượt: có số tiền nên nằm sau khoá Face ID. Không phải đường ghi.
-                if !covered && pendingPaymentCount > 0 {
+                let pendingCount = pendingPaymentCount
+                if !covered && pendingCount > 0 {
                     Section {
-                        PendingPaymentsCard(count: pendingPaymentCount, language: language) { showPendingPayments = true }
+                        PendingPaymentsCard(count: pendingCount, language: language) { showPendingPayments = true }
                     }
                 }
                 if !chips.isEmpty {
@@ -237,7 +239,10 @@ struct HomeView: View {
             isPro: ProStore.shared.isPro, calendar: cal)
     }
 
-    private var pendingPaymentCount: Int { PendingPayments(jsonData: pendingPaymentsData).count }
+    private var pendingPaymentCount: Int {
+        _ = pendingPaymentsRevision   // phụ thuộc rõ vào mã đổi, để Home đọc lại khi danh sách đổi
+        return AppSettings.pendingPayments.count
+    }
 
     private var weeklySummary: WeeklySummary {
         let cal = Calendar.current

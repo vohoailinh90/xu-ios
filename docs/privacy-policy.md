@@ -4,7 +4,7 @@
 > Trước khi đăng: điền tên nhà phát triển và email liên hệ (`[…]`), kiểm tra lại theo `docs/09-quyen-rieng-tu.md`
 > (cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật). Nội dung phải khớp màn Cài đặt › Quyền riêng tư trong app.
 
-Cập nhật: 02/10/2026 · Updated: October 2, 2026 · 更新日: 2026年10月2日
+Cập nhật: 04/10/2026 · Updated: October 4, 2026 · 更新日: 2026年10月4日
 
 ---
 

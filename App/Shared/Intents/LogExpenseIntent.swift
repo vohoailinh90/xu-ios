@@ -76,9 +76,8 @@ struct LogPaymentIntent: AppIntent {
         var quota = AppSettings.applePayQuota ?? MonthlyQuota(month: month)
         guard quota.canUse(limit: limit, isPro: isPro, in: month) else {
             // Không ghi, nhưng giữ khoản lại trên máy để Home hiện cho người dùng ghi sau: không bao giờ bỏ mất lặng lẽ.
-            var pending = AppSettings.pendingPayments
-            pending.add(PendingPayment(amount: value, currencyCode: currency.code, merchant: merchant, date: Date()))
-            AppSettings.pendingPayments = pending
+            // Mỗi khoản một khoá riêng nên không đè lên khoản khác hay thao tác xoá đang diễn ra trong app.
+            try AppSettings.addPendingPayment(PendingPayment(amount: value, currencyCode: currency.code, merchant: merchant, date: Date()))
             let amountText = MoneyFormatter.compact(value, currency: currency, language: language)
             let what = merchant.isEmpty ? amountText : "\(amountText) · \(merchant)"
             await ApplePayLimitNotice.post(language: language)
