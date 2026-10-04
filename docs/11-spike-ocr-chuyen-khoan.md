@@ -9,7 +9,7 @@
 | Câu hỏi | Trả lời hiện tại |
 |---|---|
 | Vision có đọc tiếng Việt không? | Có trên macOS 15 (ảnh dựng sẵn). **Chưa kiểm trên iPhone iOS 17/18** |
-| Số tiền đúng bao nhiêu % trên biên lai thật của 5 ngân hàng? | **Chưa biết** — cần ≥ 50 ảnh thật |
+| Số tiền đúng bao nhiêu % trên biên lai thật của 5 ngân hàng? | **Sơ bộ 39/39 (100%)** bằng Văn bản trực tiếp/Phím tắt trên iPhone của chủ dự án, chưa đủ 50 ảnh và chưa chắc cùng bộ đọc với Vision trong app; xem "Kết quả sơ bộ" |
 | Đủ nhanh và giữ được nguyên tắc (riêng tư, một chạm lưu)? | Thiết kế bên dưới; tốc độ trên máy thật chưa đo |
 
 Tiêu chí quyết định lấy từ file tính năng
@@ -57,7 +57,7 @@ dấu hiệu tốt; phải ghép theo toạ độ; không dùng fast.
 không số tài khoản che `****1234`, không ảnh chụp màn hình bị cắt. Đọc tốt ở đây chỉ nói rằng Vision không là điểm nghẽn hiển nhiên; điểm nghẽn có thể là **chọn đúng số**
 trong bố cục từng ngân hàng — và đó đúng là thứ chỉ ảnh thật mới trả lời. Cũng chưa có ảnh nào bị chụp lệch, chụp màn hình bằng máy khác, hay có chữ chồng lên ảnh nền.
 
-## Thí nghiệm 2 — ảnh thật (chưa làm, cần chủ dự án)
+## Thí nghiệm 2 — ảnh thật (đang làm: 39/50 ảnh)
 
 Dùng `prototypes/cham-bien-lai.html` (đã có: dán chữ OCR, nhập số đúng, xem tỉ lệ theo ngân hàng; ngưỡng 95%/90% có sẵn). Cần: ≥ 50 ảnh biên lai **của chính bạn**,
 5 ngân hàng/ví phổ biến (che số tài khoản, tên người nhận nếu chia sẻ màn hình; biên lai là dữ liệu tài chính cá nhân — cần kiểm tra văn bản mới nhất về bảo vệ dữ liệu cá nhân).
@@ -65,6 +65,24 @@ Dùng `prototypes/cham-bien-lai.html` (đã có: dán chữ OCR, nhập số đ�
 Cần **cách lấy chữ OCR từ ảnh thật bằng đúng bộ đọc của Vision**. Trang chấm hướng dẫn dùng phím tắt "Thử biên lai" hoặc Văn bản trực tiếp (Live Text); chưa kiểm hai đường
 đó dùng cùng bộ đọc và cùng tham số với `VNRecognizeTextRequest` — **cần kiểm tra**. Đã chọn (2026-10-04): **màn hình thử trong app, chỉ bản Debug** — chạy đúng
 `VNRecognizeTextRequest` trên iPhone thật, cho luôn danh sách ngôn ngữ và tốc độ trên iOS 17/18.
+
+### Kết quả sơ bộ trên biên lai thật (2026-10-04, 39/50 ảnh)
+
+Chủ dự án chấm bằng trang `prototypes/cham-bien-lai.html` (bản đã đăng), lấy chữ bằng iPhone (Văn bản trực tiếp hoặc Phím tắt, **chưa ghi cách nào**, máy và iOS cũng **chưa ghi**). Số liệu chép từ ảnh chụp màn hình của trang, không có dữ liệu cá nhân.
+
+| | Kết quả |
+|---|---|
+| Số tiền đọc đúng | **39/39 = 100%** (mọi ngân hàng đều 100%) |
+| Tên người nhận đọc đúng | **43,6%** (khoảng 17/39). Tiêu chí tích ô "đúng dấu tiếng Việt" chưa rõ: nhiều biên lai in tên viết hoa không dấu, nên số này **chưa giải thích được**, cần hỏi lại |
+| Số ảnh theo ngân hàng/ví | Khác 14 · Vietcombank 8 · Techcombank 6 · VietinBank 4 · Sacombank 4 · MB Bank 2 · ACB 1 |
+
+Đọc con số này thế nào:
+
+- **Chưa đủ để kết luận.** 39/39 đúng thì cận dưới khoảng tin cậy 95% (công thức Wilson) vẫn chỉ khoảng 91%, nên chưa loại trừ được tỉ lệ thật dưới 95%. Ngưỡng 95% trên 50 ảnh cho phép sai tối đa 2 ảnh (48/50 = 96%).
+- **Nhóm "Khác" chiếm 14/39** nên chưa biết ngân hàng/ví nào trong đó; ACB mới 1 ảnh, MB Bank 2 ảnh: quá ít để nói về từng ngân hàng.
+- **Đây là quy tắc chọn số của trang chấm (`findAmounts`) chạy trên chữ từ iPhone**, không phải bộ đọc Vision của app: bộ đọc của Văn bản trực tiếp/Phím tắt có cùng tham số với app hay không vẫn chưa kiểm. Số đo chỉ là chỉ báo.
+- **Tên người nhận 43,6%** không nằm trong tiêu chí quyết định (chỉ số tiền) nhưng ảnh hưởng đến việc điền sẵn ghi chú; cần biết nguyên nhân (mất dấu, sai chữ, hay chỉ do cách tích ô) trước khi kết luận.
+- Từ ảnh thứ 39 trang không lưu thêm được trên điện thoại của chủ dự án. **Không do trang**: mô phỏng 70 lần lưu trong trình duyệt không giao diện chạy hết (723 ms, không lỗi), và quy tắc chọn số chạy 1,3 triệu ký tự trong 176 ms. Nguyên nhân nhiều khả năng ở trình duyệt/máy (chưa xác định).
 
 ### Màn hình thử (bản Debug)
 
