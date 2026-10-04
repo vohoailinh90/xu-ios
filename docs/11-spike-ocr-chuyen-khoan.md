@@ -18,13 +18,13 @@ Tiêu chí quyết định lấy từ file tính năng
 
 - Số tiền đọc đúng **≥ 95%** trên 50 ảnh thật (5 ngân hàng) → đáng làm.
 - **< 90%** → hoãn, chuyển sang hướng "dán nội dung thông báo ngân hàng".
-- 90–95%: file tính năng không nói; trang chấm chỉ nói xem bảng để biết ngân hàng nào cần xử lý riêng. Coi là "chưa đạt, quyết định lại".
+- Từ 90% đến **dưới** 95%: file tính năng không nói; trang chấm chỉ nói xem bảng để biết ngân hàng nào cần xử lý riêng. Coi là "chưa đạt, quyết định lại".
 
 ## Thí nghiệm 1 — Vision trên ảnh dựng sẵn (đã chạy, CI macOS)
 
 `scripts/spike-ocr.swift`, workflow `.github/workflows/spike-ocr.yml` (chỉ chạy khi đổi script hoặc bấm tay). Dựng 4 mẫu biên lai **giả**
 (chuyển đi, quét QR, nhận tiền, ví; số tiền `-1.356.780 VND`, `52.000đ`, `+2.500.000 VND`, `1.200.000 ₫`), sáng/tối, ở 6 biến thể: sạch 3x, sạch 2x,
-JPEG 40%, thu nhỏ 50% + JPEG 50% (như ảnh qua Zalo/Messenger), chữ nhỏ và nhãn nhạt, và chữ nhỏ + thu nhỏ + JPEG. Mỗi biến thể 8 ảnh (4 mẫu × sáng/tối),
+JPEG 40%, thu nhỏ 50% + JPEG 50% (tự dựng bằng cách thu nhỏ rồi nén JPEG; **không phải** ảnh thật đã gửi qua Zalo/Messenger hay ứng dụng nào), chữ nhỏ và nhãn nhạt, và chữ nhỏ + thu nhỏ + JPEG. Mỗi biến thể 8 ảnh (4 mẫu × sáng/tối),
 chạy `VNRecognizeTextRequest` với 5 cấu hình. Lần chạy: [run 37162110417](https://github.com/vohoailinh90/xu-ios/actions/runs/37162110417)
 (macOS 15.7.9, Vision revision 3).
 

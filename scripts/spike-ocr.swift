@@ -125,7 +125,7 @@ func downscale(_ image: CGImage, factor: CGFloat) -> CGImage? {
     return ctx.makeImage()
 }
 
-/// Nén JPEG rồi giải nén lại, như ảnh đi qua Zalo/Messenger.
+/// Nén JPEG rồi giải nén lại: mô phỏng thô việc ảnh bị nén lại. Không phải ảnh thật đã đi qua ứng dụng nhắn tin nào.
 func jpeg(_ image: CGImage, quality: CGFloat) -> CGImage? {
     let data = NSMutableData()
     guard let destination = CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil) else { return nil }
