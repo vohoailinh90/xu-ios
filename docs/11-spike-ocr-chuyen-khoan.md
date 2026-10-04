@@ -82,7 +82,7 @@ Chủ dự án chấm bằng trang `prototypes/cham-bien-lai.html` (bản đã �
 - **Nhóm "Khác" chiếm 14/39** nên chưa biết ngân hàng/ví nào trong đó; ACB mới 1 ảnh, MB Bank 2 ảnh: quá ít để nói về từng ngân hàng.
 - **Đây là quy tắc chọn số của trang chấm (`findAmounts`) chạy trên chữ từ iPhone**, không phải bộ đọc Vision của app: bộ đọc của Văn bản trực tiếp/Phím tắt có cùng tham số với app hay không vẫn chưa kiểm. Số đo chỉ là chỉ báo.
 - **Tên người nhận 43,6%** không nằm trong tiêu chí quyết định (chỉ số tiền) nhưng ảnh hưởng đến việc điền sẵn ghi chú; cần biết nguyên nhân (mất dấu, sai chữ, hay chỉ do cách tích ô) trước khi kết luận.
-- Từ ảnh thứ 39 trang không lưu thêm được trên điện thoại của chủ dự án. **Không do trang**: mô phỏng 70 lần lưu trong trình duyệt không giao diện chạy hết (723 ms, không lỗi), và quy tắc chọn số chạy 1,3 triệu ký tự trong 176 ms. Nguyên nhân nhiều khả năng ở trình duyệt/máy (chưa xác định).
+- Từ ảnh thứ 39 trang không lưu thêm được trên điện thoại của chủ dự án. **Không do trang**: mô phỏng 70 lần lưu trong trình duyệt không giao diện chạy hết (723 ms, không lỗi), và quy tắc chọn số chạy 1,3 triệu ký tự trong 176 ms. Nguyên nhân nhiều khả năng ở trình duyệt/máy (chưa xác định). Sau đó mở lại trang thì **dữ liệu cũ mất hết** (tôi đã nói là sẽ còn: sai, vì chưa kiểm). Trang chỉ lưu trong bộ nhớ của trình duyệt đang mở; điện thoại có thể xoá nó hoặc mở ở ngữ cảnh khác thì không thấy. 39 ảnh vì vậy chỉ còn lại **bảng đã chụp**, không thể chấm lại hay xem từng ảnh. Lần sau: chép bảng ra ngoài ngay khi chấm xong.
 
 ### Màn hình thử (bản Debug)
 
@@ -111,6 +111,14 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 - **Riêng tư**: Vision chạy trên máy, ảnh không rời máy, nên câu trả lời App Privacy "Data Not Collected" (`docs/09`) giữ nguyên miễn là không gửi ảnh/chữ đi đâu (không OCR ngoài máy: `docs/09` đòi ghi quyết định trước). Khi phát hành phải thêm một dòng vào Cài đặt › Quyền riêng tư, `docs/privacy-policy.md` và mô tả App Store — **cần kiểm tra văn bản mới nhất**.
 - **Đường lui** (nếu ảnh thật < 90%): "dán nội dung thông báo ngân hàng": người dùng sao chép chữ từ thông báo/tin nhắn rồi dán vào ô nhập; cùng hàm trích xuất. Bố cục chữ thì mỗi ngân hàng một kiểu, nên vẫn cần mẫu riêng.
 
+## Kết luận tạm của spike (2026-10-04)
+
+Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, vì trang không lưu thêm được và dữ liệu cũ mất; chỉ có bảng ở trên.
+
+- **Theo tiêu chí** (số tiền ≥ 95% thì đáng làm): 39/39 = 100% **đạt về số tiền**. Điều kiện kèm theo, không bỏ được: chưa đủ 50 ảnh (cận dưới ~91%); bộ đọc là Văn bản trực tiếp/Phím tắt, **chưa phải Vision trong app**; nhóm "Khác" 14/39; ACB và MB Bank rất ít ảnh.
+- **Chưa biết**: Vision trên iPhone thật (iOS 17/18, ngôn ngữ, tốc độ); vì sao tên người nhận chỉ 43,6%; chữ `₫`.
+- **Đề xuất của tôi (quyết định là của chủ dự án):** coi là **đạt sơ bộ**, cho phép làm tiếp tính năng ở phạm vi nhỏ (chọn ảnh → đọc → thẻ xem trước → lưu; số tiền chưa chắc thì để trống), nhưng **chưa nhắc "đọc ảnh chuyển khoản" trong mô tả App Store hay với người dùng** cho tới khi kiểm Vision trên iPhone thật (`docs/10`: chỉ nói những gì đã làm được). Cập nhật nhật ký và điểm của tính năng ở App-idea-lab (luật 8).
+
 ## Quyết định chờ chủ dự án
 
 1. **Miễn phí hay Pro?** `docs/02` xếp "OCR chuyển khoản" vào Pro, và file tính năng ở App-idea-lab nêu "dùng thử 5 lần miễn phí". Nhưng đây là một **đường ghi**, mà luật 5 nói không khoá việc ghi; cùng lý do bạn đã chọn Apple Pay automation miễn phí (2026-10-03). Đề xuất của tôi: đọc một ảnh miễn phí; Pro bán tiện ích đi kèm (nhiều ảnh một lần, xoá ảnh sau khi ghi, gợi ý ảnh chụp mới nhất nếu về sau làm). Việc này đổi `docs/02` nên cần bạn quyết.
@@ -120,7 +128,7 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 ## Việc còn lại để đóng spike
 
 - [x] Màn hình thử trong app (bản Debug) — chờ chạy thử trên iPhone thật.
-- [ ] Có số đo trên ≥ 50 ảnh thật / 5 ngân hàng (màn hình thử + trang chấm), ghi bảng theo ngân hàng vào đây.
+- [x] Số đo trên ảnh thật: **39 ảnh** (chủ dự án chấp nhận thay vì 50), bảng ở mục "Kết quả sơ bộ". Tên người nhận 43,6% chưa giải thích được.
 - [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (mục "Máy này" của màn hình thử; kết quả ở trên là macOS 15 trên máy chủ CI).
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
 - [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng), và/hoặc thêm log từng ca không khớp nguyên văn vào script, để biết nguyên nhân (ký hiệu, khoảng trắng hay dấu phân cách) trước khi quyết định xử lý ở bước trích xuất.
