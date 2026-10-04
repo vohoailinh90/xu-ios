@@ -127,3 +127,5 @@ Quyết định 2026-10-04 (chủ dự án):
   Chi tiết cách đếm, đặt lại hạn mức, nhiều ảnh một lượt và việc không gợi ý "ảnh chụp mới nhất": `docs/11`. Tính năng chưa làm.
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.
+
+**Chưa xác nhận:** hạn mức OCR 5 ảnh mỗi tháng (quyết định 2026-10-04 ở trên) giới hạn một đường ghi, nên chưa được coi là tuân thủ nguyên tắc này cho tới khi chủ dự án xác nhận cách hiểu (`docs/11`).
