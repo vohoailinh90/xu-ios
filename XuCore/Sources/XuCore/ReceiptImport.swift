@@ -1,42 +1,5 @@
 import Foundation
 
-/// Hạn mức đọc ảnh chuyển khoản của bản Free (`ProPlan.freeReceiptReadsPerMonth`, docs/02 và docs/11). Chỉ nằm trên máy.
-///
-/// Cách đếm là diễn giải của tôi từ câu "5 ảnh miễn phí 1 tháng", chủ dự án chưa duyệt từng điểm (docs/11): tháng dương lịch, đặt lại vào ngày 1;
-/// chỉ trừ lượt khi OCR **đã đọc thành công** (tìm được số tiền), dù người dùng có lưu hay không. Ảnh lỗi, không thấy số tiền, ảnh trùng
-/// và ảnh chưa đọc vì hết lượt không bị trừ.
-public struct ReceiptQuota: Codable, Equatable, Sendable {
-    public private(set) var year: Int
-    public private(set) var month: Int
-    public private(set) var used: Int
-
-    public init(month: MonthKey, used: Int = 0) {
-        self.year = month.year
-        self.month = month.month
-        self.used = max(0, used)
-    }
-
-    private func isSameMonth(as other: MonthKey) -> Bool { year == other.year && month == other.month }
-
-    /// Lượt đã dùng trong tháng `month`: sang tháng khác thì là 0.
-    public func used(in month: MonthKey) -> Int { isSameMonth(as: month) ? used : 0 }
-
-    /// Số lượt còn lại trong tháng `month`; `nil` = không giới hạn (Xu Pro).
-    public func remaining(isPro: Bool, in month: MonthKey) -> Int? {
-        isPro ? nil : max(0, ProPlan.freeReceiptReadsPerMonth - used(in: month))
-    }
-
-    public func canRead(isPro: Bool, in month: MonthKey) -> Bool {
-        remaining(isPro: isPro, in: month).map { $0 > 0 } ?? true
-    }
-
-    /// Ghi một lượt đã dùng; sang tháng mới thì bắt đầu đếm lại từ 1.
-    public mutating func recordRead(in month: MonthKey) {
-        if !isSameMonth(as: month) { self = ReceiptQuota(month: month) }
-        used += 1
-    }
-}
-
 /// Kết quả đọc một ảnh trong lượt chọn nhiều ảnh.
 public enum ReceiptReadOutcome: Equatable, Sendable {
     /// Đọc được số tiền. `isAmbiguous`: có số khác cùng điểm, người dùng nên xem lại (`ReceiptAmountReader.Reading`).
@@ -78,15 +41,16 @@ public enum ReceiptBatch {
 
     /// - `fingerprint(i)`: dấu vân tay của ảnh thứ `i` (ví dụ SHA-256 dữ liệu ảnh), `nil` nếu không mở được ảnh.
     /// - `recognize(i)`: chữ OCR của ảnh thứ `i`, `nil` nếu bộ đọc lỗi. Chỉ gọi cho ảnh duy nhất, khi còn lượt.
-    /// - `quota`: cập nhật tại chỗ; người dùng Pro không bị đếm.
+    /// - `quota`: cập nhật tại chỗ (hạn mức `ProPlan.freeReceiptReadsPerMonth` mỗi tháng); người dùng Pro không bị đếm.
+    ///   Cách đếm: chỉ ảnh OCR đã đọc ra số tiền mới bị trừ lượt (docs/11).
     /// Trả về đúng `count` kết quả, theo thứ tự ảnh.
-    public static func run(count: Int, isPro: Bool, month: MonthKey, quota: inout ReceiptQuota,
+    public static func run(count: Int, isPro: Bool, month: MonthKey, quota: inout MonthlyQuota,
                            fingerprint: (Int) async -> String?,
                            recognize: (Int) async -> String?) async -> [ReceiptReadOutcome] {
         var outcomes: [ReceiptReadOutcome] = []
         var firstIndexByFingerprint: [String: Int] = [:]
         for index in 0..<max(0, count) {
-            guard quota.canRead(isPro: isPro, in: month) else {
+            guard quota.canUse(limit: ProPlan.freeReceiptReadsPerMonth, isPro: isPro, in: month) else {
                 outcomes.append(.skippedNoQuota)
                 continue
             }
@@ -101,7 +65,7 @@ public enum ReceiptBatch {
             firstIndexByFingerprint[signature] = index
             let text = await recognize(index)
             let result = outcome(forRecognizedText: text)
-            if result.consumesQuota, !isPro { quota.recordRead(in: month) }
+            if result.consumesQuota, !isPro { quota.recordUse(in: month) }
             outcomes.append(result)
         }
         return outcomes

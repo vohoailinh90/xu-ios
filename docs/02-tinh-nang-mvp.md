@@ -107,7 +107,7 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Khoản quen trên widget | 2 nút | 8 nút |
 | Thói quen | 2 | Không giới hạn + thử thách |
 | Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử: các tuần cũ (màn "Theo tuần") và biểu đồ các tháng trước — đã làm |
-| Apple Pay automation (`LogPaymentIntent`) | 5 lần mỗi tháng (quyết định 2026-10-04; chưa làm trong code) | ✅ không giới hạn |
+| Apple Pay automation (`LogPaymentIntent`) | 5 lần mỗi tháng (quyết định 2026-10-04; đã làm trong code, chưa thử trên máy thật) | ✅ không giới hạn |
 | OCR chuyển khoản | 5 ảnh mỗi tháng | ✅ không giới hạn (chưa làm cho người dùng; có bản Debug nhập nhiều ảnh, `docs/11`) |
 | Face ID (khoá phần xem; tắt sẵn) | — | ✅ — đã làm |
 | Danh mục tùy chỉnh, icon app, giao diện | — | ✅ (chưa làm) |
@@ -128,7 +128,11 @@ Quyết định 2026-10-04 (chủ dự án):
   Chi tiết cách đếm, đặt lại hạn mức, nhiều ảnh một lượt và việc không gợi ý "ảnh chụp mới nhất": `docs/11`. Tính năng chưa làm.
 - Apple Pay automation: **đổi từ miễn phí hoàn toàn sang quyền lợi Pro, người dùng Free được 5 lần mỗi tháng** (lời chủ dự án: "apple pay cũng cho miễn phí 5 lần / 1 tháng"), thay quyết định 2026-10-03 ở trên, cùng cách hiểu luật 5 như OCR.
   Tôi diễn giải, chủ dự án chưa duyệt từng điểm: "1 lần" = một khoản được ghi tự động qua `LogPaymentIntent`; đặt lại theo tháng dương lịch như OCR; ghi tay và các lệnh khác (`LogExpenseIntent`: Action Button, Siri, Phím tắt gõ/đọc) **không** bị đếm.
-  **Chưa làm trong code** (hiện `LogPaymentIntent` không đếm lượt). Cần quyết khi làm: automation chạy nền, không có giao diện; khi hết lượt thì khoản đó không được ghi tự động, nên phải báo cho người dùng biết (thông báo kèm đường vào ghi tay) để họ không tưởng khoản đã được ghi.
+  **Đã làm trong code (2026-10-04), chưa thử trên máy thật** (`LogPaymentIntent`, `MonthlyQuota`, bộ đếm `AppSettings.applePayQuota` chỉ trên máy):
+  - Chỉ khoản **đã ghi được** mới bị trừ lượt; tiền chưa hỗ trợ, khoản 0 đồng hay lỗi lưu không mất lượt. Xu Pro không bị đếm; trước khi từ chối vì hết lượt, tác vụ hỏi lại StoreKit (bản sao `isPro` có thể cũ sau khi cài lại máy) để không giới hạn nhầm người dùng Pro.
+  - Hết lượt: khoản đó **không** được ghi; kết quả của tác vụ nói rõ (kèm số tiền, người bán) và Xu gửi một thông báo cục bộ nếu người dùng **đã** cho phép thông báo (không xin quyền từ đây; thông báo không nêu số tiền hay cửa hàng vì hiện trên màn hình khoá; chạm vào mở ô ghi tay). Đây là đề xuất của tôi, chủ dự án đồng ý làm tiếp (2026-10-04).
+  - Báo trước khi sắp hết: lời nhắn sau khi ghi thêm "còn N lần tự ghi miễn phí tháng này" khi còn 2 lần trở xuống. Hướng dẫn Apple Pay và Paywall nêu rõ hạn mức; dòng "luôn miễn phí" ở Paywall chỉ còn nói lệnh Phím tắt "Ghi chi tiêu" (không phải tự ghi Apple Pay).
+  - **Rủi ro chưa kiểm:** automation chạy nền, chưa biết lời nhắn của tác vụ có hiện khi chạy nền không (docs/06: luồng cần thử trên máy thật); nếu không hiện và người dùng chưa cho phép thông báo thì họ không biết khoản bị bỏ. Hướng dẫn cài đã dặn người dùng kiểm tra khoản có trong danh sách.
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.
 

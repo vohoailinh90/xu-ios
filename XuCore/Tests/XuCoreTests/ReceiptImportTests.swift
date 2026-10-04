@@ -1,45 +1,7 @@
 import XCTest
 @testable import XuCore
 
-/// Hạn mức Free và đọc nhiều ảnh một lượt (docs/11). Chuỗi biên lai là dữ liệu giả.
-final class ReceiptQuotaTests: XCTestCase {
-    private let october = MonthKey(year: 2026, month: 10)
-    private let november = MonthKey(year: 2026, month: 11)
-
-    func testFreeGetsFivePerMonth() {
-        var quota = ReceiptQuota(month: october)
-        XCTAssertEqual(ProPlan.freeReceiptReadsPerMonth, 5)
-        XCTAssertEqual(quota.remaining(isPro: false, in: october), 5)
-        for _ in 0..<5 { quota.recordRead(in: october) }
-        XCTAssertEqual(quota.remaining(isPro: false, in: october), 0)
-        XCTAssertFalse(quota.canRead(isPro: false, in: october))
-    }
-
-    func testResetsOnTheFirstOfTheNextMonth() {
-        var quota = ReceiptQuota(month: october, used: 5)
-        XCTAssertFalse(quota.canRead(isPro: false, in: october))
-        XCTAssertEqual(quota.used(in: november), 0)
-        XCTAssertEqual(quota.remaining(isPro: false, in: november), 5)
-        quota.recordRead(in: november)
-        XCTAssertEqual(quota.used, 1, "Sang tháng mới thì đếm lại từ đầu")
-        XCTAssertEqual(quota.remaining(isPro: false, in: november), 4)
-        XCTAssertEqual(quota.used(in: october), 0, "Bộ đếm đã chuyển sang tháng 11: hỏi lại tháng cũ không còn lượt đã dùng")
-    }
-
-    func testProIsUnlimitedAndNil() {
-        let quota = ReceiptQuota(month: october, used: 99)
-        XCTAssertNil(quota.remaining(isPro: true, in: october))
-        XCTAssertTrue(quota.canRead(isPro: true, in: october))
-    }
-
-    func testNegativeUsedIsClampedAndCodableRoundTrips() throws {
-        XCTAssertEqual(ReceiptQuota(month: october, used: -3).used, 0)
-        let quota = ReceiptQuota(month: october, used: 3)
-        let decoded = try JSONDecoder().decode(ReceiptQuota.self, from: JSONEncoder().encode(quota))
-        XCTAssertEqual(decoded, quota)
-    }
-}
-
+/// Đọc nhiều ảnh một lượt (docs/11); hạn mức tháng ở `MonthlyQuotaTests`. Chuỗi biên lai là dữ liệu giả.
 final class ReceiptBatchTests: XCTestCase {
     private let month = MonthKey(year: 2026, month: 10)
 
@@ -72,7 +34,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testFreeStopsReadingWhenOutOfQuotaAndDoesNotReadTheRest() async {
-        var quota = ReceiptQuota(month: month, used: 3)   // còn 2 lượt
+        var quota = MonthlyQuota(month: month, used: 3)   // còn 2 lượt
         let images = texts(4)
         var recognized: [Int] = []
         let outcomes = await ReceiptBatch.run(
@@ -87,7 +49,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testFailuresNoAmountAndDuplicatesDoNotUseQuota() async {
-        var quota = ReceiptQuota(month: month, used: 3)   // còn 2 lượt
+        var quota = MonthlyQuota(month: month, used: 3)   // còn 2 lượt
         // 0: không mở được · 1: đọc xong không thấy số · 2: ảnh tốt · 3: trùng ảnh 2 · 4: ảnh tốt · 5: hết lượt
         let fingerprints: [String?] = [nil, "b", "c", "c", "e", "f"]
         let recognizedText: [Int: String] = [1: "Mã\n123456789", 2: "Số tiền\n30.000 VND", 4: "Số tiền\n50.000 VND", 5: "Số tiền\n60.000 VND"]
@@ -106,7 +68,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testRecognizerFailureOnAnImageThatOpenedIsFailedAndFree() async {
-        var quota = ReceiptQuota(month: month)
+        var quota = MonthlyQuota(month: month)
         let outcomes = await ReceiptBatch.run(count: 1, isPro: false, month: month, quota: &quota,
                                               fingerprint: { _ in "a" }, recognize: { _ in nil })
         XCTAssertEqual(outcomes, [.failed])
@@ -114,7 +76,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testProReadsEverythingAndIsNotCounted() async {
-        var quota = ReceiptQuota(month: month, used: 5)
+        var quota = MonthlyQuota(month: month, used: 5)
         let images = texts(8)
         let outcomes = await ReceiptBatch.run(count: 8, isPro: true, month: month, quota: &quota,
                                               fingerprint: { "ảnh \($0)" }, recognize: { images[$0] })
@@ -124,7 +86,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testNewMonthRestoresTheAllowance() async {
-        var quota = ReceiptQuota(month: MonthKey(year: 2026, month: 9), used: 5)
+        var quota = MonthlyQuota(month: MonthKey(year: 2026, month: 9), used: 5)
         let images = texts(2)
         let outcomes = await ReceiptBatch.run(count: 2, isPro: false, month: month, quota: &quota,
                                               fingerprint: { "ảnh \($0)" }, recognize: { images[$0] })
@@ -133,7 +95,7 @@ final class ReceiptBatchTests: XCTestCase {
     }
 
     func testEmptyBatch() async {
-        var quota = ReceiptQuota(month: month)
+        var quota = MonthlyQuota(month: month)
         let outcomes = await ReceiptBatch.run(count: 0, isPro: false, month: month, quota: &quota,
                                               fingerprint: { _ in "x" }, recognize: { _ in "x" })
         XCTAssertEqual(outcomes, [])

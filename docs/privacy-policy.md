@@ -26,7 +26,7 @@ Xu không nhận thông tin thẻ hay tài khoản Apple của bạn. Việc App
 **Phím tắt và Apple Pay.** Nếu bạn tự cài Phím tắt hoặc tự động hoá Apple Pay, iOS chỉ chuyển cho Xu câu bạn nhập,
 hoặc số tiền (kèm loại tiền) và tên cửa hàng, ngay trên máy.
 
-**Thông báo.** Nhắc chốt ngày buổi tối là thông báo đặt lịch ngay trên máy, không gửi từ máy chủ.
+**Thông báo.** Nhắc chốt ngày buổi tối, và thông báo báo một khoản Apple Pay chưa được tự ghi vì hết lượt miễn phí trong tháng, đều được tạo ngay trên máy, không gửi từ máy chủ.
 
 **Xuất và xoá.** Bạn xuất CSV bất cứ lúc nào, miễn phí; tệp gửi đi đâu là do bạn chọn. Bạn xoá từng khoản trong app;
 xoá app là xoá dữ liệu Xu khỏi máy. Nếu bạn bật sao lưu iPhone (iCloud hoặc máy tính), dữ liệu Xu có thể nằm trong
@@ -59,7 +59,7 @@ for the displayed price; Xu never receives your card or Apple Account details. A
 **Shortcuts and Apple Pay.** If you set up a shortcut or an Apple Pay automation, iOS passes Xu only the sentence you typed,
 or the amount (with its currency) and merchant name, on the device.
 
-**Notifications.** The evening reminder is a notification scheduled on the device, not sent from a server.
+**Notifications.** The evening reminder, and the heads-up when an Apple Pay payment wasn't auto-logged because the month's free uses ran out, are created on the device, not sent from a server.
 
 **Export and deletion.** Export CSV any time, for free; you choose where the file goes. Delete any entry in the app;
 deleting the app removes Xu's data from the device. If you back up your iPhone (to iCloud or a computer), Xu's data may be
@@ -91,7 +91,7 @@ Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録ア�
 **ショートカットとApple Pay。** ご自身でショートカットやApple Payのオートメーションを設定した場合、iOSは入力した文、
 または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。
 
-**通知。** 夜の締めリマインダーは端末内で予約される通知で、サーバーから送られるものではありません。
+**通知。** 夜の締めリマインダーと、無料の自動記録を使い切ってApple Payの支払いを自動記録できなかったときのお知らせは、端末内で作成される通知で、サーバーから送られるものではありません。
 
 **書き出しと削除。** CSVはいつでも無料で書き出せ、送り先はあなたが選びます。記録はアプリ内で個別に削除でき、
 アプリを削除すると端末からXuのデータが消えます。iPhoneのバックアップ(iCloudまたはコンピュータ)を有効にしている場合、

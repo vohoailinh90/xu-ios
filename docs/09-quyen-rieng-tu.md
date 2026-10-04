@@ -16,9 +16,9 @@ ghi quyết định vào tài liệu này trước, rồi sửa cả ba chỗ: p
 |---|---|---|---|
 | Giao dịch: số tiền, loại tiền, danh mục, ghi chú, ngày, nguồn ghi, **câu gốc người dùng gõ** (`rawInput`) | SwiftData trong App Group | App, widget, App Intents | Không (trừ khi người dùng tự xuất CSV) |
 | Khoản quen, từ khoá học được, thói quen, đánh dấu thói quen, chốt ngày | SwiftData trong App Group | App, widget, App Intents | Không |
-| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`), khoá Face ID bật/tắt (`faceIDLock`, tắt sẵn) | UserDefaults của App Group | App, widget | Không |
+| Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, bộ đếm lượt dùng miễn phí trong tháng (`applePayQuota`: số khoản Apple Pay đã tự ghi; `receiptQuota`: số ảnh biên lai đã đọc, chỉ bản Debug; docs/02), lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`), khoá Face ID bật/tắt (`faceIDLock`, tắt sẵn) | UserDefaults của App Group | App, widget | Không |
 | Ngân sách tháng, "số nhỏ là nghìn" | UserDefaults riêng của app | App | Không |
-| Thông báo nhắc chốt ngày | Lịch thông báo cục bộ của iOS | iOS | Không (không dùng push từ máy chủ) |
+| Thông báo nhắc chốt ngày, và thông báo báo một khoản Apple Pay chưa được tự ghi vì hết lượt miễn phí (không nêu số tiền hay cửa hàng; chỉ gửi khi người dùng đã cho phép thông báo) | Thông báo cục bộ của iOS | iOS | Không (không dùng push từ máy chủ) |
 | Tệp CSV tạm khi xuất (`xu-giao-dich.csv`) | Thư mục tạm của app | App, bảng chia sẻ của iOS | Chỉ khi người dùng chọn nơi gửi; xoá khi đóng bảng chia sẻ, và bảng chia sẻ tự đóng khi khoá Face ID |
 
 Các đường dữ liệu đi qua hệ thống của Apple (Xu không nhận gì thêm):

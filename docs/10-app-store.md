@@ -41,7 +41,7 @@
 ・カテゴリが違ったらタップして選び直すだけ。次からは覚えます
 ・ホーム画面のウィジェット:いつもの支出をワンタップで記録(アプリを開かずに)
 ・ショートカット/アクションボタン:「支出を記録」をすぐ呼び出せます
-・Apple Pay:ショートカットAppのオートメーションを設定すると、カード払いを自動で記録(設定ガイドつき)
+・Apple Pay:ショートカットAppのオートメーションを設定すると、カード払いを自動で記録(設定ガイドつき。無料版は月5回まで、Xu Proは無制限)
 
 ■ 続けられる仕組み
 ・月の予算から「今日あといくら使えるか」を表示
@@ -57,7 +57,7 @@
 日本で使うなら円、ベトナムで使うならドン。表示言語は日本語・英語・ベトナム語から選べます。
 
 ■ Xu Pro(買い切り・サブスクなし)
-用意された5つの習慣をすべて同時に続けられ、ウィジェットに「いつもの」を最大4件表示。前の月のグラフもふり返れます。記録・アプリ内の「いつもの」・ショートカット・CSV書き出しはずっと無料です。
+用意された5つの習慣をすべて同時に続けられ、ウィジェットに「いつもの」を最大4件表示。前の月のグラフもふり返れ、Apple Payの自動記録は無制限(無料版は月5回まで)。記録・アプリ内の「いつもの」・ショートカットの「支出を記録」・CSV書き出しはずっと無料です。
 ```
 
 ## English
@@ -82,7 +82,7 @@ QUICK LOGGING
 • Wrong category? Tap to pick another — Xu remembers next time
 • Home Screen widget: log your usual expenses with one tap, without opening the app
 • Shortcuts and the Action Button: "Log expense" is ready to go
-• Apple Pay: set up an automation in the Shortcuts app to log card payments automatically (step-by-step guide included)
+• Apple Pay: set up an automation in the Shortcuts app to log card payments automatically (step-by-step guide included; the free version auto-logs 5 payments a month, Xu Pro is unlimited)
 
 HABITS THAT STICK
 • See how much you can still spend today, based on your monthly budget
@@ -98,7 +98,7 @@ YEN AND DONG
 Use yen in Japan or dong in Vietnam. Choose Vietnamese, English or Japanese for the app.
 
 XU PRO — PAY ONCE, NO SUBSCRIPTION
-Track all 5 built-in habits at once, show up to 4 quick picks on the widget, and see charts for earlier months. Logging, quick picks in the app, Shortcuts and CSV export are always free.
+Track all 5 built-in habits at once, show up to 4 quick picks on the widget, see charts for earlier months, and auto-log Apple Pay without a limit (free: 5 a month). Logging, quick picks in the app, the "Log expense" Shortcuts action and CSV export are always free.
 ```
 
 ## Tiếng Việt
@@ -123,7 +123,7 @@ GHI NHANH
 • Đoán sai danh mục thì chạm để chọn lại, lần sau Xu nhớ
 • Widget màn hình chính: chạm một lần để ghi khoản quen, không cần mở app
 • Phím tắt và Action Button: "Ghi chi tiêu" có sẵn
-• Apple Pay: cài tự động hoá trong app Phím tắt để tự ghi khi quẹt thẻ (có hướng dẫn từng bước)
+• Apple Pay: cài tự động hoá trong app Phím tắt để tự ghi khi quẹt thẻ (có hướng dẫn từng bước; bản miễn phí tự ghi 5 lần mỗi tháng, Xu Pro không giới hạn)
 
 THÓI QUEN, KHÔNG TỘI LỖI
 • Biết hôm nay còn được tiêu bao nhiêu theo ngân sách tháng
@@ -139,7 +139,7 @@ RIÊNG TƯ
 Ở Việt Nam ghi bằng đồng, ở Nhật ghi bằng yên. Giao diện tiếng Việt, tiếng Anh hoặc tiếng Nhật.
 
 XU PRO — MUA MỘT LẦN, KHÔNG THUÊ BAO
-Theo dõi cả 5 thói quen có sẵn cùng lúc, widget hiện tới 4 khoản quen, xem lại biểu đồ các tháng trước. Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.
+Theo dõi cả 5 thói quen có sẵn cùng lúc, widget hiện tới 4 khoản quen, xem lại biểu đồ các tháng trước, tự ghi Apple Pay không giới hạn (bản miễn phí: 5 lần mỗi tháng). Ghi chép, khoản quen trong app, lệnh Phím tắt "Ghi chi tiêu" và xuất CSV luôn miễn phí.
 ```
 
 ## Ảnh chụp màn hình

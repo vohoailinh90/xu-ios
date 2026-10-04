@@ -35,6 +35,10 @@ struct LogExpenseIntent: AppIntent {
 /// Dành cho automation "Giao dịch" của Ví (Wallet) trong app Phím tắt:
 /// Phím tắt truyền Số tiền (kèm loại tiền của giao dịch) + Người bán vào đây → tự ghi, không cần mở app.
 /// Luồng automation này cần thử trên máy thật (docs/06).
+///
+/// Bản Free tự ghi tối đa `ProPlan.freeApplePayLogsPerMonth` khoản mỗi tháng dương lịch, Xu Pro không giới hạn (docs/02, quyết định 2026-10-04).
+/// Chỉ khoản **đã ghi được** mới bị trừ lượt. Hết lượt thì khoản đó không được ghi: nói rõ trong kết quả của tác vụ và gửi thông báo nếu người dùng
+/// đã cho phép thông báo (`ApplePayLimitNotice`), để không ai tưởng khoản đã được ghi. Ghi tay và `LogExpenseIntent` không bao giờ bị đếm.
 struct LogPaymentIntent: AppIntent {
     static let title: LocalizedStringResource = "Ghi giao dịch thẻ"
     static let description = IntentDescription("Dùng trong Tự động hóa › Giao dịch để tự ghi khi quẹt Apple Pay.")
@@ -62,13 +66,40 @@ struct LogPaymentIntent: AppIntent {
         }
         let value = Currency.wholeUnits(amount.amount)
         guard value > 0 else { return .result(dialog: "\(language.t(.skippedZero))") }
+
+        let month = MonthKey(DayKey(Date(), calendar: .current))
+        var isPro = AppSettings.isPro
+        let limit = ProPlan.freeApplePayLogsPerMonth
+        var quota = AppSettings.applePayQuota ?? MonthlyQuota(month: month)
+        if !quota.canUse(limit: limit, isPro: isPro, in: month) {
+            // Hết lượt theo bản sao `isPro`: hỏi lại StoreKit trước khi từ chối, vì bản sao có thể cũ (cài lại máy, chưa mở app) và
+            // người dùng Xu Pro không bao giờ bị giới hạn.
+            isPro = await ProEntitlement.verifyAndCache()
+        }
+        guard quota.canUse(limit: limit, isPro: isPro, in: month) else {
+            let amountText = MoneyFormatter.compact(value, currency: currency, language: language)
+            let what = merchant.isEmpty ? amountText : "\(amountText) · \(merchant)"
+            await ApplePayLimitNotice.post(language: language)
+            return .result(dialog: "\(language.t(.applePayLimitReached, what, "\(limit)"))")
+        }
+
         let matched = Ledger.parser(in: context).matcher.match(note: merchant)
         let categoryID = (matched?.kind == .expense ? matched?.id : nil) ?? CategoryCatalog.otherExpenseID
         let result = QuickEntryResult(amount: value, currency: currency, isIncome: false,
                                       date: Date(), categoryID: categoryID, note: merchant)
         let record = try Ledger.save(result, rawInput: merchant, source: .applePay, in: context)
+        if !isPro {
+            // Chỉ đếm sau khi ghi được: khoản lỗi hay bị bỏ qua không mất lượt.
+            quota.recordUse(in: month)
+            AppSettings.applePayQuota = quota
+        }
         let amountText = MoneyFormatter.compact(record.amount, currency: record.currency, language: language)
-        return .result(dialog: "\(language.t(.intentSaved, amountText, record.category.emoji + " " + merchant))")
+        let what = record.category.emoji + " " + merchant
+        // Báo trước khi sắp hết (còn 2 lần trở xuống) để hết lượt không bất ngờ.
+        if let left = quota.remaining(limit: limit, isPro: isPro, in: month), left <= 2 {
+            return .result(dialog: "\(language.t(.intentSavedAllowance, amountText, what, "\(left)"))")
+        }
+        return .result(dialog: "\(language.t(.intentSaved, amountText, what))")
     }
 
     private static func trimmed(_ code: String) -> String { code.trimmingCharacters(in: .whitespaces) }

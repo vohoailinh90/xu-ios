@@ -13,7 +13,7 @@ import XuCore
 /// đếm lượt, (3) dịch chữ sang vi/en/ja.
 ///
 /// Luồng: chọn nhiều ảnh → đọc lần lượt (Vision `.accurate` trên máy) → danh sách thẻ "số tiền · ngày" → một chạm "Lưu". Quy tắc nằm ở XuCore
-/// (`ReceiptBatch`, `ReceiptQuota`, test được): bản Free đọc 5 ảnh mỗi tháng và dừng khi hết lượt, ảnh trùng/ảnh lỗi/ảnh không thấy số tiền không bị
+/// (`ReceiptBatch`, `MonthlyQuota`, test được): bản Free đọc 5 ảnh mỗi tháng và dừng khi hết lượt, ảnh trùng/ảnh lỗi/ảnh không thấy số tiền không bị
 /// trừ lượt, thẻ không chắc (hai số cùng điểm) không được chọn sẵn. Ghi tay không bao giờ bị ảnh hưởng.
 ///
 /// Riêng tư (luật 6): ảnh và chữ OCR chỉ nằm trong bộ nhớ, không lưu, không gửi đi; không xin quyền thư viện ảnh. Khoản lưu chỉ có số tiền, ngày,
@@ -33,7 +33,8 @@ struct ReceiptImportView: View {
 
     private var allowanceText: String {
         if store.isPro { return "Xu Pro: đọc không giới hạn" }
-        let left = (quota ?? ReceiptQuota(month: month)).remaining(isPro: false, in: month) ?? 0
+        let left = (quota ?? MonthlyQuota(month: month))
+            .remaining(limit: ProPlan.freeReceiptReadsPerMonth, isPro: false, in: month) ?? 0
         return "Bản Free: còn \(left)/\(ProPlan.freeReceiptReadsPerMonth) ảnh trong tháng này"
     }
 
@@ -148,7 +149,7 @@ struct ReceiptImportView: View {
         notice = nil
         cards = []
         let items = picked
-        var current = quota ?? ReceiptQuota(month: month)
+        var current = quota ?? MonthlyQuota(month: month)
         let box = ImageBox()
         let outcomes = await ReceiptBatch.run(
             count: items.count, isPro: store.isPro, month: month, quota: &current,

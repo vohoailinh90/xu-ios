@@ -12,6 +12,9 @@ public enum ProPlan {
     /// Đọc ảnh chuyển khoản (OCR) ở bản Free: số ảnh mỗi tháng dương lịch (chủ dự án chốt 2026-10-04, `docs/02`). Xu Pro không giới hạn.
     /// Ghi tay, ghi nhanh và xuất dữ liệu không bao giờ bị đếm.
     public static let freeReceiptReadsPerMonth = 5
+    /// Tự ghi Apple Pay (`LogPaymentIntent`, automation "Giao dịch") ở bản Free: số khoản mỗi tháng dương lịch (chủ dự án chốt 2026-10-04,
+    /// `docs/02`). Xu Pro không giới hạn. Ghi tay, ghi nhanh, `LogExpenseIntent` (Action Button, Siri, Phím tắt gõ/đọc) và xuất dữ liệu không bị đếm.
+    public static let freeApplePayLogsPerMonth = 5
 
     /// Thêm được thói quen mới không. Thói quen đã có từ trước thì giữ nguyên, không bao giờ bị tắt.
     public static func canAddHabit(activeHabits: Int, isPro: Bool) -> Bool {

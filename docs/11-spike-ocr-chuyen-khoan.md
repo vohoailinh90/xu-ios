@@ -106,7 +106,7 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 
 Chủ dự án chốt làm cho app Xu (mục "Quyết định của chủ dự án"). **Mới có bản Debug**, chưa mở cho người dùng.
 
-- **Ở đâu:** Cài đặt › "Nhập nhiều biên lai" (`App/Xu/Features/Settings/ReceiptImportView.swift`, bọc trong `#if DEBUG`, chữ chưa qua `L10n`). Quy tắc nằm ở XuCore, có test: `ReceiptBatch` (đọc lần lượt, dừng khi hết lượt, bỏ ảnh trùng), `ReceiptQuota` (hạn mức tháng), `ReceiptReadOutcome`, và `ReceiptAmountReader` (chọn số tiền; thêm `hasPlusSign` để biết tiền vào).
+- **Ở đâu:** Cài đặt › "Nhập nhiều biên lai" (`App/Xu/Features/Settings/ReceiptImportView.swift`, bọc trong `#if DEBUG`, chữ chưa qua `L10n`). Quy tắc nằm ở XuCore, có test: `ReceiptBatch` (đọc lần lượt, dừng khi hết lượt, bỏ ảnh trùng), `MonthlyQuota` (hạn mức tháng), `ReceiptReadOutcome`, và `ReceiptAmountReader` (chọn số tiền; thêm `hasPlusSign` để biết tiền vào).
 - **Luồng:** chọn tối đa 20 ảnh (bộ chọn ảnh của hệ thống, không xin quyền thư viện) → Vision `.accurate` đọc lần lượt trên máy → mỗi ảnh một thẻ → một chạm "Lưu N khoản". Thẻ có số tiền chắc được chọn sẵn; thẻ **không chắc** (hai số cùng điểm) hiện cảnh báo và **không** chọn sẵn; ảnh lỗi/không thấy số tiền/trùng/chưa đọc vì hết lượt hiện rõ lý do, không bỏ lặng lẽ.
 - **Hạn mức Free (diễn giải chưa duyệt, mục Quyết định):** 5 ảnh mỗi tháng dương lịch; đếm khi OCR đã đọc ra số tiền; ảnh lỗi, không thấy số, ảnh trùng và ảnh chưa đọc không bị trừ; Xu Pro không bị đếm; bộ đếm lưu trên máy (`AppSettings.receiptQuota`). Hết lượt thì các ảnh còn lại **chưa đọc** (không đọc hết rồi mới chặn lưu).
 - **Khoản lưu:** chỉ số tiền (sửa được), ngày (mặc định hôm nay, chỉnh từng thẻ), thu/chi theo dấu `+` trên biên lai, danh mục "Khác", ghi chú trống, `source = .screenshot`. **Không lưu** ảnh, chữ OCR (`rawInput` rỗng), tên người nhận hay số tài khoản.
@@ -159,5 +159,5 @@ Chủ dự án chấp nhận lấy **39 ảnh** làm số liệu **tạm/sơ b�
 - [x] Nhập nhiều biên lai một lượt: bản Debug + quy tắc ở XuCore có test (mục trên). **Chưa** chạy trên iPhone thật.
 - [ ] Chạy thử "Nhập nhiều biên lai" trên iPhone thật (cùng lúc đo Vision ở trên): chọn ≥ 5 ảnh, kiểm hết lượt Free, ảnh trùng, thẻ không chắc, lưu.
 - [ ] Mở cho người dùng: dịch `L10n` vi/en/ja, bỏ `#if DEBUG` khi đủ điều kiện (mục trên).
-- [ ] Hạn mức Free 5 lần/tháng của Apple Pay automation (`LogPaymentIntent`, `docs/02`): **chưa làm**.
+- [x] Hạn mức Free 5 lần/tháng của Apple Pay automation (`LogPaymentIntent`, `docs/02`): đã làm trong code (2026-10-04), **chưa thử trên máy thật**.
 - [ ] Chấm lại điểm tính năng ở App-idea-lab (luật 8) sau khi có số liệu Vision thật.
