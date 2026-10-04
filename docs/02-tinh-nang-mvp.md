@@ -108,7 +108,7 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Thói quen | 2 | Không giới hạn + thử thách |
 | Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử: các tuần cũ (màn "Theo tuần") và biểu đồ các tháng trước — đã làm |
 | Apple Pay automation | ✅ | ✅ |
-| OCR chuyển khoản | — | ✅ (chưa làm) |
+| OCR chuyển khoản | 5 ảnh mỗi tháng | ✅ không giới hạn (chưa làm) |
 | Face ID (khoá phần xem; tắt sẵn) | — | ✅ — đã làm |
 | Danh mục tùy chỉnh, icon app, giao diện | — | ✅ (chưa làm) |
 
@@ -119,5 +119,10 @@ Quyết định 2026-10-03 (chủ dự án):
   (ví dụ hoàn tiền) vẫn tắt được khoá.
 - Apple Pay automation: **miễn phí** — nó là một đường ghi, mà luật 5 nói không khóa việc ghi. (Xu Pro là mua một lần
   nên không có chuyện hết hạn; kể cả hoàn tiền thì cũng không khóa đường ghi.)
+
+Quyết định 2026-10-04 (chủ dự án):
+
+- OCR chuyển khoản: quyền lợi Pro, người dùng Free được đọc **5 ảnh mỗi tháng** ("5 ảnh miễn phí 1 tháng"). Ghi tay vẫn miễn phí nên không khóa đường ghi.
+  Chi tiết cách đếm, đặt lại hạn mức, nhiều ảnh một lượt và việc không gợi ý "ảnh chụp mới nhất": `docs/11`. Tính năng chưa làm.
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.

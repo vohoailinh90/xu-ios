@@ -103,7 +103,7 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 
 ## Thiết kế dự kiến nếu làm (chưa cam kết)
 
-- **Đường vào**: Share → Xu (Share Extension) và nút "Từ ảnh" trong app dùng bộ chọn ảnh của hệ thống. **Không tự quét thư viện ảnh** ở bản đầu: "gợi ý ảnh chụp mới nhất" cần quyền đọc thư viện (cần kiểm tra quy định App Store/quyền riêng tư và chịu cái giá niềm tin) — để sau, và cần quyết định.
+- **Đường vào**: Share → Xu (Share Extension) và nút "Từ ảnh" trong app dùng bộ chọn ảnh của hệ thống. **Không tự quét thư viện ảnh** ở bản đầu: "gợi ý ảnh chụp mới nhất" cần quyền đọc thư viện (cần kiểm tra quy định App Store/quyền riêng tư và chịu cái giá niềm tin) — để sau (chủ dự án chốt không làm ở bản đầu, 2026-10-04).
 - **Luồng**: ảnh → Vision (`.accurate`, `vi-VT` + `en-US`) trên máy → các dòng kèm toạ độ → trích xuất → **thẻ xem trước** (đúng luồng xem trước rồi lưu hiện có) → một chạm Lưu, không đòi gõ. Mục tiêu theo file tính năng: ~3 giây tới thẻ xem trước rồi ~1 giây để lưu (**chưa đo**).
 - **Trích xuất** tách khỏi Vision, là hàm thuần trong `XuCore` (test được bằng `swift test`). **Phần số tiền đã có** (2026-10-04): `ReceiptAmountReader` (`XuCore/Sources/XuCore/ReceiptAmountReader.swift`), bản Swift của `findAmounts` + `pick` trong `prototypes/cham-bien-lai.html` — cùng quy tắc chọn số (cửa sổ ngữ cảnh đếm theo UTF-16 và tách dòng theo `\n` như trang), nên số đo của trang chấm tham khảo được cho app **với chữ Latin/ASCII thường gặp trên biên lai**. **Khác có chủ ý**: Swift dùng `TextFolding` chung với phần còn lại của `XuCore` nên chữ/số toàn khổ được đưa về nửa khổ (trang không), và số vượt `Int64` bị bỏ (trang vẫn nhận); ký tự lạ khác chưa kiểm hết, nên số đo của trang không phải bằng chứng cho mọi đầu vào. Các giá trị mong đợi trong test lấy từ việc chạy **chính đoạn JavaScript của trang** trên cùng chuỗi mẫu (dữ liệu giả). Quy tắc: số có dấu nhóm nghìn hoặc số trần ≥ 4 chữ số có đơn vị `vnd`/`đ`; điểm: đơn vị +3, dấu +/− +2, nhãn "số tiền/amount/tổng tiền" +4, nhãn "số dư/balance/phí/fee/hạn mức" −6; hoà điểm lấy số lớn hơn nhưng báo `isAmbiguous`. **Giới hạn đã biết** (giữ để khớp trang chấm, ghi thành test): số trần không đơn vị như `52000` bị bỏ; nhãn tìm theo chuỗi con nên "phi" trong từ khác cũng trừ điểm; nhãn trừ điểm ở dòng trên kéo điểm số ở dòng dưới xuống; `₫` và `dong` không tính là đơn vị. **Chưa làm**: tên người nhận, nội dung, ngày giờ; nối vào màn hình thử Debug hay luồng ghi. Quy tắc mới được thử trên ít biên lai thật (chưa đủ 50 ảnh/5 ngân hàng): chưa kết luận.
 - **Không chắc thì để trống, đừng đoán**: không tìm ra số tiền hoặc có hai số ngang điểm thì ô số tiền để trống cho người dùng gõ, kèm câu giọng "không tội lỗi" (không "đọc thất bại"). Không bao giờ lưu số tiền đoán mà không hiện ra để người dùng thấy.
@@ -119,11 +119,19 @@ Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, 
 - **Chưa biết**: Vision trên iPhone thật (iOS 17/18, ngôn ngữ, tốc độ); vì sao tên người nhận chỉ 43,6%; chữ `₫`.
 - **Đề xuất của tôi (quyết định là của chủ dự án):** coi 39/39 là **tín hiệu sơ bộ, không phải kết luận**. Việc nên làm trước khi xây tính năng cho người dùng là kiểm Vision trên iPhone thật với đủ 50 ảnh. Nếu chủ dự án chọn làm sớm ở phạm vi nhỏ (chọn ảnh → đọc → thẻ xem trước → lưu; số tiền chưa chắc thì để trống) thì đó là chấp nhận rủi ro Vision chưa kiểm, và **vẫn chưa nhắc "đọc ảnh chuyển khoản" trong mô tả App Store hay với người dùng** cho tới khi kiểm xong (`docs/10`: chỉ nói những gì đã làm được). Cập nhật nhật ký và điểm của tính năng ở App-idea-lab (luật 8).
 
-## Quyết định chờ chủ dự án
+## Quyết định của chủ dự án (2026-10-04)
 
-1. **Miễn phí hay Pro?** `docs/02` xếp "OCR chuyển khoản" vào Pro, và file tính năng ở App-idea-lab nêu "dùng thử 5 lần miễn phí". Nhưng đây là một **đường ghi**, mà luật 5 nói không khoá việc ghi; cùng lý do bạn đã chọn Apple Pay automation miễn phí (2026-10-03). Đề xuất của tôi: đọc một ảnh miễn phí; Pro bán tiện ích đi kèm (nhiều ảnh một lần, xoá ảnh sau khi ghi, gợi ý ảnh chụp mới nhất nếu về sau làm). Việc này đổi `docs/02` nên cần bạn quyết.
-2. **Ai gom 50 ảnh thật** (5 ngân hàng/ví) và chạy màn hình thử ở trên.
-3. **Có làm "gợi ý ảnh chụp mới nhất" không** (quyền đọc thư viện ảnh) — đề xuất: không ở bản đầu.
+1. **Miễn phí hay Pro — chốt:** OCR vẫn là quyền lợi Pro, nhưng người dùng Free được **đọc 5 ảnh miễn phí trong một tháng** (lời chủ dự án: "cho phép đọc 5 ảnh miễn phí 1 tháng"). Thay cho "dùng thử 5 lần" trước đó. Ghi tay không bị ảnh hưởng nên luật 5 (không khoá việc ghi) vẫn giữ.
+   Các chi tiết dưới đây là **tôi diễn giải, chủ dự án chưa duyệt từng điểm**:
+   - "Một tháng" = mỗi tháng dương lịch có 5 ảnh, đặt lại vào ngày 1. (Nếu ý là chỉ 5 ảnh trong tháng đầu tiên thì sửa mục này.)
+   - Chỉ trừ lượt khi ảnh **đã được lưu thành khoản**; ảnh đọc lỗi hoặc bị bỏ qua không bị trừ (hợp "không tội lỗi").
+   - Bộ đếm chỉ nằm trên máy (`AppSettings`), không gửi đi đâu (luật 6). Người đã mua Xu Pro không bị đếm.
+   - Hết lượt thì chỉ hiện một dòng nhẹ kèm liên kết tới Xu Pro; **không** chặn bằng paywall giữa lúc đang ghi (`docs/02`), và ô ghi tay luôn dùng được.
+2. **Gợi ý "ảnh chụp mới nhất" — chốt: không làm** ở bản đầu (cần quyền đọc thư viện ảnh).
+3. **Nhiều ảnh một lượt — chốt: làm cho app Xu**, không phải trang chấm. Thiết kế ở App-idea-lab (`products/xu/features/ocr-anh-chuyen-khoan.md`, mục "Mở rộng: nhiều ảnh một lần"); chưa làm.
+   Chưa chốt: khi người dùng Free chọn nhiều ảnh hơn số lượt còn lại. Đề xuất: báo trước "còn N lượt tháng này" và chỉ đọc N ảnh đầu, không đọc hết rồi mới chặn lưu; phần còn lại ghi tay hoặc mở khoá Pro.
+   Lưu ý về giá trị: 5 ảnh mỗi tháng nghĩa là một lượt chọn nhiều ảnh dễ dùng hết hạn mức Free, nên tính năng này chủ yếu có ích cho người dùng Pro.
+4. **Còn mở:** ai gom đủ 50 ảnh thật (5 ngân hàng/ví) và chạy màn hình thử Debug trên iPhone thật.
 
 ## Việc còn lại để đóng spike
 
@@ -132,4 +140,5 @@ Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, 
 - [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (mục "Máy này" của màn hình thử; kết quả ở trên là macOS 15 trên máy chủ CI).
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
 - [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng), và/hoặc thêm log từng ca không khớp nguyên văn vào script, để biết nguyên nhân (ký hiệu, khoảng trắng hay dấu phân cách) trước khi quyết định xử lý ở bước trích xuất.
-- [ ] Quyết định 1–3 ở trên; cập nhật điểm và nhật ký của tính năng ở App-idea-lab (luật 8) sau khi có số liệu thật.
+- [x] Quyết định Free/Pro, gợi ý ảnh mới nhất và nhiều ảnh một lượt (2026-10-04, mục trên); nhật ký ở App-idea-lab đã ghi.
+- [ ] Chấm lại điểm tính năng ở App-idea-lab (luật 8) sau khi có số liệu Vision thật.
