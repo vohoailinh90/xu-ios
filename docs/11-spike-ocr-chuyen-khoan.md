@@ -121,12 +121,15 @@ Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, 
 
 ## Quyết định của chủ dự án (2026-10-04)
 
-1. **Miễn phí hay Pro — chốt:** OCR vẫn là quyền lợi Pro, nhưng người dùng Free được **đọc 5 ảnh miễn phí trong một tháng** (lời chủ dự án: "cho phép đọc 5 ảnh miễn phí 1 tháng"). Thay cho "dùng thử 5 lần" trước đó. Ghi tay không bị ảnh hưởng nên luật 5 (không khoá việc ghi) vẫn giữ.
+1. **Miễn phí hay Pro — chốt:** OCR vẫn là quyền lợi Pro, nhưng người dùng Free được **đọc 5 ảnh miễn phí trong một tháng** (lời chủ dự án: "cho phép đọc 5 ảnh miễn phí 1 tháng"). Thay cho "dùng thử 5 lần" trước đó.
+   **Chỗ căng với luật 5, ghi thẳng ra:** hạn mức này nghĩa là từ ảnh thứ 6 trong tháng, người dùng Free **không đọc được ảnh bằng OCR** (phải ghi tay hoặc mở khoá Xu Pro). OCR cũng là một đường ghi, và `docs/02` giữ Apple Pay automation miễn phí chính vì "nó là một đường ghi".
+   Chủ dự án chọn hạn mức cho OCR với cách hiểu: đường ghi được bảo vệ là **ghi tay/ghi nhanh** (luôn miễn phí, không bao giờ có paywall), còn OCR là tiện ích nhập nhanh thêm. Cách hiểu luật 5 này **cần chủ dự án xác nhận rõ**. Nếu không muốn khoá đường ghi OCR thì phương án thay thế là Free đọc không giới hạn
+   (hoặc một ảnh mỗi lượt) và Pro chỉ bán phần đi kèm (nhiều ảnh một lượt, xoá ảnh hàng loạt).
    Các chi tiết dưới đây là **tôi diễn giải, chủ dự án chưa duyệt từng điểm**:
    - "Một tháng" = mỗi tháng dương lịch có 5 ảnh, đặt lại vào ngày 1. (Nếu ý là chỉ 5 ảnh trong tháng đầu tiên thì sửa mục này.)
-   - Chỉ trừ lượt khi ảnh **đã được lưu thành khoản**; ảnh đọc lỗi hoặc bị bỏ qua không bị trừ (hợp "không tội lỗi").
+   - Trừ lượt khi OCR **đã đọc thành công** ảnh (tìm được số tiền), dù người dùng có lưu hay không — theo đúng chữ "đọc 5 ảnh". (Nếu chỉ trừ khi lưu thì xem số tiền rồi huỷ sẽ đọc được không giới hạn.) Ảnh đọc lỗi hoặc không thấy số tiền không bị trừ (hợp "không tội lỗi").
    - Bộ đếm chỉ nằm trên máy (`AppSettings`), không gửi đi đâu (luật 6). Người đã mua Xu Pro không bị đếm.
-   - Hết lượt thì chỉ hiện một dòng nhẹ kèm liên kết tới Xu Pro; **không** chặn bằng paywall giữa lúc đang ghi (`docs/02`), và ô ghi tay luôn dùng được.
+   - Hết lượt thì ảnh tiếp theo không được đọc; hiện thông báo giọng "không tội lỗi" kèm nút "Ghi tay" và liên kết tới Xu Pro. Paywall chỉ hiện khi người dùng chạm tính năng Pro (`CONTEXT.md` ở App-idea-lab), **không bao giờ** trong ô ghi nhanh (`docs/02`).
 2. **Gợi ý "ảnh chụp mới nhất" — chốt: không làm** ở bản đầu (cần quyền đọc thư viện ảnh).
 3. **Nhiều ảnh một lượt — chốt: làm cho app Xu**, không phải trang chấm. Thiết kế ở App-idea-lab (`products/xu/features/ocr-anh-chuyen-khoan.md`, mục "Mở rộng: nhiều ảnh một lần"); chưa làm.
    Chưa chốt: khi người dùng Free chọn nhiều ảnh hơn số lượt còn lại. Đề xuất: báo trước "còn N lượt tháng này" và chỉ đọc N ảnh đầu, không đọc hết rồi mới chặn lưu; phần còn lại ghi tay hoặc mở khoá Pro.
