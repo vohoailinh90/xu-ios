@@ -49,6 +49,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
   "Data Not Collected". Còn làm trước khi nộp: đăng chính sách ở URL công khai, điền tên + email liên hệ, điền App Privacy
   trên App Store Connect — cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật.
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
+  Làm dở (2026-10-03, `docs/11`): Vision macOS 15 có `vi-VT` (chế độ accurate) và đọc tốt ảnh dựng sẵn; **chưa** có số đo trên ảnh thật,
+  chưa kiểm trên iPhone iOS 17/18. Chờ quyết định Free/Pro (xung đột luật 5) và ảnh thật của chủ dự án.
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);
   còn sửa chỗ chậm khi có số liệu thật từ TestFlight
 - [ ] #release TestFlight cho 20–50 người dùng thử, form phản hồi

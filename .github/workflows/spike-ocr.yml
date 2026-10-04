@@ -1,0 +1,24 @@
+name: Spike OCR (Vision)
+
+# Thí nghiệm một lần cho docs/11: Vision có đọc được chữ tiếng Việt trong ảnh kiểu biên lai chuyển khoản không.
+# Chỉ chạy khi đổi script/workflow này (hoặc bấm tay), không chạy theo mỗi lần push.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'claude/**']
+    paths:
+      - scripts/spike-ocr.swift
+      - .github/workflows/spike-ocr.yml
+
+jobs:
+  spike-ocr:
+    name: Vision OCR trên mẫu tự dựng
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Phiên bản hệ điều hành và Swift
+        run: |
+          sw_vers
+          swift --version
+      - name: Chạy thí nghiệm
+        run: swift scripts/spike-ocr.swift

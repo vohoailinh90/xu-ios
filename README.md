@@ -89,6 +89,7 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | `docs/09-quyen-rieng-tu.md` | Dữ liệu Xu lưu, App Privacy, privacy manifest, việc cần kiểm tra trước khi nộp |
 | `docs/privacy-policy.md` | Chính sách quyền riêng tư vi/en/ja để đăng công khai |
 | `docs/10-app-store.md` | Nội dung App Store vi/en/ja: tên, phụ đề, từ khoá, mô tả, chữ trên ảnh chụp |
+| `docs/11-spike-ocr-chuyen-khoan.md` | Spike đọc ảnh chuyển khoản bằng Vision: kết quả đã có, điều chưa biết, quyết định chờ |
 
 ## Đã có sẵn trong khung
 
