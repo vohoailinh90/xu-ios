@@ -245,6 +245,7 @@ print("Chạy bằng CPU: \(cpuOnly)")
 
 struct Tally {
     var imagesRun = 0
+    var failures = 0         // OCR báo lỗi: tính là sai ở mọi mẫu số, không bỏ qua
     var amountExact = 0
     var amountDigits = 0
     var amountByHeight = 0   // dòng chữ cao nhất có chữ số đúng là số tiền
@@ -266,11 +267,14 @@ for variant in variants {
                 guard let image = variant.make(sample, dark) else { continue }
                 let started = Date()
                 let lines: [Line]
+                var failed = false
                 do { lines = try recognize(image, config) } catch {
+                    // Không `continue`: bỏ ảnh lỗi khỏi mẫu số sẽ làm các tỉ lệ đúng/tổng cao giả tạo. Tính là đọc được 0 dòng (mọi trường sai).
                     print("Lỗi OCR (\(variant.name), \(config.name), \(sample.title)): \(error)")
-                    continue
+                    lines = []
+                    failed = true
                 }
-                tally.millis += Date().timeIntervalSince(started) * 1000
+                if failed { tally.failures += 1 } else { tally.millis += Date().timeIntervalSince(started) * 1000 }
                 tally.imagesRun += 1
                 let joined = lines.map(\.text).joined(separator: "\n")
                 let joinedFolded = fold(joined)
@@ -324,7 +328,10 @@ for variant in variants {
             let e = t.fields[kind] ?? (0, 0, 0)
             return "\(percent(e.exact, e.total)) (bỏ dấu \(percent(e.folded, e.total)))"
         }
-        print("- \(config.name) · \(String(format: "%.0f", t.imagesRun == 0 ? 0 : t.millis / Double(t.imagesRun))) ms/ảnh")
+        let timedImages = t.imagesRun - t.failures
+        let average = timedImages <= 0 ? 0 : t.millis / Double(timedImages)
+        let failureNote = t.failures > 0 ? " · LỖI OCR \(t.failures)/\(t.imagesRun) (đã tính là sai)" : ""
+        print("- \(config.name) · \(String(format: "%.0f", average)) ms/ảnh\(failureNote)")
         print("    số tiền: nguyên văn \(percent(t.amountExact, t.imagesRun)) · đúng chữ số \(percent(t.amountDigits, t.imagesRun)) · chọn theo dòng cao nhất \(percent(t.amountByHeight, t.imagesRun))")
         print("    ngày giờ \(f(.datetime)) · tên \(f(.name)) · nội dung \(f(.note)) · mã \(f(.id)) · ghép nhãn–giá trị \(percent(t.pairs, t.pairsTotal))")
     }

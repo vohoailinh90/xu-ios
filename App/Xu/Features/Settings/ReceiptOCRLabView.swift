@@ -1,4 +1,5 @@
 #if DEBUG
+import CryptoKit
 import ImageIO
 import PhotosUI
 import SwiftUI
@@ -80,7 +81,10 @@ struct ReceiptOCRLabView: View {
 
             if !runs.isEmpty {
                 Section {
-                    LabeledContent("Đã đọc") { Text("\(runs.count) ảnh · trung bình \(averageMilliseconds) ms") }
+                    LabeledContent("Đã đọc") { Text("\(uniqueCount) ảnh · trung bình \(averageMilliseconds) ms").font(.callout) }
+                    if duplicateCount > 0 {
+                        LabeledContent("Ảnh trùng") { Text("\(duplicateCount) ảnh không tính").foregroundStyle(.orange).font(.callout) }
+                    }
                     if checkedCount > 0 {
                         LabeledContent("Đúng số tiền") { Text("\(correctCount)/\(checkedCount) ảnh đã chấm").font(.callout) }
                     }
@@ -90,37 +94,13 @@ struct ReceiptOCRLabView: View {
                 } header: {
                     Text("Tổng")
                 } footer: {
-                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu. Ảnh đã chấm = có nhập số đúng hoặc không đọc được (tính là sai). Ngưỡng ở docs/11: từ 95% trên 50 ảnh thật (5 ngân hàng) thì đáng làm, dưới 90% thì hoãn. Kết quả mất khi chọn ảnh khác: ghi lại trước.")
+                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu. Ảnh đã chấm = có nhập số đúng, hoặc không đọc được / không có dòng nào có chữ số (tính là sai); ảnh trùng byte với ảnh trước không tính. Ngưỡng ở docs/11: từ 95% trên 50 ảnh thật (5 ngân hàng) thì đáng làm, dưới 90% thì hoãn. Kết quả mất khi chọn ảnh khác: ghi lại trước.")
                 }
             }
 
             ForEach(runs) { run in
                 Section {
-                    Picker("Ngân hàng / ví", selection: bankBinding(run.index)) {
-                        Text("Chưa chọn").tag("")
-                        ForEach(Self.bankChoices, id: \.self) { Text($0).tag($0) }
-                    }
-                    if let error = run.error {
-                        Text(error).foregroundStyle(.red)
-                        Label("Sai (không đọc được)", systemImage: "xmark.circle.fill").foregroundStyle(.red)
-                    } else {
-                        LabeledContent("Số tiền đọc được") { Text(run.tallest ?? "(không có)").monospacedDigit() }
-                        TextField("Số tiền đúng (chữ số)", text: truthBinding(run.index))
-                            .keyboardType(.numbersAndPunctuation)
-                        if let verdict = verdict(of: run) {
-                            Label(verdict ? "Đúng" : "Sai", systemImage: verdict ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(verdict ? .green : .red)
-                        }
-                        // Không `.textSelection(.enabled)`: thao tác Copy mặc định ghi vào bảng nhớ chung, không `localOnly`, không hết hạn. Chỉ chép bằng nút dưới.
-                        Text(run.rowsText).font(.caption.monospaced())
-                        Button(copiedIndex == run.index ? "Đã sao chép" : "Sao chép chữ (theo hàng)") {
-                            // Tên người nhận và số tài khoản: không để sang máy khác qua Universal Clipboard, tự hết hạn sau 2 phút.
-                            UIPasteboard.general.setItems(
-                                [[UTType.plainText.identifier: run.rowsText]],
-                                options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)])
-                            copiedIndex = run.index
-                        }
-                    }
+                    runContent(run)
                 } header: {
                     Text(run.title)
                 }
@@ -133,6 +113,39 @@ struct ReceiptOCRLabView: View {
             banks = [:]
             copiedIndex = nil
             Task { await readAll() }
+        }
+    }
+
+    @ViewBuilder
+    private func runContent(_ run: OCRRun) -> some View {
+        if let original = run.duplicateOf {
+            Label("Trùng ảnh \(original): không tính vào tỉ lệ", systemImage: "doc.on.doc").foregroundStyle(.orange)
+        } else {
+            Picker("Ngân hàng / ví", selection: bankBinding(run.index)) {
+                Text("Chưa chọn").tag("")
+                ForEach(Self.bankChoices, id: \.self) { Text($0).tag($0) }
+            }
+            if let error = run.error {
+                Text(error).foregroundStyle(.red)
+                Label("Sai (không đọc được)", systemImage: "xmark.circle.fill").foregroundStyle(.red)
+            } else {
+                LabeledContent("Số tiền đọc được") { Text(run.tallest ?? "(không có dòng nào có chữ số)").monospacedDigit() }
+                TextField("Số tiền đúng (chữ số)", text: truthBinding(run.index))
+                    .keyboardType(.numbersAndPunctuation)
+                if let verdict = verdict(of: run) {
+                    Label(verdict ? "Đúng" : "Sai", systemImage: verdict ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundStyle(verdict ? .green : .red)
+                }
+                // Không `.textSelection(.enabled)`: thao tác Copy mặc định ghi vào bảng nhớ chung, không `localOnly`, không hết hạn. Chỉ chép bằng nút dưới.
+                Text(run.rowsText).font(.caption.monospaced())
+                Button(copiedIndex == run.index ? "Đã sao chép" : "Sao chép chữ (theo hàng)") {
+                    // Tên người nhận và số tài khoản: không để sang máy khác qua Universal Clipboard, tự hết hạn sau 2 phút.
+                    UIPasteboard.general.setItems(
+                        [[UTType.plainText.identifier: run.rowsText]],
+                        options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)])
+                    copiedIndex = run.index
+                }
+            }
         }
     }
 
@@ -177,10 +190,12 @@ struct ReceiptOCRLabView: View {
             : "Chế độ \(accurate ? "chính xác" : "nhanh") của máy này không hỗ trợ \(languageChoice.title): sẽ đọc bằng ngôn ngữ mặc định."
     }
 
-    /// nil nếu chưa nhập số đúng. Ảnh không đọc được (Vision báo lỗi, không mở được ảnh) tính là **Sai**, không bỏ khỏi mẫu số: người dùng không có kết quả
-    /// nào từ ảnh đó, và bỏ đi sẽ làm tỉ lệ cao hơn thực tế (45 đúng, 2 sai, 3 lỗi là 45/50, không phải 45/47).
+    /// nil nếu chưa nhập số đúng, hoặc ảnh trùng byte với ảnh trước (không tính hai lần). Ảnh không đọc được (Vision báo lỗi, không mở được ảnh) và ảnh
+    /// Vision đọc xong nhưng không có dòng nào có chữ số đều tính là **Sai**, không bỏ khỏi mẫu số: người dùng không có số tiền nào từ ảnh đó, và bỏ đi sẽ
+    /// làm tỉ lệ cao hơn thực tế (45 đúng, 2 sai, 3 lỗi là 45/50, không phải 45/47).
     private func verdict(of run: OCRRun) -> Bool? {
-        if run.error != nil { return false }
+        if run.duplicateOf != nil { return nil }
+        if run.error != nil || run.tallest == nil { return false }
         let truth = (truths[run.index] ?? "").filter(\.isNumber)
         guard !truth.isEmpty else { return nil }
         return (run.tallest ?? "").filter(\.isNumber) == truth
@@ -188,6 +203,8 @@ struct ReceiptOCRLabView: View {
 
     private var checkedCount: Int { runs.filter { verdict(of: $0) != nil }.count }
     private var correctCount: Int { runs.filter { verdict(of: $0) == true }.count }
+    private var uniqueCount: Int { runs.filter { $0.duplicateOf == nil }.count }
+    private var duplicateCount: Int { runs.count - uniqueCount }
     private var averageMilliseconds: Int {
         let timed = runs.filter { $0.error == nil }
         guard !timed.isEmpty else { return 0 }
@@ -204,16 +221,25 @@ struct ReceiptOCRLabView: View {
         var collected: [OCRRun] = []
         runs = []
         for (offset, item) in picked.enumerated() {
-            collected.append(await Self.read(item: item, index: offset + 1, options: options))
+            var run = await Self.read(item: item, index: offset + 1, options: options)
+            // Cùng một ảnh chọn nhiều lần (bản sao trong thư viện) sẽ tính trùng một kết quả vào tỉ lệ: bỏ khỏi thống kê, nói rõ.
+            if !run.fingerprint.isEmpty, let first = collected.first(where: { $0.fingerprint == run.fingerprint }) {
+                run.duplicateOf = first.duplicateOf ?? first.index
+            }
+            collected.append(run)
             runs = collected
         }
     }
 
     private static func read(item: PhotosPickerItem, index: Int, options: ReadOptions) async -> OCRRun {
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data),
-              let cgImage = image.cgImage
-        else { return OCRRun(index: index, error: "Không mở được ảnh này") }
+        guard let data = try? await item.loadTransferable(type: Data.self) else {
+            return OCRRun(index: index, error: "Không đọc được dữ liệu ảnh này")
+        }
+        // Dấu vân tay để phát hiện ảnh trùng byte; chỉ nằm trong bộ nhớ.
+        let fingerprint = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        guard let image = UIImage(data: data), let cgImage = image.cgImage else {
+            return OCRRun(index: index, error: "Không mở được ảnh này", fingerprint: fingerprint)
+        }
         let orientation = cgOrientation(image.imageOrientation)
         return await Task.detached(priority: .userInitiated) { () -> OCRRun in
             let request = VNRecognizeTextRequest()
@@ -224,7 +250,7 @@ struct ReceiptOCRLabView: View {
             do {
                 try VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:]).perform([request])
             } catch {
-                return OCRRun(index: index, error: "Vision báo lỗi: \(error.localizedDescription)")
+                return OCRRun(index: index, error: "Vision báo lỗi: \(error.localizedDescription)", fingerprint: fingerprint)
             }
             let milliseconds = Date().timeIntervalSince(started) * 1000
             let lines = (request.results ?? []).compactMap { observation in
@@ -233,7 +259,7 @@ struct ReceiptOCRLabView: View {
             let tallest = lines.filter { $0.text.contains(where: \.isNumber) }.max { $0.box.height < $1.box.height }
             let rowsText = groupRows(lines).map { $0.map(\.text).joined(separator: " | ") }.joined(separator: "\n")
             return OCRRun(index: index, summary: "\(cgImage.width)×\(cgImage.height) · \(Int(milliseconds)) ms",
-                          milliseconds: milliseconds, rowsText: rowsText, tallest: tallest?.text, error: nil)
+                          milliseconds: milliseconds, rowsText: rowsText, tallest: tallest?.text, error: nil, fingerprint: fingerprint)
         }.value
     }
 
@@ -282,6 +308,8 @@ private struct OCRRun: Identifiable {
     var rowsText = ""
     var tallest: String?
     var error: String?
+    var fingerprint = ""      // SHA-256 của dữ liệu ảnh, chỉ để phát hiện ảnh chọn trùng
+    var duplicateOf: Int?     // số thứ tự ảnh gốc nếu ảnh này trùng byte với ảnh trước
 
     var title: String { summary.isEmpty ? "Ảnh \(index)" : "Ảnh \(index) · \(summary)" }
 }
