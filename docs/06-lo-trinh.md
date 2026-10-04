@@ -42,15 +42,15 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 - [x] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch; giới hạn Free trong `docs/02`: 2 thói quen
   (thói quen cũ không bị tắt), 2 nút widget. Cần làm trước TestFlight: tạo sản phẩm non-consumable `com.example.xu.pro`
   (đổi theo bundle ID) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
-  Chưa khoá: Apple Pay automation — chủ dự án chốt 2026-10-04: Pro, Free 5 lần mỗi tháng (`docs/02`); chưa làm trong code.
+  Giới hạn Free của Apple Pay automation: **đã quyết** 2026-10-04 (Pro, Free 5 lần mỗi tháng, `docs/02`); **chưa làm trong code** (hiện `LogPaymentIntent` chưa đếm lượt).
   Lời mời Pro một lần sau 7 ngày liền (`docs/07`): thẻ trên Home vào ngày sau chuỗi 7 ngày, ở lại hết ngày đó, chạm mới mở paywall.
 - [x] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect (`docs/09`): màn Cài đặt › Quyền riêng tư (offline,
   vi/en/ja), privacy manifest cho app + widget, bản chính sách `docs/privacy-policy.md`, câu trả lời App Privacy
   "Data Not Collected". Còn làm trước khi nộp: đăng chính sách ở URL công khai, điền tên + email liên hệ, điền App Privacy
   trên App Store Connect — cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật.
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
-  Làm dở (2026-10-03, `docs/11`): Vision macOS 15 có `vi-VT` (chế độ accurate) và đọc tốt ảnh dựng sẵn; **chưa** có số đo trên ảnh thật,
-  chưa kiểm trên iPhone iOS 17/18. Chờ quyết định Free/Pro (xung đột luật 5) và ảnh thật của chủ dự án.
+  Làm dở (`docs/11`): Vision macOS 15 có `vi-VT` (chế độ accurate) và đọc tốt ảnh dựng sẵn. Mốc sơ bộ 2026-10-04: 39 biên lai thật bằng Live Text/Phím tắt, số tiền 39/39 (**không phải** số đo Vision, chưa đủ 50 ảnh/5 ngân hàng).
+  Quyết định Free/Pro đã xong (OCR: Free 5 ảnh mỗi tháng, `docs/02`). **Còn chờ:** đo Vision trên iPhone thật iOS 17/18 với ≥ 50 ảnh, 5 ngân hàng/ví.
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);
   còn sửa chỗ chậm khi có số liệu thật từ TestFlight
 - [ ] #release TestFlight cho 20–50 người dùng thử, form phản hồi
