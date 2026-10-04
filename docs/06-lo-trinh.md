@@ -3,7 +3,7 @@
 Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian ~15–20 giờ/tuần). `scripts/create-issues.sh` tạo sẵn các issue dưới đây trên GitHub.
 
 > `[x]` = đã có code, test XuCore xanh và app build được trên CI (iOS Simulator). **Chưa chạy thử trên máy thật** —
-> mục nào cũng cần thử tay trước TestFlight. Cập nhật 2026-10-02.
+> mục nào cũng cần thử tay trước TestFlight. Cập nhật 2026-10-04.
 
 ## M0 — Nền móng (tuần 1)
 - [ ] #setup Tạo repo, chạy `xcodegen`, build app rỗng lên máy thật
@@ -42,7 +42,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 - [x] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch; giới hạn Free trong `docs/02`: 2 thói quen
   (thói quen cũ không bị tắt), 2 nút widget. Cần làm trước TestFlight: tạo sản phẩm non-consumable `com.example.xu.pro`
   (đổi theo bundle ID) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
-  Giới hạn Free của Apple Pay automation: **đã quyết** 2026-10-04 (Pro, Free 5 lần mỗi tháng, `docs/02`); **chưa làm trong code** (hiện `LogPaymentIntent` chưa đếm lượt).
+  Giới hạn Free của Apple Pay automation: **đã quyết** 2026-10-04 (Pro, Free 5 lần mỗi tháng, `docs/02`) và **đã làm trong code** (`LogPaymentIntent`, `MonthlyQuota`); chưa thử trên máy thật.
   Lời mời Pro một lần sau 7 ngày liền (`docs/07`): thẻ trên Home vào ngày sau chuỗi 7 ngày, ở lại hết ngày đó, chạm mới mở paywall.
 - [x] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect (`docs/09`): màn Cài đặt › Quyền riêng tư (offline,
   vi/en/ja), privacy manifest cho app + widget, bản chính sách `docs/privacy-policy.md`, câu trả lời App Privacy

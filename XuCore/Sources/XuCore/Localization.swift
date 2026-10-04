@@ -120,11 +120,15 @@ public enum L10n: String, CaseIterable, Sendable {
     // Hướng dẫn Apple Pay (automation "Giao dịch" trong app Phím tắt)
     case applePayGuideTitle, applePayGuideIntro, applePayStep1, applePayStep2, applePayStep3, applePayStep4, applePayStep5
     case applePayNotes, openShortcuts
+    case applePayLimitNote, applePayLimitReached, applePayLimitTitle, applePayLimitBody
+    // Khoản Apple Pay chờ ghi (bản Free hết lượt tự ghi)
+    case pendingPaymentsTitle, pendingPaymentsCard, pendingPaymentsOpen, pendingPaymentsIntro
+    case pendingSave, pendingDismiss, pendingEmpty
     // Khoá Face ID (chỉ che việc xem, không bao giờ che ô ghi)
     case faceIDToggle, faceIDFooter, faceIDUnavailable, faceIDUnlock, faceIDLockedHint, faceIDReason
     // Xu Pro
     case proTitle, proSubtitle, proBenefitHabits, proBenefitWidget, proBenefitMonths, proAlwaysFree, proBuy, proRestore
-    case proOwned, proBenefitFaceID
+    case proOwned, proBenefitFaceID, proBenefitApplePay
     case proPriceUnavailable, proHabitLimit, proWidgetNote, proInviteTitle, proInviteBody, proInviteOpen, proInviteLater
     case proPurchaseFailed, proPurchasePending, proRestoreFailed, proNothingToRestore
     // Quyền riêng tư (docs/09) — sửa ở đây thì sửa cả docs/privacy-policy.md
@@ -133,7 +137,7 @@ public enum L10n: String, CaseIterable, Sendable {
     // CSV
     case csvHeader, csvIncome, csvExpense
     // Phím tắt
-    case intentSaved, skippedZero, unsupportedCurrency
+    case intentSaved, intentSavedAllowance, skippedZero, unsupportedCurrency
     // Widget
     case widgetChipsDescription, widgetTodayLine, logSomethingElse, widgetTodayDescription, widgetInline, tapToLog
 
@@ -470,6 +474,46 @@ public enum L10n: String, CaseIterable, Sendable {
                 ja: "ウォレットに追加したカードのみ対象です。ショートカットAppの項目名はiOSのバージョンによって少し異なる場合があります。金額は取引の通貨(ドンまたは円)で記録し、通貨が渡されない場合は{0}で記録します。一覧からいつでも修正できます。")
         case .openShortcuts:
             LocalizedText(vi: "Mở app Phím tắt", en: "Open Shortcuts", ja: "ショートカットAppを開く")
+        case .applePayLimitNote:
+            // {0} số lần tự ghi miễn phí mỗi tháng (ProPlan.freeApplePayLogsPerMonth)
+            LocalizedText(
+                vi: "Bản miễn phí tự ghi tối đa {0} lần mỗi tháng. Hết lượt thì Xu không tự ghi nữa mà giữ khoản mới trong app để bạn ghi sau bằng một chạm; ghi tay luôn không giới hạn. Xu Pro tự ghi không giới hạn.",
+                en: "The free version auto-logs up to {0} payments a month. After that Xu stops auto-logging and keeps new payments in the app for you to add with a tap; adding by hand is always unlimited. Xu Pro auto-logs without a limit.",
+                ja: "無料版の自動記録は月{0}回までです。使い切ると自動記録はせず、新しい支払いはアプリ内に保管され、1回のタップで記録できます(手入力はいつでも無制限)。Xu Proなら自動記録は無制限です。")
+        case .applePayLimitReached:
+            // {0} số tiền (kèm người bán nếu có) · {1} số lần tự ghi miễn phí mỗi tháng
+            LocalizedText(
+                vi: "Chưa tự ghi {0}: bản miễn phí tự ghi {1} lần mỗi tháng và tháng này đã dùng hết. Xu giữ khoản này trong app để bạn ghi sau, hoặc dùng Xu Pro để tự ghi không giới hạn.",
+                en: "Didn't auto-log {0}: the free version auto-logs {1} payments a month and this month's are used up. Xu kept it in the app so you can add it later, or get Xu Pro to auto-log without a limit.",
+                ja: "{0}は自動記録していません。無料版の自動記録は月{1}回までで、今月分は使い切りました。この支払いはアプリ内に保管しているので、あとから記録できます。Xu Proなら無制限に自動記録できます。")
+        case .pendingPaymentsTitle:
+            LocalizedText(vi: "Apple Pay chưa được tự ghi", en: "Apple Pay not auto-logged", ja: "自動記録されていないApple Pay")
+        case .pendingPaymentsCard:
+            // {0} số khoản đang chờ ghi
+            LocalizedText(vi: "Khoản Apple Pay chưa được tự ghi: {0}",
+                          en: "Apple Pay payments not auto-logged: {0}",
+                          ja: "自動記録されていないApple Payの支払い: {0}件")
+        case .pendingPaymentsOpen:
+            LocalizedText(vi: "Xem và ghi", en: "Review", ja: "確認する")
+        case .pendingPaymentsIntro:
+            LocalizedText(
+                vi: "Tháng này bản miễn phí đã dùng hết lượt tự ghi Apple Pay, nên Xu giữ các khoản này ở đây, chỉ trên máy bạn. Ghi từng khoản bằng một chạm, hoặc bỏ nếu không cần. Xu Pro tự ghi không giới hạn.",
+                en: "This month's free Apple Pay auto-logs are used up, so Xu keeps these payments here, only on your phone. Add each one with a tap, or dismiss it. Xu Pro auto-logs without a limit.",
+                ja: "今月の無料のApple Pay自動記録は使い切ったため、これらの支払いはこの端末の中だけに保管しています。1回のタップで記録するか、不要なら削除してください。Xu Proなら自動記録は無制限です。")
+        case .pendingSave:
+            LocalizedText(vi: "Ghi", en: "Add", ja: "記録")
+        case .pendingDismiss:
+            LocalizedText(vi: "Bỏ", en: "Dismiss", ja: "削除")
+        case .pendingEmpty:
+            LocalizedText(vi: "Không còn khoản nào chờ ghi.", en: "Nothing is waiting.", ja: "待っている支払いはありません。")
+        case .applePayLimitTitle:
+            LocalizedText(vi: "Xu chưa tự ghi một khoản Apple Pay", en: "Xu didn't log an Apple Pay payment",
+                          ja: "Apple Payの支払いを記録していません")
+        case .applePayLimitBody:
+            // Không nêu số tiền hay người bán: thông báo hiện cả trên màn hình khoá.
+            LocalizedText(vi: "Tháng này đã dùng hết lượt tự ghi miễn phí. Mở Xu để xem khoản chưa ghi.",
+                          en: "This month's free auto-logs are used up. Open Xu to see the payment that wasn't logged.",
+                          ja: "今月の無料の自動記録は使い切りました。Xuを開いて、記録されていない支払いを確認できます。")
 
         case .faceIDToggle:
             LocalizedText(vi: "Khóa bằng Face ID", en: "Lock with Face ID", ja: "Face IDでロック")
@@ -514,10 +558,15 @@ public enum L10n: String, CaseIterable, Sendable {
             LocalizedText(vi: "Khoá phần xem bằng Face ID (tắt sẵn; ô ghi không bao giờ bị khoá)",
                           en: "Lock viewing with Face ID (off by default; the spending box is never locked)",
                           ja: "Face IDで閲覧をロック(初期はオフ。記録欄はロックされません)")
+        case .proBenefitApplePay:
+            // {0} số lần tự ghi miễn phí mỗi tháng
+            LocalizedText(vi: "Tự ghi Apple Pay không giới hạn (bản miễn phí: {0} lần mỗi tháng)",
+                          en: "Unlimited Apple Pay auto-logging (free: {0} a month)",
+                          ja: "Apple Payの自動記録が無制限(無料版: 月{0}回)")
         case .proAlwaysFree:
-            LocalizedText(vi: "Ghi chép, khoản quen trong app, Phím tắt và xuất CSV luôn miễn phí.",
-                          en: "Logging, quick picks in the app, Shortcuts and CSV export are always free.",
-                          ja: "記録、アプリ内のいつもの、ショートカット、CSV書き出しはずっと無料です。")
+            LocalizedText(vi: "Ghi chép, khoản quen trong app, lệnh Phím tắt \"Ghi chi tiêu\" và xuất CSV luôn miễn phí.",
+                          en: "Logging, quick picks in the app, the \"Log expense\" Shortcuts action and CSV export are always free.",
+                          ja: "記録、アプリ内のいつもの、ショートカットの「支出を記録」、CSV書き出しはずっと無料です。")
         case .proBuy:
             // {0} giá do App Store trả về
             LocalizedText(vi: "Mua {0}", en: "Buy for {0}", ja: "{0}で購入")
@@ -574,9 +623,9 @@ public enum L10n: String, CaseIterable, Sendable {
                           ja: "データはこのiPhoneの中にあります。")
         case .privacyOnDevice:
             LocalizedText(
-                vi: "Các khoản bạn ghi (cả câu gốc bạn gõ), khoản quen, thói quen, cài đặt và thời gian ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị. Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này đi đâu.",
-                en: "Your entries (including the text you typed), quick picks, habits, settings and entry times are stored on this device; Xu's widgets read the parts they display. Xu has no server, needs no account and doesn't send this data anywhere.",
-                ja: "記録(入力した文そのものを含む)、いつもの、習慣、設定、記録にかかった時間はすべてこの端末に保存されます。Xuのウィジェットは表示に必要な部分だけを読み取ります。Xuにはサーバーがなく、アカウントも不要で、これらのデータをどこにも送信しません。")
+                vi: "Các khoản bạn ghi (cả câu gốc bạn gõ), khoản quen, thói quen, cài đặt, thời gian ghi và các khoản Apple Pay đang chờ bạn ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị. Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này đi đâu.",
+                en: "Your entries (including the text you typed), quick picks, habits, settings, entry times and any Apple Pay payments waiting for you to add them are stored on this device; Xu's widgets read the parts they display. Xu has no server, needs no account and doesn't send this data anywhere.",
+                ja: "記録(入力した文そのものを含む)、いつもの、習慣、設定、記録にかかった時間、記録待ちのApple Payの支払いはすべてこの端末に保存されます。Xuのウィジェットは表示に必要な部分だけを読み取ります。Xuにはサーバーがなく、アカウントも不要で、これらのデータをどこにも送信しません。")
         case .privacyNoTracking:
             LocalizedText(vi: "Không quảng cáo, không theo dõi, không công cụ phân tích.", en: "No ads, no tracking, no analytics.",
                           ja: "広告、トラッキング、アクセス解析はありません。")
@@ -591,9 +640,9 @@ public enum L10n: String, CaseIterable, Sendable {
                 en: "Shortcuts and Apple Pay automations you set up pass Xu only the sentence you typed, or the amount (with its currency) and merchant name, on the device.",
                 ja: "ご自身で設定したショートカットやApple Payのオートメーションは、入力した文、または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。")
         case .privacyNotifications:
-            LocalizedText(vi: "Nhắc chốt ngày là thông báo đặt lịch ngay trên máy, không qua máy chủ nào.",
-                          en: "The evening reminder is a notification scheduled on the device, not sent from a server.",
-                          ja: "夜の締めリマインダーは端末内で予約される通知で、サーバーを経由しません。")
+            LocalizedText(vi: "Thông báo của Xu (nhắc chốt ngày buổi tối, và báo khi một khoản Apple Pay chưa được tự ghi vì hết lượt miễn phí) đều tạo ngay trên máy, không qua máy chủ nào.",
+                          en: "Xu's notifications (the evening reminder, and a heads-up when an Apple Pay payment wasn't auto-logged because the free uses ran out) are created on the device, not sent from a server.",
+                          ja: "Xuの通知(夜の締めリマインダー、および無料の自動記録を使い切ってApple Payの支払いを自動記録できなかったときのお知らせ)は端末内で作成され、サーバーを経由しません。")
         case .privacyExport:
             LocalizedText(vi: "Xuất CSV bất cứ lúc nào, miễn phí. Tệp đi đâu là do bạn chọn trong bảng chia sẻ.",
                           en: "Export CSV any time, for free. You choose where the file goes in the share sheet.",
@@ -604,7 +653,7 @@ public enum L10n: String, CaseIterable, Sendable {
                 en: "Delete any entry from the list. Deleting the app removes Xu's data from this device. If you back up your iPhone (to iCloud or a computer), Xu's data may be included in that backup like any other app's.",
                 ja: "記録は一覧からいつでも削除できます。アプリを削除すると、この端末からXuのデータが消えます。iPhoneのバックアップ(iCloudまたはコンピュータ)を有効にしている場合、ほかのアプリと同様にXuのデータも含まれることがあります。")
         case .privacyUpdated:
-            LocalizedText(vi: "Cập nhật: 02/10/2026", en: "Updated: October 2, 2026", ja: "更新日: 2026年10月2日")
+            LocalizedText(vi: "Cập nhật: 04/10/2026", en: "Updated: October 4, 2026", ja: "更新日: 2026年10月4日")
 
         case .csvHeader:
             // ngày (ngày lịch như trong app) … thời điểm ghi (ISO 8601, kèm lệch múi giờ của máy lúc xuất)
@@ -619,6 +668,11 @@ public enum L10n: String, CaseIterable, Sendable {
         case .intentSaved:
             // {0} số tiền · {1} emoji + danh mục hoặc người bán
             LocalizedText(vi: "Đã ghi {0} · {1}", en: "Logged {0} · {1}", ja: "{0} を記録しました・{1}")
+        case .intentSavedAllowance:
+            // {0} số tiền · {1} emoji + người bán · {2} số lần tự ghi miễn phí còn lại trong tháng
+            LocalizedText(vi: "Đã ghi {0} · {1}. Còn {2} lần tự ghi miễn phí tháng này.",
+                          en: "Logged {0} · {1}. {2} free auto-logs left this month.",
+                          ja: "{0} を記録しました・{1}。今月の無料の自動記録はあと{2}回です。")
         case .skippedZero:
             LocalizedText(vi: "Bỏ qua giao dịch 0 đồng", en: "Skipped a zero-amount transaction",
                           ja: "金額0の取引はスキップしました")

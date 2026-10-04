@@ -4,7 +4,7 @@
 > Trước khi đăng: điền tên nhà phát triển và email liên hệ (`[…]`), kiểm tra lại theo `docs/09-quyen-rieng-tu.md`
 > (cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật). Nội dung phải khớp màn Cài đặt › Quyền riêng tư trong app.
 
-Cập nhật: 02/10/2026 · Updated: October 2, 2026 · 更新日: 2026年10月2日
+Cập nhật: 04/10/2026 · Updated: October 4, 2026 · 更新日: 2026年10月4日
 
 ---
 
@@ -13,7 +13,7 @@ Cập nhật: 02/10/2026 · Updated: October 2, 2026 · 更新日: 2026年10月2
 Xu là app ghi chi tiêu trên iPhone do [tên nhà phát triển — cần điền] làm. Tóm gọn: **dữ liệu của bạn nằm trên iPhone của bạn.**
 
 **Xu lưu gì, ở đâu.** Các khoản bạn ghi (số tiền, loại tiền, danh mục, ghi chú, ngày, cả câu gốc bạn gõ), khoản quen,
-thói quen, cài đặt và thời gian bạn ghi mỗi khoản đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị
+thói quen, cài đặt, thời gian bạn ghi mỗi khoản và các khoản Apple Pay đang chờ bạn ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị
 (như các khoản đã ghi, khoản quen, ngôn ngữ).
 Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này cho chúng tôi hay bất kỳ ai.
 
@@ -26,7 +26,7 @@ Xu không nhận thông tin thẻ hay tài khoản Apple của bạn. Việc App
 **Phím tắt và Apple Pay.** Nếu bạn tự cài Phím tắt hoặc tự động hoá Apple Pay, iOS chỉ chuyển cho Xu câu bạn nhập,
 hoặc số tiền (kèm loại tiền) và tên cửa hàng, ngay trên máy.
 
-**Thông báo.** Nhắc chốt ngày buổi tối là thông báo đặt lịch ngay trên máy, không gửi từ máy chủ.
+**Thông báo.** Nhắc chốt ngày buổi tối, và thông báo báo một khoản Apple Pay chưa được tự ghi vì hết lượt miễn phí trong tháng, đều được tạo ngay trên máy, không gửi từ máy chủ.
 
 **Xuất và xoá.** Bạn xuất CSV bất cứ lúc nào, miễn phí; tệp gửi đi đâu là do bạn chọn. Bạn xoá từng khoản trong app;
 xoá app là xoá dữ liệu Xu khỏi máy. Nếu bạn bật sao lưu iPhone (iCloud hoặc máy tính), dữ liệu Xu có thể nằm trong
@@ -46,7 +46,7 @@ sách này và thông tin trên App Store trước khi phát hành tính năng �
 Xu is an expense-logging app for iPhone made by [developer name — to fill in]. In short: **your data stays on your iPhone.**
 
 **What Xu stores, and where.** Your entries (amount, currency, category, note, date, and the text you typed), quick picks,
-habits, settings and how long each entry took are stored on this device; Xu's widgets read the parts they display
+habits, settings, how long each entry took and any Apple Pay payments waiting for you to add them are stored on this device; Xu's widgets read the parts they display
 (such as your entries, quick picks and language).
 Xu has no server, needs no account and doesn't send this data to us or anyone else.
 
@@ -59,7 +59,7 @@ for the displayed price; Xu never receives your card or Apple Account details. A
 **Shortcuts and Apple Pay.** If you set up a shortcut or an Apple Pay automation, iOS passes Xu only the sentence you typed,
 or the amount (with its currency) and merchant name, on the device.
 
-**Notifications.** The evening reminder is a notification scheduled on the device, not sent from a server.
+**Notifications.** The evening reminder, and the heads-up when an Apple Pay payment wasn't auto-logged because the month's free uses ran out, are created on the device, not sent from a server.
 
 **Export and deletion.** Export CSV any time, for free; you choose where the file goes. Delete any entry in the app;
 deleting the app removes Xu's data from the device. If you back up your iPhone (to iCloud or a computer), Xu's data may be
@@ -79,7 +79,7 @@ and the App Store information before releasing it.
 Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録アプリです。要点: **データはあなたのiPhoneの中にあります。**
 
 **保存するデータと場所。** 記録(金額、通貨、カテゴリ、メモ、日付、入力した文そのもの)、いつもの、習慣、設定、
-記録にかかった時間はこの端末内に保存されます。Xuのウィジェットは表示に必要な部分(記録、いつもの、言語など)だけを読み取ります。Xuにはサーバーがなく、
+記録にかかった時間、記録待ちのApple Payの支払いはこの端末内に保存されます。Xuのウィジェットは表示に必要な部分(記録、いつもの、言語など)だけを読み取ります。Xuにはサーバーがなく、
 アカウントも不要で、これらのデータを当方や第三者に送信しません。
 
 **広告・トラッキング・アクセス解析なし。** 広告識別子を使わず、他社のアプリやWebサイトをまたいだトラッキングも行いません。
@@ -91,7 +91,7 @@ Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録ア�
 **ショートカットとApple Pay。** ご自身でショートカットやApple Payのオートメーションを設定した場合、iOSは入力した文、
 または金額(通貨を含む)と店舗名だけを端末内でXuに渡します。
 
-**通知。** 夜の締めリマインダーは端末内で予約される通知で、サーバーから送られるものではありません。
+**通知。** 夜の締めリマインダーと、無料の自動記録を使い切ってApple Payの支払いを自動記録できなかったときのお知らせは、端末内で作成される通知で、サーバーから送られるものではありません。
 
 **書き出しと削除。** CSVはいつでも無料で書き出せ、送り先はあなたが選びます。記録はアプリ内で個別に削除でき、
 アプリを削除すると端末からXuのデータが消えます。iPhoneのバックアップ(iCloudまたはコンピュータ)を有効にしている場合、

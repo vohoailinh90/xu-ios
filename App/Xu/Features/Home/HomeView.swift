@@ -16,6 +16,8 @@ struct HomeView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @AppStorage(AppSettings.Key.proInviteDay, store: AppSettings.defaults) private var proInviteDay = ""
     @AppStorage(AppSettings.Key.proInviteDismissed, store: AppSettings.defaults) private var proInviteDismissed = false
+    /// Đổi mỗi khi danh sách khoản Apple Pay chờ ghi đổi (tác vụ nền thêm, danh sách xoá): Home đọc lại số khoản.
+    @AppStorage(AppSettings.Key.pendingPaymentsRevision, store: AppSettings.defaults) private var pendingPaymentsRevision = ""
 
     private let lock = AppLock.shared
 
@@ -29,6 +31,7 @@ struct HomeView: View {
     @State private var exportFile: ExportFile?
     @State private var editing: TransactionRecord?
     @State private var showPaywall = false
+    @State private var showPendingPayments = false
     /// Ô nhập nhanh còn chữ chưa lưu.
     @State private var hasDraft = false
 
@@ -60,6 +63,13 @@ struct HomeView: View {
                             // Ghi ngày hiện lần đầu: thẻ ở lại hết hôm nay, sang ngày khác là thôi (chỉ mời một lần).
                             if proInviteDay.isEmpty { proInviteDay = DayKey(Date(), calendar: .current).description }
                         }
+                    }
+                }
+                // Khoản Apple Pay bản Free không tự ghi vì hết lượt: có số tiền nên nằm sau khoá Face ID. Không phải đường ghi.
+                let pendingCount = pendingPaymentCount
+                if !covered && pendingCount > 0 {
+                    Section {
+                        PendingPaymentsCard(count: pendingCount, language: language) { showPendingPayments = true }
                     }
                 }
                 if !chips.isEmpty {
@@ -149,6 +159,7 @@ struct HomeView: View {
             .sheet(isPresented: $showSettings) { SettingsView().faceIDGate() }
             .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft).faceIDGate() }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showPendingPayments) { PendingPaymentsView().faceIDGate() }
             .sheet(isPresented: $showMonth) { MonthView().faceIDGate() }
             .sheet(isPresented: $showWeek) { WeekView().faceIDGate() }
             .sheet(isPresented: $showChips) {
@@ -202,6 +213,7 @@ struct HomeView: View {
         showChips = false
         showMonth = false
         showWeek = false
+        showPendingPayments = false
         exportFile = nil
     }
 
@@ -225,6 +237,11 @@ struct HomeView: View {
             usedDays: Set(records.map { $0.day(in: cal) }).union(closures.map(\.dayKey)),
             today: DayKey(Date(), calendar: cal), shownOn: DayKey(proInviteDay), dismissed: proInviteDismissed,
             isPro: ProStore.shared.isPro, calendar: cal)
+    }
+
+    private var pendingPaymentCount: Int {
+        _ = pendingPaymentsRevision   // phụ thuộc rõ vào mã đổi, để Home đọc lại khi danh sách đổi
+        return AppSettings.pendingPayments.count
     }
 
     private var weeklySummary: WeeklySummary {

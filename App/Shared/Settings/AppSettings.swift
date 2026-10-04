@@ -29,8 +29,13 @@ enum AppSettings {
         static let reviewRequested = "reviewRequested"
         /// Khoá Face ID che phần xem (docs/02, S4). Tắt sẵn; ô ghi không bao giờ bị khoá.
         static let faceIDLock = "faceIDLock"
-        /// `ReceiptQuota` dạng JSON — số ảnh biên lai đã đọc trong tháng (bản Free, docs/02), chỉ trên máy.
+        /// `MonthlyQuota` dạng JSON — số ảnh biên lai đã đọc trong tháng (bản Free, docs/02), chỉ trên máy.
         static let receiptQuota = "receiptQuota"
+        /// `MonthlyQuota` dạng JSON — số khoản Apple Pay đã tự ghi trong tháng (bản Free, docs/02), chỉ trên máy.
+        static let applePayQuota = "applePayQuota"
+        /// Mã ngẫu nhiên đổi mỗi khi danh sách khoản Apple Pay chờ ghi đổi (thêm/xoá), để thẻ ở Home và danh sách đang mở đọc lại. Không chứa dữ liệu
+        /// người dùng; chính các khoản nằm ở khoá riêng của từng khoản (`PendingPayment.storageKey`).
+        static let pendingPaymentsRevision = "pendingPaymentsRevision"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -52,9 +57,39 @@ enum AppSettings {
         set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.entryTimings) }
     }
 
-    static var receiptQuota: ReceiptQuota? {
-        get { defaults.data(forKey: Key.receiptQuota).flatMap { try? JSONDecoder().decode(ReceiptQuota.self, from: $0) } }
+    static var receiptQuota: MonthlyQuota? {
+        get { defaults.data(forKey: Key.receiptQuota).flatMap { try? JSONDecoder().decode(MonthlyQuota.self, from: $0) } }
         set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.receiptQuota) }
+    }
+
+    static var applePayQuota: MonthlyQuota? {
+        get { defaults.data(forKey: Key.applePayQuota).flatMap { try? JSONDecoder().decode(MonthlyQuota.self, from: $0) } }
+        set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.applePayQuota) }
+    }
+
+    /// Khoản Apple Pay chưa được tự ghi vì bản Free hết lượt, giữ để người dùng ghi sau (docs/02), chỉ trên máy. Mỗi khoản một khoá theo `id`:
+    /// thêm và xoá chỉ đụng đúng khoản đó, nên tác vụ nền (thêm) và danh sách trong app (xoá) chạy cùng lúc không đè nhau. Đọc cả khối rồi ghi
+    /// lại cả khối thì có.
+    static var pendingPayments: PendingPayments { PendingPayments(storedValues: defaults.dictionaryRepresentation()) }
+
+    static func addPendingPayment(_ payment: PendingPayment) throws {
+        let data = try payment.encoded()
+        defaults.set(data, forKey: payment.storageKey)
+        notifyPendingPaymentsChanged()
+    }
+
+    static func removePendingPayment(_ payment: PendingPayment) {
+        defaults.removeObject(forKey: payment.storageKey)
+        notifyPendingPaymentsChanged()
+    }
+
+    static func hasPendingPayment(_ payment: PendingPayment) -> Bool {
+        defaults.object(forKey: payment.storageKey) != nil
+    }
+
+    /// Ghi mù một mã mới, không đọc giá trị cũ, nên không có đọc-sửa-ghi.
+    private static func notifyPendingPaymentsChanged() {
+        defaults.set(UUID().uuidString, forKey: Key.pendingPaymentsRevision)
     }
 
     static var faceIDLockEnabled: Bool { defaults.bool(forKey: Key.faceIDLock) }

@@ -10,8 +10,9 @@ import WidgetKit
 final class ProStore {
     static let shared = ProStore()
 
-    /// Phải trùng với sản phẩm non-consumable tạo trong App Store Connect — cần kiểm tra khi đổi bundle ID.
-    static let productID = "com.example.xu.pro"
+    /// Phải trùng với sản phẩm non-consumable tạo trong App Store Connect — cần kiểm tra khi đổi bundle ID. Định nghĩa ở `ProEntitlement`
+    /// (dùng chung với App Intents chạy nền, nơi không có `ProStore`).
+    static let productID = ProEntitlement.productID
 
     private(set) var product: Product?
     private(set) var isPro: Bool = AppSettings.isPro

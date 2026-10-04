@@ -24,6 +24,7 @@ struct PaywallView: View {
                     Label(language.t(.proBenefitWidget, "\(ProPlan.widgetChipCapacity)", "\(ProPlan.freeWidgetChipLimit)"),
                           systemImage: "square.grid.2x2")
                     Label(language.t(.proBenefitMonths), systemImage: "chart.bar.xaxis")
+                    Label(language.t(.proBenefitApplePay, "\(ProPlan.freeApplePayLogsPerMonth)"), systemImage: "creditcard")
                     Label(language.t(.proBenefitFaceID), systemImage: "faceid")
                 } footer: {
                     Text(language.t(.proAlwaysFree))
