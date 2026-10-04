@@ -17,6 +17,19 @@ Trả lời bằng tiếng Việt. Đọc `README.md` và `docs/01-tam-nhin-san-
 8. Ý tưởng tính năng mới và chấm điểm làm ở repo
    [App-idea-lab](https://github.com/vohoailinh90/App-idea-lab) (`products/xu/`), không làm ở đây.
 
+## Quy trình PR (đồng bộ với `CLAUDE.md`)
+
+Claude comment `@codex review` lên PR kèm một dòng nói cần xem gì, rồi sửa tới khi Codex không còn finding ở commit mới nhất.
+Với Codex: mọi đề xuất bạn để lại, kể cả nhỏ, là một finding. Chỉ báo "không có finding" khi commit mới nhất thật sự không còn gì cần sửa, vì Claude được tự merge dựa vào kết quả đó.
+
+Claude được **tự merge** PR (chủ dự án cho phép 2026-10-04, áp dụng cho mọi PR) khi đủ cả 4 điều kiện:
+1. Codex đã review **commit mới nhất** và không còn finding (không có đề xuất, hoặc chỉ thả 👍). Sau mỗi lần push sửa, Claude comment lại `@codex review` và chờ kết quả cho commit đó.
+2. Mọi thread review đã được trả lời; thread đã sửa thì resolve. Thread đang chờ chủ dự án quyết (ví dụ cách hiểu một luật) thì **không** tự đóng, và PR chưa tự merge cho tới khi có câu trả lời.
+3. Không xung đột với `main`; CI xanh (XuCore tests, App build).
+4. Test trong repo chạy qua (CI macOS chạy `swift test`).
+
+Ngoại lệ: PR sửa chính các file luật này (`CLAUDE.md`, `AGENTS.md`) để chủ dự án đọc trước khi merge.
+
 ## Khi review PR
 
 Kiểm tra thay đổi có vi phạm 4 nguyên tắc hoặc mục "Không làm" không, và có làm chậm đường ghi chi tiêu không.
