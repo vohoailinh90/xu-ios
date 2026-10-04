@@ -28,7 +28,7 @@ Claude được **tự merge** PR (chủ dự án cho phép 2026-10-04, áp dụ
 3. Không xung đột với `main`; CI xanh (XuCore tests, App build).
 4. Test trong repo chạy qua (CI macOS chạy `swift test`).
 
-Ngoại lệ: PR sửa chính các file luật này (`CLAUDE.md`, `AGENTS.md`) để chủ dự án đọc trước khi merge.
+Không có ngoại lệ theo loại file: PR sửa cả `CLAUDE.md`/`AGENTS.md` cũng tự merge khi đủ 4 điều kiện (chủ dự án xác nhận 2026-10-04).
 
 ## Khi review PR
 
