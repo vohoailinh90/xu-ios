@@ -1,7 +1,7 @@
 import Foundation
 
 /// Chọn số tiền trong chữ đọc được từ biên lai/thông báo chuyển khoản (docs/11). Bản Swift của `findAmounts` + `pick` trong
-/// `prototypes/cham-bien-lai.html` — **cùng quy tắc**, để số đo của trang chấm áp được vào app. Quy tắc đó mới được thử trên ít biên lai thật
+/// `prototypes/cham-bien-lai.html` — **cùng quy tắc chọn**, để số đo của trang chấm tham khảo được cho app. Quy tắc đó mới được thử trên ít biên lai thật
 /// (chưa đủ 50 ảnh/5 ngân hàng), chưa kết luận.
 ///
 /// Thuần chữ, không phụ thuộc Vision: dùng được cho cả đường đọc ảnh lẫn đường dán nội dung thông báo ngân hàng (hướng dự phòng ở docs/11).
@@ -11,6 +11,10 @@ import Foundation
 ///   số trần không đơn vị (số tài khoản, mã giao dịch, năm) bị bỏ.
 /// - Điểm: đơn vị `vnd`/`đ` +3, dấu `+`/`-` ngay trước +2, nhãn "số tiền/amount/tổng tiền" ở dòng trước hoặc dòng hiện tại +4,
 ///   nhãn "số dư/balance/phí/fee/hạn mức" ở hai dòng đó −6. Chọn điểm cao nhất, hoà thì chọn số lớn hơn (`Reading.isAmbiguous` báo hoà).
+/// - Cửa sổ ngữ cảnh đếm theo đơn vị UTF-16 và tách dòng theo `\n` như JavaScript của trang (emoji, `\r\n` không làm lệch), nên với chữ Latin/ASCII thường gặp
+///   trên biên lai hai bên chọn như nhau.
+/// - **Khác trang chấm có chủ ý** (`TextFolding` dùng chung với phần còn lại của XuCore): chữ/số toàn khổ được đưa về nửa khổ
+///   (`３.０００.０００ ＶＮＤ` có ứng viên, trang thì không); số vượt `Int64` bị bỏ (trang vẫn nhận dạng số thực). Ký tự lạ khác chưa kiểm hết.
 /// - Giới hạn đã biết (giữ nguyên để khớp trang chấm): nhãn tìm theo chuỗi con nên "phi" trong từ khác cũng trừ điểm, nhãn trừ điểm ở dòng trên còn
 ///   ảnh hưởng số ở dòng dưới ("Phí 11.000 VND" rồi "Số tiền 250.000 VND" giảm điểm số sau), số trần không đơn vị như `52000` bị bỏ,
 ///   chữ `₫` và `dong` không tính là đơn vị.
@@ -18,7 +22,7 @@ public enum ReceiptAmountReader {
     public struct Candidate: Equatable, Sendable {
         public let value: Int64
         public let score: Int
-        /// Vị trí (theo ký tự) của số trong chuỗi đã gấp, cùng độ dài chuỗi gốc.
+        /// Vị trí đầu của khớp (kể cả dấu và khoảng trắng đứng trước số) trong chuỗi đã gấp, tính theo đơn vị UTF-16 như `idx` của trang chấm.
         public let offset: Int
         public let hasUnit: Bool
     }
@@ -39,31 +43,42 @@ public enum ReceiptAmountReader {
 
     /// Mọi số có dạng số tiền, theo thứ tự xuất hiện.
     public static func candidates(in text: String) -> [Candidate] {
+        // Làm việc trên đơn vị UTF-16 (cùng hệ chỉ mục của NSRange và của `String.slice` trong JavaScript), không đổi sang `String.Index`:
+        // khớp có thể bắt đầu giữa "\r\n" (một `Character` của Swift) hoặc cắt giữa emoji.
         let folded = TextFolding.fold(text)
+        let units = Array(folded.utf16)
         var found: [Candidate] = []
-        for match in regex.matches(in: folded, range: NSRange(folded.startIndex..., in: folded)) {
-            guard let whole = Range(match.range, in: folded),
-                  let numberRange = Range(match.range(at: 2), in: folded) else { continue }
+        for match in regex.matches(in: folded, range: NSRange(location: 0, length: units.count)) {
+            let raw = string(units, match.range(at: 2))
             let hasUnit = match.range(at: 3).location != NSNotFound
-            let raw = String(folded[numberRange])
             let hasSeparator = raw.contains { $0 == "." || $0 == "," }
             if !hasUnit && !hasSeparator { continue }
             guard let value = parse(raw), value > 0 else { continue }
 
-            let sign = Range(match.range(at: 1), in: folded).map { String(folded[$0]) } ?? ""
-            let offset = folded.distance(from: folded.startIndex, to: whole.lowerBound)
-            let contextStart = folded.index(whole.lowerBound, offsetBy: -min(contextLength, offset))
-            let lines = folded[contextStart..<whole.lowerBound].split(separator: Character("\n"), omittingEmptySubsequences: false)
-            let context = lines.suffix(2).joined(separator: " ")
+            let sign = string(units, match.range(at: 1))
+            let start = match.range.location
+            // 60 đơn vị UTF-16 trước số, lấy hai dòng cuối, nối bằng một dấu cách.
+            let lines = units[max(0, start - contextLength)..<start].split(separator: 10, omittingEmptySubsequences: false)
+            var window: [UInt16] = []
+            for (index, line) in lines.suffix(2).enumerated() {
+                if index > 0 { window.append(32) }
+                window.append(contentsOf: line)
+            }
+            let context = String(decoding: window, as: UTF16.self)
 
             var score = 0
             if hasUnit { score += 3 }
             if sign == "-" || sign == "+" { score += 2 }
             if amountLabels.contains(where: { context.contains($0) }) { score += 4 }
             if notAmountLabels.contains(where: { context.contains($0) }) { score -= 6 }
-            found.append(Candidate(value: value, score: score, offset: offset, hasUnit: hasUnit))
+            found.append(Candidate(value: value, score: score, offset: start, hasUnit: hasUnit))
         }
         return found
+    }
+
+    private static func string(_ units: [UInt16], _ range: NSRange) -> String {
+        guard range.location != NSNotFound else { return "" }
+        return String(decoding: units[range.location..<range.location + range.length], as: UTF16.self)
     }
 
     /// Số được chọn, hoặc nil khi không có số nào có dạng số tiền.
