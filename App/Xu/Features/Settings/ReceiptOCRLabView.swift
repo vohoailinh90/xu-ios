@@ -106,7 +106,8 @@ struct ReceiptOCRLabView: View {
                             Label(verdict ? "Đúng" : "Sai", systemImage: verdict ? "checkmark.circle.fill" : "xmark.circle.fill")
                                 .foregroundStyle(verdict ? .green : .red)
                         }
-                        Text(run.rowsText).font(.caption.monospaced()).textSelection(.enabled)
+                        // Không `.textSelection(.enabled)`: thao tác Copy mặc định ghi vào bảng nhớ chung, không `localOnly`, không hết hạn. Chỉ chép bằng nút dưới.
+                        Text(run.rowsText).font(.caption.monospaced())
                         Button(copiedIndex == run.index ? "Đã sao chép" : "Sao chép chữ (theo hàng)") {
                             // Tên người nhận và số tài khoản: không để sang máy khác qua Universal Clipboard, tự hết hạn sau 2 phút.
                             UIPasteboard.general.setItems(
