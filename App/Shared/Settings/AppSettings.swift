@@ -33,6 +33,8 @@ enum AppSettings {
         static let receiptQuota = "receiptQuota"
         /// `MonthlyQuota` dạng JSON — số khoản Apple Pay đã tự ghi trong tháng (bản Free, docs/02), chỉ trên máy.
         static let applePayQuota = "applePayQuota"
+        /// `PendingPayments` dạng JSON — khoản Apple Pay chưa được tự ghi vì bản Free hết lượt, giữ để người dùng ghi sau (docs/02), chỉ trên máy.
+        static let pendingPayments = "pendingPayments"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -62,6 +64,11 @@ enum AppSettings {
     static var applePayQuota: MonthlyQuota? {
         get { defaults.data(forKey: Key.applePayQuota).flatMap { try? JSONDecoder().decode(MonthlyQuota.self, from: $0) } }
         set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.applePayQuota) }
+    }
+
+    static var pendingPayments: PendingPayments {
+        get { PendingPayments(jsonData: defaults.data(forKey: Key.pendingPayments) ?? Data()) }
+        set { defaults.set(newValue.jsonData, forKey: Key.pendingPayments) }
     }
 
     static var faceIDLockEnabled: Bool { defaults.bool(forKey: Key.faceIDLock) }

@@ -37,8 +37,9 @@ struct LogExpenseIntent: AppIntent {
 /// Luồng automation này cần thử trên máy thật (docs/06).
 ///
 /// Bản Free tự ghi tối đa `ProPlan.freeApplePayLogsPerMonth` khoản mỗi tháng dương lịch, Xu Pro không giới hạn (docs/02, quyết định 2026-10-04).
-/// Chỉ khoản **đã ghi được** mới bị trừ lượt. Hết lượt thì khoản đó không được ghi: nói rõ trong kết quả của tác vụ và gửi thông báo nếu người dùng
-/// đã cho phép thông báo (`ApplePayLimitNotice`), để không ai tưởng khoản đã được ghi. Ghi tay và `LogExpenseIntent` không bao giờ bị đếm.
+/// Chỉ khoản **đã ghi được** mới bị trừ lượt. Hết lượt thì khoản đó không được ghi nhưng cũng **không bị bỏ mất**: Xu giữ lại trên máy
+/// (`PendingPayments`) để hiện ở Home cho người dùng ghi sau, vì automation chạy nền nên lời nhắn của tác vụ và thông báo (`ApplePayLimitNotice`,
+/// chỉ khi đã cho phép thông báo) không được bảo đảm hiện. Ghi tay và `LogExpenseIntent` không bao giờ bị đếm.
 struct LogPaymentIntent: AppIntent {
     static let title: LocalizedStringResource = "Ghi giao dịch thẻ"
     static let description = IntentDescription("Dùng trong Tự động hóa › Giao dịch để tự ghi khi quẹt Apple Pay.")
@@ -68,15 +69,16 @@ struct LogPaymentIntent: AppIntent {
         guard value > 0 else { return .result(dialog: "\(language.t(.skippedZero))") }
 
         let month = MonthKey(DayKey(Date(), calendar: .current))
-        var isPro = AppSettings.isPro
+        // Luôn hỏi StoreKit trước khi đếm hay giới hạn: bản sao `AppSettings.isPro` chỉ cập nhật khi mở app nên có thể cũ — cũ theo hướng
+        // chưa Pro (cài lại máy: người dùng Pro bị đếm/giới hạn nhầm) hay đã hết Pro (hoàn tiền: tự ghi không giới hạn tới lần mở app sau).
+        let isPro = await ProEntitlement.verifyAndCache()
         let limit = ProPlan.freeApplePayLogsPerMonth
         var quota = AppSettings.applePayQuota ?? MonthlyQuota(month: month)
-        if !quota.canUse(limit: limit, isPro: isPro, in: month) {
-            // Hết lượt theo bản sao `isPro`: hỏi lại StoreKit trước khi từ chối, vì bản sao có thể cũ (cài lại máy, chưa mở app) và
-            // người dùng Xu Pro không bao giờ bị giới hạn.
-            isPro = await ProEntitlement.verifyAndCache()
-        }
         guard quota.canUse(limit: limit, isPro: isPro, in: month) else {
+            // Không ghi, nhưng giữ khoản lại trên máy để Home hiện cho người dùng ghi sau: không bao giờ bỏ mất lặng lẽ.
+            var pending = AppSettings.pendingPayments
+            pending.add(PendingPayment(amount: value, currencyCode: currency.code, merchant: merchant, date: Date()))
+            AppSettings.pendingPayments = pending
             let amountText = MoneyFormatter.compact(value, currency: currency, language: language)
             let what = merchant.isEmpty ? amountText : "\(amountText) · \(merchant)"
             await ApplePayLimitNotice.post(language: language)

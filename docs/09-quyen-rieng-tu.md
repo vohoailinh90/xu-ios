@@ -15,6 +15,7 @@ ghi quyết định vào tài liệu này trước, rồi sửa cả ba chỗ: p
 | Dữ liệu | Nơi lưu | Ai đọc | Ra khỏi máy? |
 |---|---|---|---|
 | Giao dịch: số tiền, loại tiền, danh mục, ghi chú, ngày, nguồn ghi, **câu gốc người dùng gõ** (`rawInput`) | SwiftData trong App Group | App, widget, App Intents | Không (trừ khi người dùng tự xuất CSV) |
+| Khoản Apple Pay chưa được tự ghi vì bản Free hết lượt tháng đó (số tiền, loại tiền, người bán, lúc xảy ra; `pendingPayments`, tối đa 200 khoản; xoá khi người dùng ghi hoặc bỏ; docs/02) | UserDefaults của App Group | App, App Intents | Không |
 | Khoản quen, từ khoá học được, thói quen, đánh dấu thói quen, chốt ngày | SwiftData trong App Group | App, widget, App Intents | Không |
 | Ngôn ngữ, nơi chi tiêu, nhắc buổi tối (bật/giờ, ngày đã nhắc), thời gian ghi (`EntryTimingLog`, 200 lần gần nhất), bản sao `isPro`, bộ đếm lượt dùng miễn phí trong tháng (`applePayQuota`: số khoản Apple Pay đã tự ghi; `receiptQuota`: số ảnh biên lai đã đọc, chỉ bản Debug; docs/02), lúc bắt đầu chờ duyệt mua Xu Pro (`proPendingSince`), lời mời Pro đã hiện/đã tắt (`proInviteDay`, `proInviteDismissed`), đã hỏi đánh giá App Store chưa (`reviewRequested`), khoá Face ID bật/tắt (`faceIDLock`, tắt sẵn) | UserDefaults của App Group | App, widget | Không |
 | Ngân sách tháng, "số nhỏ là nghìn" | UserDefaults riêng của app | App | Không |

@@ -13,7 +13,7 @@ Cập nhật: 02/10/2026 · Updated: October 2, 2026 · 更新日: 2026年10月2
 Xu là app ghi chi tiêu trên iPhone do [tên nhà phát triển — cần điền] làm. Tóm gọn: **dữ liệu của bạn nằm trên iPhone của bạn.**
 
 **Xu lưu gì, ở đâu.** Các khoản bạn ghi (số tiền, loại tiền, danh mục, ghi chú, ngày, cả câu gốc bạn gõ), khoản quen,
-thói quen, cài đặt và thời gian bạn ghi mỗi khoản đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị
+thói quen, cài đặt, thời gian bạn ghi mỗi khoản và các khoản Apple Pay đang chờ bạn ghi đều lưu trên máy này; widget của Xu đọc chung phần nó cần hiển thị
 (như các khoản đã ghi, khoản quen, ngôn ngữ).
 Xu không có máy chủ, không cần tài khoản và không gửi những dữ liệu này cho chúng tôi hay bất kỳ ai.
 
@@ -46,7 +46,7 @@ sách này và thông tin trên App Store trước khi phát hành tính năng �
 Xu is an expense-logging app for iPhone made by [developer name — to fill in]. In short: **your data stays on your iPhone.**
 
 **What Xu stores, and where.** Your entries (amount, currency, category, note, date, and the text you typed), quick picks,
-habits, settings and how long each entry took are stored on this device; Xu's widgets read the parts they display
+habits, settings, how long each entry took and any Apple Pay payments waiting for you to add them are stored on this device; Xu's widgets read the parts they display
 (such as your entries, quick picks and language).
 Xu has no server, needs no account and doesn't send this data to us or anyone else.
 
@@ -79,7 +79,7 @@ and the App Store information before releasing it.
 Xuは[開発者名 — 要記入]が提供するiPhone向けの支出記録アプリです。要点: **データはあなたのiPhoneの中にあります。**
 
 **保存するデータと場所。** 記録(金額、通貨、カテゴリ、メモ、日付、入力した文そのもの)、いつもの、習慣、設定、
-記録にかかった時間はこの端末内に保存されます。Xuのウィジェットは表示に必要な部分(記録、いつもの、言語など)だけを読み取ります。Xuにはサーバーがなく、
+記録にかかった時間、記録待ちのApple Payの支払いはこの端末内に保存されます。Xuのウィジェットは表示に必要な部分(記録、いつもの、言語など)だけを読み取ります。Xuにはサーバーがなく、
 アカウントも不要で、これらのデータを当方や第三者に送信しません。
 
 **広告・トラッキング・アクセス解析なし。** 広告識別子を使わず、他社のアプリやWebサイトをまたいだトラッキングも行いません。

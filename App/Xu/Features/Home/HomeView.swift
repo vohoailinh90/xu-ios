@@ -16,6 +16,7 @@ struct HomeView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @AppStorage(AppSettings.Key.proInviteDay, store: AppSettings.defaults) private var proInviteDay = ""
     @AppStorage(AppSettings.Key.proInviteDismissed, store: AppSettings.defaults) private var proInviteDismissed = false
+    @AppStorage(AppSettings.Key.pendingPayments, store: AppSettings.defaults) private var pendingPaymentsData = Data()
 
     private let lock = AppLock.shared
 
@@ -29,6 +30,7 @@ struct HomeView: View {
     @State private var exportFile: ExportFile?
     @State private var editing: TransactionRecord?
     @State private var showPaywall = false
+    @State private var showPendingPayments = false
     /// Ô nhập nhanh còn chữ chưa lưu.
     @State private var hasDraft = false
 
@@ -60,6 +62,12 @@ struct HomeView: View {
                             // Ghi ngày hiện lần đầu: thẻ ở lại hết hôm nay, sang ngày khác là thôi (chỉ mời một lần).
                             if proInviteDay.isEmpty { proInviteDay = DayKey(Date(), calendar: .current).description }
                         }
+                    }
+                }
+                // Khoản Apple Pay bản Free không tự ghi vì hết lượt: có số tiền nên nằm sau khoá Face ID. Không phải đường ghi.
+                if !covered && pendingPaymentCount > 0 {
+                    Section {
+                        PendingPaymentsCard(count: pendingPaymentCount, language: language) { showPendingPayments = true }
                     }
                 }
                 if !chips.isEmpty {
@@ -149,6 +157,7 @@ struct HomeView: View {
             .sheet(isPresented: $showSettings) { SettingsView().faceIDGate() }
             .sheet(isPresented: $showHabits) { HabitsView(canAskForReview: !hasDraft).faceIDGate() }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showPendingPayments) { PendingPaymentsView().faceIDGate() }
             .sheet(isPresented: $showMonth) { MonthView().faceIDGate() }
             .sheet(isPresented: $showWeek) { WeekView().faceIDGate() }
             .sheet(isPresented: $showChips) {
@@ -202,6 +211,7 @@ struct HomeView: View {
         showChips = false
         showMonth = false
         showWeek = false
+        showPendingPayments = false
         exportFile = nil
     }
 
@@ -226,6 +236,8 @@ struct HomeView: View {
             today: DayKey(Date(), calendar: cal), shownOn: DayKey(proInviteDay), dismissed: proInviteDismissed,
             isPro: ProStore.shared.isPro, calendar: cal)
     }
+
+    private var pendingPaymentCount: Int { PendingPayments(jsonData: pendingPaymentsData).count }
 
     private var weeklySummary: WeeklySummary {
         let cal = Calendar.current
