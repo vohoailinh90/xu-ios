@@ -14,17 +14,20 @@
    Bảng [Supported capabilities (iOS)](https://developer.apple.com/help/account/reference/supported-capabilities-ios) của Apple có ba cột: ADP (trả phí),
    ADEP (Enterprise, trả phí) và **Apple Developer** (tài khoản Apple đã đồng ý Thoả thuận nhà phát triển, miễn phí, không phân phối được app).
    Hàng *App groups* có dấu ✓ ở **cả ba cột**, nên theo Apple, **App Group không buộc phải trả phí**. Cũng theo bảng đó, cột miễn phí **không có**
-   In-App Purchase, Push notifications, iCloud và Siri. Với Xu: không thử được **mua** Xu Pro (In-App Purchase) bằng tài khoản miễn phí (cách thử bằng tệp
-   cấu hình StoreKit của Xcode: cần kiểm tra); thông báo của Xu là thông báo cục bộ nên không cần Push; iCloud thuộc v1.1, chưa làm; `project.yml` không khai báo Siri.
+   In-App Purchase, Push notifications, iCloud và Siri. Với Xu: **mua** Xu Pro qua Sandbox/TestFlight cần tài khoản trả phí (In-App Purchase không có ở cột miễn phí, và sản phẩm phải tạo trong App Store Connect).
+   Thử **cục bộ** bằng tệp cấu hình StoreKit (`.storekit`) của Xcode thì khác: Apple mô tả đây là môi trường thử không cần kết nối máy chủ App Store, dùng được khi
+   chưa thiết lập app trong App Store Connect, và trang đó không nói phải trả phí. Repo **chưa có** tệp này (cần thêm một sản phẩm không tiêu hao với mã `com.example.xu.pro`,
+   hoặc mã bạn đã đổi, rồi chọn tệp trong tuỳ chọn chạy của scheme); chưa ai thử trên Xu.
+   Thông báo của Xu là thông báo cục bộ nên không cần Push; iCloud thuộc v1.1, chưa làm; `project.yml` không khai báo Siri.
    **Chưa ai thử ký Xu bằng tài khoản miễn phí** (có thể vướng giới hạn 10 App ID mỗi 7 ngày hoặc lỗi khác): nếu Xcode báo lỗi thì ghi lại nguyên văn.
 4. **Apple Developer Program** (trả phí): 99 USD mỗi năm, hoặc tiền địa phương nếu có (theo trang chương trình của Apple; **cần kiểm tra giá hiện tại**
-   ở Việt Nam/Nhật). Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro). Dù sao cũng cần khi nộp App Store (`docs/10`).
+   ở Việt Nam/Nhật). Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro qua Sandbox/TestFlight). Dù sao cũng cần khi nộp App Store (`docs/10`).
 
 ## Chọn đường
 
 | Bạn có | Đường | Ghi chú |
 |---|---|---|
-| Mac + iPhone | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cần trả phí |
+| Mac + iPhone | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
 | iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Cần thêm workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
 | Chỉ iPhone, không Mac, không trả phí | **C.** Không chạy được Xu | Chỉ còn thử Vision bằng ảnh dựng sẵn trên CI (spike, `docs/11`). Không đưa biên lai thật lên GitHub (có tên, số tài khoản) |
 
@@ -36,7 +39,7 @@
    Mã sản phẩm mua `com.example.xu.pro` (`ProEntitlement.productID`) chỉ cần đổi khi thử mua Xu Pro.
 3. `xcodegen generate`, mở `Xu.xcodeproj`, chọn scheme **Xu**.
 4. Cắm iPhone, chọn "Tin cậy máy tính này". Bật **Chế độ nhà phát triển** trên iPhone (Cài đặt › Quyền riêng tư & Bảo mật; mục này chỉ hiện sau khi Xcode
-   nhận máy, iOS 16 trở lên; **cần kiểm tra** theo bản iOS của bạn). Chọn iPhone làm thiết bị chạy, bấm Run.
+   nhận máy; Apple nói cần bật trên iOS 16 trở lên, còn tên mục **cần kiểm tra** theo bản iOS của bạn). Chọn iPhone làm thiết bị chạy, bấm Run.
 5. Nếu iPhone báo nhà phát triển không tin cậy: Cài đặt › Cài đặt chung › VPN & Quản lý thiết bị, tin cậy hồ sơ của bạn (cần kiểm tra tên mục theo iOS).
 6. Run mặc định là **Debug**: có Cài đặt › **Thử đọc biên lai** và **Nhập nhiều biên lai** (cách dùng ở `docs/11`).
 
@@ -66,6 +69,7 @@ Biên lai và khoản thật có tên người, số tiền: không chụp màn 
 ## Nguồn (Apple, đọc 2026-10-04)
 
 - [Supported capabilities (iOS)](https://developer.apple.com/help/account/reference/supported-capabilities-ios): bảng capability theo loại thành viên (đọc thẳng từ HTML của trang): App groups ✓ cả ba cột; In-App Purchase, Push notifications, iCloud, Siri không có ở cột miễn phí.
+- [StoreKit Testing in Xcode](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode): thử mua cục bộ bằng tệp `.storekit`, không cần kết nối máy chủ App Store, dùng được khi chưa thiết lập app trong App Store Connect; nhắc bật Chế độ nhà phát triển trên iOS 16 trở lên.
 - [So sánh thành viên miễn phí và trả phí](https://developer.apple.com/support/compare-memberships/): chạy trên máy của mình từ Xcode, giới hạn tài khoản miễn phí, TestFlight/App Store Connect/Xcode Cloud chỉ cho tài khoản trả phí.
 - [TestFlight](https://developer.apple.com/testflight/): số người thử nội bộ/bên ngoài, số thiết bị, App Review cho bản đầu của người thử bên ngoài.
 - [Apple Developer Program](https://developer.apple.com/programs/): phí thành viên (qua kết quả tìm kiếm; cần mở trang để kiểm tra giá hiện tại).
