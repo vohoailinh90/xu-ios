@@ -92,6 +92,13 @@ final class ReceiptAmountReaderTests: XCTestCase {
         XCTAssertNil(ReceiptAmountReader.read("Ngày 26.09 lúc 10,15"))
     }
 
+    func testPlusSignMarksIncomeButDoesNotChangeTheChoice() {
+        let incoming = ReceiptAmountReader.candidates(in: "Biến động số dư\n+2.500.000 VND\nSố dư\n8.431.200 VND")
+        XCTAssertEqual(incoming.map(\.hasPlusSign), [true, false])
+        XCTAssertEqual(ReceiptAmountReader.candidates(in: "-1.356.780 VND").map(\.hasPlusSign), [false])
+        XCTAssertEqual(ReceiptAmountReader.candidates(in: "1.356.780 VND").map(\.hasPlusSign), [false])
+    }
+
     func testHugeNumberDoesNotCrash() {
         // Khác trang chấm có chủ ý: trang vẫn nhận số này (JavaScript dùng số thực, ra 1e26), app bỏ vì không vừa Int64.
         XCTAssertNil(ReceiptAmountReader.read("Số tiền 99999999999999999999999999 VND"), "vượt Int64: bỏ, không đoán")

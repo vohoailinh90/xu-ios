@@ -50,7 +50,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
   trên App Store Connect — cần kiểm tra văn bản mới nhất của Apple và luật Việt Nam/Nhật.
 - [ ] #research Spike: OCR ảnh chuyển khoản bằng Vision — kiểm tra hỗ trợ tiếng Việt, độ chính xác với 5 ngân hàng phổ biến
   Làm dở (`docs/11`): Vision macOS 15 có `vi-VT` (chế độ accurate) và đọc tốt ảnh dựng sẵn. Mốc sơ bộ 2026-10-04: 39 biên lai thật bằng Live Text/Phím tắt, số tiền 39/39 (**không phải** số đo Vision, chưa đủ 50 ảnh/5 ngân hàng).
-  Quyết định Free/Pro đã xong (OCR: Free 5 ảnh mỗi tháng, `docs/02`). **Còn chờ:** đo Vision trên iPhone thật iOS 17/18 với ≥ 50 ảnh, 5 ngân hàng/ví.
+  Quyết định Free/Pro đã xong (OCR: Free 5 ảnh mỗi tháng, `docs/02`). Đã có bản Debug "Nhập nhiều biên lai" và quy tắc hạn mức/đọc lô ở XuCore (`docs/11`), chưa mở cho người dùng.
+  **Còn chờ:** đo Vision trên iPhone thật iOS 17/18 với ≥ 50 ảnh, 5 ngân hàng/ví; chạy thử bản Debug trên máy thật.
 - [ ] #release Đo thời gian ghi trung vị (log cục bộ), sửa chỗ chậm — đã có phần đo (`EntryTimingLog`, hiện ở Cài đặt › Nhập nhanh hơn);
   còn sửa chỗ chậm khi có số liệu thật từ TestFlight
 - [ ] #release TestFlight cho 20–50 người dùng thử, form phản hồi

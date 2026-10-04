@@ -29,6 +29,8 @@ enum AppSettings {
         static let reviewRequested = "reviewRequested"
         /// Khoá Face ID che phần xem (docs/02, S4). Tắt sẵn; ô ghi không bao giờ bị khoá.
         static let faceIDLock = "faceIDLock"
+        /// `ReceiptQuota` dạng JSON — số ảnh biên lai đã đọc trong tháng (bản Free, docs/02), chỉ trên máy.
+        static let receiptQuota = "receiptQuota"
     }
 
     static let defaultReminderMinutes = 21 * 60
@@ -48,6 +50,11 @@ enum AppSettings {
                 .flatMap { try? JSONDecoder().decode(EntryTimingLog.self, from: $0) } ?? EntryTimingLog()
         }
         set { defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.entryTimings) }
+    }
+
+    static var receiptQuota: ReceiptQuota? {
+        get { defaults.data(forKey: Key.receiptQuota).flatMap { try? JSONDecoder().decode(ReceiptQuota.self, from: $0) } }
+        set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.receiptQuota) }
     }
 
     static var faceIDLockEnabled: Bool { defaults.bool(forKey: Key.faceIDLock) }

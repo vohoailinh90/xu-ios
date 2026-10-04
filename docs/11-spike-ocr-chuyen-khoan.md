@@ -102,6 +102,17 @@ kiểm khi làm TestFlight). Cách dùng:
 Riêng tư (luật 6): không xin quyền thư viện ảnh (bộ chọn ảnh của hệ thống chỉ trao ảnh đã chọn), ảnh chỉ nằm trong bộ nhớ, không lưu, không gửi đi. Chữ đọc được có thể có số tài khoản và tên
 người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`localOnly`, hết hạn sau 2 phút).
 
+## Nhập nhiều biên lai một lượt (bản Debug, 2026-10-04)
+
+Chủ dự án chốt làm cho app Xu (mục "Quyết định của chủ dự án"). **Mới có bản Debug**, chưa mở cho người dùng.
+
+- **Ở đâu:** Cài đặt › "Nhập nhiều biên lai" (`App/Xu/Features/Settings/ReceiptImportView.swift`, bọc trong `#if DEBUG`, chữ chưa qua `L10n`). Quy tắc nằm ở XuCore, có test: `ReceiptBatch` (đọc lần lượt, dừng khi hết lượt, bỏ ảnh trùng), `ReceiptQuota` (hạn mức tháng), `ReceiptReadOutcome`, và `ReceiptAmountReader` (chọn số tiền; thêm `hasPlusSign` để biết tiền vào).
+- **Luồng:** chọn tối đa 20 ảnh (bộ chọn ảnh của hệ thống, không xin quyền thư viện) → Vision `.accurate` đọc lần lượt trên máy → mỗi ảnh một thẻ → một chạm "Lưu N khoản". Thẻ có số tiền chắc được chọn sẵn; thẻ **không chắc** (hai số cùng điểm) hiện cảnh báo và **không** chọn sẵn; ảnh lỗi/không thấy số tiền/trùng/chưa đọc vì hết lượt hiện rõ lý do, không bỏ lặng lẽ.
+- **Hạn mức Free (diễn giải chưa duyệt, mục Quyết định):** 5 ảnh mỗi tháng dương lịch; đếm khi OCR đã đọc ra số tiền; ảnh lỗi, không thấy số, ảnh trùng và ảnh chưa đọc không bị trừ; Xu Pro không bị đếm; bộ đếm lưu trên máy (`AppSettings.receiptQuota`). Hết lượt thì các ảnh còn lại **chưa đọc** (không đọc hết rồi mới chặn lưu).
+- **Khoản lưu:** chỉ số tiền (sửa được), ngày (mặc định hôm nay, chỉnh từng thẻ), thu/chi theo dấu `+` trên biên lai, danh mục "Khác", ghi chú trống, `source = .screenshot`. **Không lưu** ảnh, chữ OCR (`rawInput` rỗng), tên người nhận hay số tài khoản.
+- **Chưa làm / giới hạn:** chưa đọc ngày giờ, tên người nhận, nội dung (tên chỉ ~43,6% ở mốc sơ bộ); chưa đối chiếu với khoản đã có (chỉ bỏ ảnh trùng byte trong cùng lượt); chưa chạy trên iPhone thật nên chưa có số đo tốc độ; CI chỉ dựng bản Debug và chạy test XuCore, **không** chạy màn hình; chưa hiện trong bản Release/TestFlight; chữ chưa dịch vi/en/ja.
+- **Điều kiện mở cho người dùng:** số đo Vision quyết định (≥ 50 ảnh thật, iPhone thật, tiêu chí ở trên); chủ dự án duyệt các chi tiết đếm lượt; dịch `L10n` vi/en/ja và đưa chữ vào `Localizable`; cập nhật `docs/10` (mô tả App Store) và `docs/09` (quyền riêng tư) nếu cần — **cần kiểm tra văn bản mới nhất**.
+
 ## Thiết kế dự kiến nếu làm (chưa cam kết)
 
 - **Đường vào**: Share → Xu (Share Extension) và nút "Từ ảnh" trong app dùng bộ chọn ảnh của hệ thống. **Không tự quét thư viện ảnh** ở bản đầu: "gợi ý ảnh chụp mới nhất" cần quyền đọc thư viện (cần kiểm tra quy định App Store/quyền riêng tư và chịu cái giá niềm tin) — để sau (chủ dự án chốt không làm ở bản đầu, 2026-10-04).
@@ -145,4 +156,8 @@ Chủ dự án chấp nhận lấy **39 ảnh** làm số liệu **tạm/sơ b�
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
 - [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng), và/hoặc thêm log từng ca không khớp nguyên văn vào script, để biết nguyên nhân (ký hiệu, khoảng trắng hay dấu phân cách) trước khi quyết định xử lý ở bước trích xuất.
 - [x] Quyết định Free/Pro, gợi ý ảnh mới nhất và nhiều ảnh một lượt (2026-10-04, mục trên); nhật ký ở App-idea-lab đã ghi.
+- [x] Nhập nhiều biên lai một lượt: bản Debug + quy tắc ở XuCore có test (mục trên). **Chưa** chạy trên iPhone thật.
+- [ ] Chạy thử "Nhập nhiều biên lai" trên iPhone thật (cùng lúc đo Vision ở trên): chọn ≥ 5 ảnh, kiểm hết lượt Free, ảnh trùng, thẻ không chắc, lưu.
+- [ ] Mở cho người dùng: dịch `L10n` vi/en/ja, bỏ `#if DEBUG` khi đủ điều kiện (mục trên).
+- [ ] Hạn mức Free 5 lần/tháng của Apple Pay automation (`LogPaymentIntent`, `docs/02`): **chưa làm**.
 - [ ] Chấm lại điểm tính năng ở App-idea-lab (luật 8) sau khi có số liệu Vision thật.
