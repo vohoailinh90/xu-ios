@@ -122,7 +122,8 @@ Quyết định 2026-10-03 (chủ dự án):
 
 Quyết định 2026-10-04 (chủ dự án):
 
-- OCR chuyển khoản: quyền lợi Pro, người dùng Free được đọc **5 ảnh mỗi tháng** ("5 ảnh miễn phí 1 tháng"). Ghi tay vẫn miễn phí nên không khóa đường ghi.
+- OCR chuyển khoản: quyền lợi Pro, người dùng Free được đọc **5 ảnh mỗi tháng** ("5 ảnh miễn phí 1 tháng"). Ghi tay/ghi nhanh vẫn miễn phí, không bao giờ có paywall.
+  **Chỗ căng với luật 5:** từ ảnh thứ 6 người dùng Free không đọc được ảnh bằng OCR, trong khi Apple Pay automation được giữ miễn phí vì là một đường ghi; cách hiểu luật 5 này cần chủ dự án xác nhận (`docs/11`).
   Chi tiết cách đếm, đặt lại hạn mức, nhiều ảnh một lượt và việc không gợi ý "ảnh chụp mới nhất": `docs/11`. Tính năng chưa làm.
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.
