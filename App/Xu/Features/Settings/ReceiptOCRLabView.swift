@@ -81,7 +81,9 @@ struct ReceiptOCRLabView: View {
 
             if !runs.isEmpty {
                 Section {
-                    LabeledContent("Đã đọc") { Text("\(uniqueCount) ảnh · trung bình \(averageMilliseconds) ms").font(.callout) }
+                    LabeledContent("Đã đọc") { Text("\(uniqueCount) ảnh duy nhất").font(.callout) }
+                    // Mẫu số nói rõ: chỉ ảnh đọc được mới có thời gian; ảnh lỗi/không mở được không có số đo tốc độ có nghĩa.
+                    LabeledContent("Thời gian đọc") { Text("trung bình \(averageMilliseconds) ms · trên \(timedRuns.count) ảnh đọc được").font(.callout) }
                     if duplicateCount > 0 {
                         LabeledContent("Ảnh trùng") { Text("\(duplicateCount) ảnh không tính").foregroundStyle(.orange).font(.callout) }
                     }
@@ -205,11 +207,11 @@ struct ReceiptOCRLabView: View {
     private var correctCount: Int { runs.filter { verdict(of: $0) == true }.count }
     private var uniqueCount: Int { runs.filter { $0.duplicateOf == nil }.count }
     private var duplicateCount: Int { runs.count - uniqueCount }
+    /// Ảnh dùng để đo tốc độ: duy nhất (không tính bản sao) và đọc được (ảnh lỗi không có thời gian có nghĩa).
+    private var timedRuns: [OCRRun] { runs.filter { $0.error == nil && $0.duplicateOf == nil } }
     private var averageMilliseconds: Int {
-        // Không tính ảnh trùng: nếu không, bản sao làm lệch số đo tốc độ (cùng cách tính với uniqueCount).
-        let timed = runs.filter { $0.error == nil && $0.duplicateOf == nil }
-        guard !timed.isEmpty else { return 0 }
-        return Int(timed.map(\.milliseconds).reduce(0, +) / Double(timed.count))
+        guard !timedRuns.isEmpty else { return 0 }
+        return Int(timedRuns.map(\.milliseconds).reduce(0, +) / Double(timedRuns.count))
     }
 
     // MARK: - Đọc

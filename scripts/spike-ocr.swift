@@ -337,7 +337,8 @@ for variant in variants {
         let timedImages = t.imagesRun - t.failures
         let average = timedImages <= 0 ? 0 : t.millis / Double(timedImages)
         let failureNote = t.failures > 0 ? " · LỖI OCR \(t.failures)/\(t.imagesRun) (đã tính là sai)" : ""
-        print("- \(config.name) · \(String(format: "%.0f", average)) ms/ảnh\(failureNote)")
+        // Thời gian chỉ tính ảnh đọc được; nói rõ mẫu số để khi có lỗi OCR, con số không bị hiểu là trung bình trên mọi ảnh.
+        print("- \(config.name) · \(String(format: "%.0f", average)) ms/ảnh đọc được (\(timedImages)/\(t.imagesRun) ảnh)\(failureNote)")
         print("    số tiền: nguyên văn \(percent(t.amountExact, t.imagesRun)) · đúng chữ số \(percent(t.amountDigits, t.imagesRun)) · chọn theo dòng cao nhất \(percent(t.amountByHeight, t.imagesRun))")
         print("    ngày giờ \(f(.datetime)) · tên \(f(.name)) · nội dung \(f(.note)) · mã \(f(.id)) · ghép nhãn–giá trị \(percent(t.pairs, t.pairsTotal))")
     }
