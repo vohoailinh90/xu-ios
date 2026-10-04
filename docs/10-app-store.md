@@ -162,3 +162,4 @@ Theo 5 thông điệp trong `docs/07`, chụp với giao diện và nơi chi ti�
 - [ ] Người bản ngữ Nhật đọc lại phần 日本語.
 - [ ] Mọi câu ví dụ trong mô tả chạy đúng trên bản build nộp (ghi thử từng câu).
 - [ ] Câu lệnh Siri/Phím tắt và tự động hoá Apple Pay đã thử trên máy thật trước khi nhắc trong mô tả.
+- [ ] Mô tả Apple Pay và (khi có) đọc ảnh chuyển khoản nói rõ phần miễn phí (5 lần/ảnh mỗi tháng) và phần cần Xu Pro — **cần kiểm tra** yêu cầu mới nhất của App Store về mô tả tính năng trả phí.

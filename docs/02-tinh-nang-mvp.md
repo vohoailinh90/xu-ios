@@ -107,8 +107,8 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Khoản quen trên widget | 2 nút | 8 nút |
 | Thói quen | 2 | Không giới hạn + thử thách |
 | Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử: các tuần cũ (màn "Theo tuần") và biểu đồ các tháng trước — đã làm |
-| Apple Pay automation | ✅ | ✅ |
-| OCR chuyển khoản | — | ✅ (chưa làm) |
+| Apple Pay automation (`LogPaymentIntent`) | 5 lần mỗi tháng (quyết định 2026-10-04; chưa làm trong code) | ✅ không giới hạn |
+| OCR chuyển khoản | 5 ảnh mỗi tháng | ✅ không giới hạn (chưa làm) |
 | Face ID (khoá phần xem; tắt sẵn) | — | ✅ — đã làm |
 | Danh mục tùy chỉnh, icon app, giao diện | — | ✅ (chưa làm) |
 
@@ -119,5 +119,17 @@ Quyết định 2026-10-03 (chủ dự án):
   (ví dụ hoàn tiền) vẫn tắt được khoá.
 - Apple Pay automation: **miễn phí** — nó là một đường ghi, mà luật 5 nói không khóa việc ghi. (Xu Pro là mua một lần
   nên không có chuyện hết hạn; kể cả hoàn tiền thì cũng không khóa đường ghi.)
+  **Đã được thay bởi quyết định 2026-10-04 bên dưới** (Pro, Free 5 lần mỗi tháng).
+
+Quyết định 2026-10-04 (chủ dự án):
+
+- OCR chuyển khoản: quyền lợi Pro, người dùng Free được đọc **5 ảnh mỗi tháng** ("5 ảnh miễn phí 1 tháng"). Ghi tay/ghi nhanh vẫn miễn phí, không bao giờ có paywall.
+  **Đã xác nhận (2026-10-04):** chủ dự án chốt "chỉ cho hạn mức 5 ảnh / tháng", không đổi sang Free đọc không giới hạn. Cách hiểu luật 5 đi kèm: đường ghi được bảo vệ là **ghi tay/ghi nhanh**; OCR là tiện ích nhập nhanh có hạn mức Free (`docs/11`).
+  Chi tiết cách đếm, đặt lại hạn mức, nhiều ảnh một lượt và việc không gợi ý "ảnh chụp mới nhất": `docs/11`. Tính năng chưa làm.
+- Apple Pay automation: **đổi từ miễn phí hoàn toàn sang quyền lợi Pro, người dùng Free được 5 lần mỗi tháng** (lời chủ dự án: "apple pay cũng cho miễn phí 5 lần / 1 tháng"), thay quyết định 2026-10-03 ở trên, cùng cách hiểu luật 5 như OCR.
+  Tôi diễn giải, chủ dự án chưa duyệt từng điểm: "1 lần" = một khoản được ghi tự động qua `LogPaymentIntent`; đặt lại theo tháng dương lịch như OCR; ghi tay và các lệnh khác (`LogExpenseIntent`: Action Button, Siri, Phím tắt gõ/đọc) **không** bị đếm.
+  **Chưa làm trong code** (hiện `LogPaymentIntent` không đếm lượt). Cần quyết khi làm: automation chạy nền, không có giao diện; khi hết lượt thì khoản đó không được ghi tự động, nên phải báo cho người dùng biết (thông báo kèm đường vào ghi tay) để họ không tưởng khoản đã được ghi.
 
 Nguyên tắc: **không bao giờ khóa việc ghi chép và xuất dữ liệu.** Pro bán tốc độ và niềm vui, không bán quyền truy cập vào dữ liệu của chính người dùng.
+
+**Đã xác nhận (2026-10-04):** hạn mức OCR 5 ảnh/tháng và Apple Pay automation 5 lần/tháng là ngoại lệ có chủ đích của chủ dự án; ghi tay/ghi nhanh và xuất dữ liệu không bao giờ bị khoá. Người làm tính năng không tự mở rộng ngoại lệ này sang đường ghi khác.
