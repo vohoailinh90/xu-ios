@@ -83,10 +83,6 @@ enum AppSettings {
         notifyPendingPaymentsChanged()
     }
 
-    static func hasPendingPayment(_ payment: PendingPayment) -> Bool {
-        defaults.object(forKey: payment.storageKey) != nil
-    }
-
     /// Ghi mù một mã mới, không đọc giá trị cũ, nên không có đọc-sửa-ghi.
     private static func notifyPendingPaymentsChanged() {
         defaults.set(UUID().uuidString, forKey: Key.pendingPaymentsRevision)
