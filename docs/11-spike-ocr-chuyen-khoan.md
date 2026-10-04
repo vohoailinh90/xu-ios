@@ -122,7 +122,7 @@ Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, 
 ## Quyết định của chủ dự án (2026-10-04)
 
 1. **Miễn phí hay Pro — chốt:** OCR vẫn là quyền lợi Pro, nhưng người dùng Free được **đọc 5 ảnh miễn phí trong một tháng** (lời chủ dự án: "cho phép đọc 5 ảnh miễn phí 1 tháng"). Thay cho "dùng thử 5 lần" trước đó.
-   **Chỗ căng với luật 5, ghi thẳng ra:** hạn mức này nghĩa là từ ảnh thứ 6 trong tháng, người dùng Free **không đọc được ảnh bằng OCR** (phải ghi tay hoặc mở khoá Xu Pro). OCR cũng là một đường ghi, và `docs/02` giữ Apple Pay automation miễn phí chính vì "nó là một đường ghi".
+   **Chỗ căng với luật 5, ghi thẳng ra:** hạn mức này nghĩa là từ ảnh thứ 6 trong tháng, người dùng Free **không đọc được ảnh bằng OCR** (phải ghi tay hoặc mở khoá Xu Pro). OCR cũng là một đường ghi, và ngày 2026-10-03 `docs/02` đã giữ Apple Pay automation miễn phí chính vì "nó là một đường ghi" (**quyết định cũ đó đã bị thay thế ngày 2026-10-04**: Apple Pay automation giờ là Pro với Free 5 lần mỗi tháng, xem dưới và `docs/02`).
    **Đã xác nhận (2026-10-04):** chủ dự án chốt "chỉ cho hạn mức 5 ảnh / tháng thôi", không đổi sang Free đọc không giới hạn. Cách hiểu luật 5 đi kèm: đường ghi được bảo vệ là **ghi tay/ghi nhanh** (luôn miễn phí, không bao giờ có paywall), còn OCR là tiện ích nhập nhanh thêm có hạn mức Free. Cùng cách hiểu cho Apple Pay automation (`docs/02`).
    Các chi tiết dưới đây là **tôi diễn giải, chủ dự án chưa duyệt từng điểm**:
    - "Một tháng" = mỗi tháng dương lịch có 5 ảnh, đặt lại vào ngày 1. (Nếu ý là chỉ 5 ảnh trong tháng đầu tiên thì sửa mục này.)
