@@ -1,8 +1,9 @@
 # 11 — Spike: đọc ảnh chuyển khoản bằng Vision (OCR trên máy)
 
-> Cập nhật 2026-10-03. Trạng thái: **làm dở**. Phần máy móc đã chạy (Vision có tiếng Việt, đọc tốt trên ảnh dựng sẵn); phần quyết
-> định (có làm tính năng hay không) cần **ảnh thật** của chủ dự án và chưa có. Đừng đọc các con số dưới đây như độ chính xác với ngân hàng nào.
-> Mục `#research` ở `docs/06` còn mở cho tới khi có kết quả trên ảnh thật.
+> Cập nhật 2026-10-04. Trạng thái: **làm dở**. Có hai mốc, đừng nhầm: (1) Thí nghiệm 1: Vision trên macOS 15 (CI) đọc tốt ảnh dựng sẵn; (2) mốc sơ bộ: 39 biên lai thật của chủ dự án
+> đọc bằng Văn bản trực tiếp/Phím tắt, số tiền 39/39 — **không phải số đo của Vision**, chưa đủ 50 ảnh/5 ngân hàng. Số đo quyết định (≥ 50 ảnh thật, bằng Vision trên iPhone thật iOS 17/18)
+> **chưa có**. Quyết định Free/Pro đã xong (mục "Quyết định của chủ dự án" bên dưới). Mục `#research` ở `docs/06` còn mở cho tới khi có số đo Vision quyết định.
+> Đừng đọc các con số của Thí nghiệm 1 như độ chính xác với ngân hàng nào.
 
 ## Câu hỏi và tiêu chí
 
