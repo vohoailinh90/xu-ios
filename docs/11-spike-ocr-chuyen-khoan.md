@@ -136,7 +136,8 @@ Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, 
 ## Việc còn lại để đóng spike
 
 - [x] Màn hình thử trong app (bản Debug) — chờ chạy thử trên iPhone thật.
-- [x] Số đo trên ảnh thật: **39 ảnh** (chủ dự án chấp nhận thay vì 50), bảng ở mục "Kết quả sơ bộ". Tên người nhận 43,6% chưa giải thích được.
+- [x] Mốc sơ bộ (không phải kết quả quyết định): 39 ảnh bằng Văn bản trực tiếp/Phím tắt, số tiền 39/39, bảng ở mục "Kết quả sơ bộ". Tên người nhận 43,6% chưa giải thích được.
+- [ ] Số đo quyết định: **≥ 50 ảnh thật, 5 ngân hàng/ví, bằng Vision của app** (chủ dự án chấp nhận lấy 39 ảnh làm số liệu tạm vì trang chấm mất dữ liệu, chưa đổi tiêu chí).
 - [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (mục "Máy này" của màn hình thử; kết quả ở trên là macOS 15 trên máy chủ CI).
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
 - [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng), và/hoặc thêm log từng ca không khớp nguyên văn vào script, để biết nguyên nhân (ký hiệu, khoảng trắng hay dấu phân cách) trước khi quyết định xử lý ở bước trích xuất.
