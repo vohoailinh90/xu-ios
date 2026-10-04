@@ -335,10 +335,13 @@ for variant in variants {
             return "\(percent(e.exact, e.total)) (bỏ dấu \(percent(e.folded, e.total)))"
         }
         let timedImages = t.imagesRun - t.failures
-        let average = timedImages <= 0 ? 0 : t.millis / Double(timedImages)
         let failureNote = t.failures > 0 ? " · LỖI OCR \(t.failures)/\(t.imagesRun) (đã tính là sai)" : ""
         // Thời gian chỉ tính ảnh đọc được; nói rõ mẫu số để khi có lỗi OCR, con số không bị hiểu là trung bình trên mọi ảnh.
-        print("- \(config.name) · \(String(format: "%.0f", average)) ms/ảnh đọc được (\(timedImages)/\(t.imagesRun) ảnh)\(failureNote)")
+        // Không có ảnh nào đọc được thì không có số đo tốc độ: không in "0 ms" như thể OCR chạy tức thì.
+        let speed = timedImages <= 0
+            ? "không có số đo tốc độ"
+            : "\(String(format: "%.0f", t.millis / Double(timedImages))) ms/ảnh đọc được (\(timedImages)/\(t.imagesRun) ảnh)"
+        print("- \(config.name) · \(speed)\(failureNote)")
         print("    số tiền: nguyên văn \(percent(t.amountExact, t.imagesRun)) · đúng chữ số \(percent(t.amountDigits, t.imagesRun)) · chọn theo dòng cao nhất \(percent(t.amountByHeight, t.imagesRun))")
         print("    ngày giờ \(f(.datetime)) · tên \(f(.name)) · nội dung \(f(.note)) · mã \(f(.id)) · ghép nhãn–giá trị \(percent(t.pairs, t.pairsTotal))")
     }

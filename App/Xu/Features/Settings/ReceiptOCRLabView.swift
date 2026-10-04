@@ -83,7 +83,11 @@ struct ReceiptOCRLabView: View {
                 Section {
                     LabeledContent("Đã đọc") { Text("\(uniqueCount) ảnh duy nhất").font(.callout) }
                     // Mẫu số nói rõ: chỉ ảnh đọc được mới có thời gian; ảnh lỗi/không mở được không có số đo tốc độ có nghĩa.
-                    LabeledContent("Thời gian đọc") { Text("trung bình \(averageMilliseconds) ms · trên \(timedRuns.count) ảnh đọc được").font(.callout) }
+                    LabeledContent("Thời gian đọc") {
+                        // Không có ảnh nào đọc được thì không có số đo: không hiện "0 ms" như thể OCR chạy tức thì.
+                        Text(timedRuns.isEmpty ? "không có số đo" : "trung bình \(averageMilliseconds) ms · trên \(timedRuns.count) ảnh đọc được")
+                            .font(.callout)
+                    }
                     if duplicateCount > 0 {
                         LabeledContent("Ảnh trùng") { Text("\(duplicateCount) ảnh không tính").foregroundStyle(.orange).font(.callout) }
                     }

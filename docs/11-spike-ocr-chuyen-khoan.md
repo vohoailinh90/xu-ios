@@ -44,7 +44,7 @@ chạy `VNRecognizeTextRequest` với 5 cấu hình. Lần chạy: [run 37162110
 - Ngày giờ và mã giao dịch đúng 100% ở mọi biến thể (chế độ accurate).
 - "Đúng nguyên văn" thấp hơn "đúng chữ số" chỉ vì mẫu ví `1.200.000 ₫`: ký hiệu `₫` không được đọc nguyên văn (chưa xem ảnh thô nên chưa biết nó thành gì). Với app chỉ cần chữ số, đây là chi tiết cần xử lý ở bước trích xuất, không phải lỗi số tiền.
 - Chế độ **fast** kém: ngày giờ 0/8, tên 2/10 (bỏ dấu 6–8/10), nội dung 2/8, ghép nhãn–giá trị 7–14/36, số tiền sai chữ số 2/8 ảnh. **Chỉ dùng accurate.**
-- Mặc định ngôn ngữ, `en-US` và `vi-VT` không khác biệt đáng kể trên dữ liệu này; bật hay tắt "sửa lỗi theo ngôn ngữ" chỉ khác một chỗ (dòng tên ở ảnh nén mạnh).
+- Ngôn ngữ mặc định và `vi-VT` không khác biệt đáng kể trong lần chạy 6 biến thể này; bật hay tắt "sửa lỗi theo ngôn ngữ" chỉ khác một chỗ (dòng tên ở ảnh nén mạnh). Cấu hình `en-US` **không có** trong lần chạy này: chỉ lần chạy đầu (4 mẫu sạch, [run 37161821721](https://github.com/vohoailinh90/xu-ios/actions/runs/37161821721)) có và cho kết quả giống mặc định. Chưa biết `en-US` có khác trên ảnh nén hay chữ nhỏ.
 - Tốc độ trên máy chủ CI (máy ảo, **không đại diện cho iPhone**): accurate ~0,6–1,5 giây mỗi ảnh, fast ~35–80 ms. Chưa đo trên iPhone.
 - Thứ tự dòng Vision trả về **không đáng tin để ghép nhãn với giá trị**: cùng một hàng, nhãn và giá trị là hai ô riêng, và theo trục dọc ô nào đứng trước phụ thuộc chênh lệch cỡ chữ. Ghép theo toạ độ (cùng hàng) cho 35–36/36; thứ tự dòng thì không.
 
