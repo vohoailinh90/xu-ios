@@ -111,6 +111,19 @@ struct SettingsView: View {
                         Label(language.t(.privacyTitle), systemImage: "hand.raised")
                     }
                 }
+                #if DEBUG
+                Section {
+                    NavigationLink {
+                        ReceiptOCRLabView()
+                    } label: {
+                        Label("Thử đọc biên lai", systemImage: "doc.text.viewfinder")
+                    }
+                } header: {
+                    Text("Chỉ bản Debug")
+                } footer: {
+                    Text("Spike OCR ảnh chuyển khoản (docs/11). Không có trong bản TestFlight/App Store.")
+                }
+                #endif
             }
             .navigationTitle(language.t(.settings))
             .sheet(isPresented: $showPaywall) { PaywallView() }

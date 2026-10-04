@@ -62,12 +62,25 @@ trong bố cục từng ngân hàng — và đó đúng là thứ chỉ ảnh th
 Dùng `prototypes/cham-bien-lai.html` (đã có: dán chữ OCR, nhập số đúng, xem tỉ lệ theo ngân hàng; ngưỡng 95%/90% có sẵn). Cần: ≥ 50 ảnh biên lai **của chính bạn**,
 5 ngân hàng/ví phổ biến (che số tài khoản, tên người nhận nếu chia sẻ màn hình; biên lai là dữ liệu tài chính cá nhân — cần kiểm tra văn bản mới nhất về bảo vệ dữ liệu cá nhân).
 
-Còn thiếu một thứ: **cách lấy chữ OCR từ ảnh thật bằng đúng bộ đọc của Vision**. Trang chấm hướng dẫn dùng phím tắt "Thử biên lai" hoặc Văn bản trực tiếp (Live Text); tôi chưa kiểm hai đường
-đó dùng cùng bộ đọc và cùng tham số với `VNRecognizeTextRequest` — **cần kiểm tra**. Ba cách để lấy số liệu sát nhất với thứ sẽ phát hành, chọn một:
+Cần **cách lấy chữ OCR từ ảnh thật bằng đúng bộ đọc của Vision**. Trang chấm hướng dẫn dùng phím tắt "Thử biên lai" hoặc Văn bản trực tiếp (Live Text); chưa kiểm hai đường
+đó dùng cùng bộ đọc và cùng tham số với `VNRecognizeTextRequest` — **cần kiểm tra**. Đã chọn (2026-10-04): **màn hình thử trong app, chỉ bản Debug** — chạy đúng
+`VNRecognizeTextRequest` trên iPhone thật, cho luôn danh sách ngôn ngữ và tốc độ trên iOS 17/18.
 
-1. **Script trên Mac**: mở rộng `scripts/spike-ocr.swift` nhận một thư mục ảnh và in chữ đọc được (không lưu). Cần một máy Mac.
-2. **Màn hình thử trong app** (chỉ bản Debug): chọn ảnh bằng bộ chọn ảnh, hiện chữ Vision đọc và số tiền Xu sẽ chọn. Chạy trên iPhone thật, cho luôn số đo tốc độ và danh sách ngôn ngữ trên iOS 17/18.
-3. **Phím tắt như trang chấm hướng dẫn**: không cần viết code, nhưng độ giống với thứ phát hành chưa chắc.
+### Màn hình thử (bản Debug)
+
+`App/Xu/Features/Settings/ReceiptOCRLabView.swift`, bọc trong `#if DEBUG`: **không có trong bản Release/TestFlight/App Store** (chưa kiểm bằng một bản Release — CI chỉ dựng Debug; nên
+kiểm khi làm TestFlight). Cách dùng:
+
+1. Mở bằng Xcode, chạy cấu hình **Debug** (mặc định khi bấm Run) trên iPhone thật; ký bằng Team của bạn. Trình mô phỏng cũng chạy được nhưng không cho số đo tốc độ/ngôn ngữ của máy thật.
+2. Cài đặt (nút bánh răng) › kéo xuống cuối › **Thử đọc biên lai**.
+3. Mục "Máy này": ghi lại hệ điều hành, thiết bị, và hai dòng **Tiếng Việt / Tiếng Nhật (chính xác)** có hay không — đó là kết quả cho mục kiểm `vi-VT`/`ja-JP` bên dưới. Làm trên cả iOS 17 và 18 nếu có hai máy.
+4. **Chọn ảnh biên lai** (tối đa 20 ảnh một lần, của chính bạn). Mỗi ảnh hiện: số tiền đọc được (dòng chữ cao nhất có chữ số), thời gian đọc, và chữ theo hàng (nhãn | giá trị).
+5. Gõ số đúng (bằng chữ số, ví dụ `1356780`) vào ô dưới mỗi ảnh: màn hình báo Đúng/Sai và tổng "đúng x/y". Chỉ so các chữ số; `52k`, `1tr2` chưa hiểu.
+6. Để chấm **theo ngân hàng** (cần cho tiêu chí 5 ngân hàng): bấm **Sao chép chữ** rồi dán vào `prototypes/cham-bien-lai.html` — trang đó giữ bảng theo ngân hàng. Màn hình thử không lưu kết quả.
+7. Thử đổi **Chế độ / Ngôn ngữ / Sửa lỗi theo ngôn ngữ** rồi "Đọc lại" để so cùng một ảnh.
+
+Riêng tư (luật 6): không xin quyền thư viện ảnh (bộ chọn ảnh của hệ thống chỉ trao ảnh đã chọn), ảnh chỉ nằm trong bộ nhớ, không lưu, không gửi đi. Chữ đọc được có thể có số tài khoản và tên
+người nhận; chữ chỉ vào bảng nhớ tạm khi bạn bấm Sao chép.
 
 ## Thiết kế dự kiến nếu làm (chưa cam kết)
 
@@ -82,13 +95,14 @@ Còn thiếu một thứ: **cách lấy chữ OCR từ ảnh thật bằng đún
 ## Quyết định chờ chủ dự án
 
 1. **Miễn phí hay Pro?** `docs/02` xếp "OCR chuyển khoản" vào Pro, và file tính năng ở App-idea-lab nêu "dùng thử 5 lần miễn phí". Nhưng đây là một **đường ghi**, mà luật 5 nói không khoá việc ghi; cùng lý do bạn đã chọn Apple Pay automation miễn phí (2026-10-03). Đề xuất của tôi: đọc một ảnh miễn phí; Pro bán tiện ích đi kèm (nhiều ảnh một lần, xoá ảnh sau khi ghi, gợi ý ảnh chụp mới nhất nếu về sau làm). Việc này đổi `docs/02` nên cần bạn quyết.
-2. **Cách lấy số đo trên ảnh thật** (1, 2 hay 3 ở trên) và ai gom 50 ảnh.
+2. **Ai gom 50 ảnh thật** (5 ngân hàng/ví) và chạy màn hình thử ở trên.
 3. **Có làm "gợi ý ảnh chụp mới nhất" không** (quyền đọc thư viện ảnh) — đề xuất: không ở bản đầu.
 
 ## Việc còn lại để đóng spike
 
-- [ ] Có số đo trên ≥ 50 ảnh thật / 5 ngân hàng (trang chấm), ghi bảng theo ngân hàng vào đây.
-- [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (kết quả ở trên là macOS 15 trên máy chủ CI).
+- [x] Màn hình thử trong app (bản Debug) — chờ chạy thử trên iPhone thật.
+- [ ] Có số đo trên ≥ 50 ảnh thật / 5 ngân hàng (màn hình thử + trang chấm), ghi bảng theo ngân hàng vào đây.
+- [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (mục "Máy này" của màn hình thử; kết quả ở trên là macOS 15 trên máy chủ CI).
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
-- [ ] Xem ảnh thô của mẫu `₫` để biết ký hiệu bị đọc thành gì và có cần xử lý ở bước trích xuất.
+- [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng) để biết ký hiệu bị đọc thành gì và có cần xử lý ở bước trích xuất.
 - [ ] Quyết định 1–3 ở trên; cập nhật điểm và nhật ký của tính năng ở App-idea-lab (luật 8) sau khi có số liệu thật.
