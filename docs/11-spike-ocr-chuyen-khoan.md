@@ -74,13 +74,14 @@ kiểm khi làm TestFlight). Cách dùng:
 1. Mở bằng Xcode, chạy cấu hình **Debug** (mặc định khi bấm Run) trên iPhone thật; ký bằng Team của bạn. Trình mô phỏng cũng chạy được nhưng không cho số đo tốc độ/ngôn ngữ của máy thật.
 2. Cài đặt (nút bánh răng) › kéo xuống cuối › **Thử đọc biên lai**.
 3. Mục "Máy này": ghi lại hệ điều hành, thiết bị, và hai dòng **Tiếng Việt / Tiếng Nhật (chính xác)** có hay không — đó là kết quả cho mục kiểm `vi-VT`/`ja-JP` bên dưới. Làm trên cả iOS 17 và 18 nếu có hai máy.
-4. **Chọn ảnh biên lai** (tối đa 20 ảnh một lần, của chính bạn). Mỗi ảnh hiện: số tiền đọc được (dòng chữ cao nhất có chữ số), thời gian đọc, và chữ theo hàng (nhãn | giá trị).
-5. Gõ số đúng (bằng chữ số, ví dụ `1356780`) vào ô dưới mỗi ảnh: màn hình báo Đúng/Sai và tổng "đúng x/y". Chỉ so các chữ số; `52k`, `1tr2` chưa hiểu.
-6. Để chấm **theo ngân hàng** (cần cho tiêu chí 5 ngân hàng): bấm **Sao chép chữ** rồi dán vào `prototypes/cham-bien-lai.html` — trang đó giữ bảng theo ngân hàng. Màn hình thử không lưu kết quả.
-7. Thử đổi **Chế độ / Ngôn ngữ / Sửa lỗi theo ngôn ngữ** rồi "Đọc lại" để so cùng một ảnh.
+4. **Chọn ảnh biên lai** (tối đa 60 ảnh một lần, của chính bạn). Mỗi ảnh hiện: số tiền đọc được (dòng chữ cao nhất có chữ số), thời gian đọc, và chữ theo hàng (nhãn | giá trị).
+5. Chọn **ngân hàng/ví** và gõ **số đúng** (bằng chữ số, ví dụ `1356780`) ở mỗi ảnh: màn hình báo Đúng/Sai và hiện bảng **đúng/tổng theo ngân hàng** cùng tỉ lệ %. Chỉ so các chữ số; `52k`, `1tr2` chưa hiểu.
+   Kết quả **chỉ nằm trong bộ nhớ**, mất khi chọn ảnh khác hoặc rời màn hình: chọn cả 50 ảnh một lần (tối đa 60) và ghi bảng lại vào đây trước khi thoát.
+6. Muốn dùng trang chấm `prototypes/cham-bien-lai.html` thay vì bảng trong app: **Sao chép chữ**, rồi dán trên **chính iPhone này** (bảng nhớ đặt `localOnly` — không sang Mac/iPad qua Universal Clipboard — và tự hết hạn sau 2 phút).
+7. Thử đổi **Chế độ / Ngôn ngữ / Sửa lỗi theo ngôn ngữ** rồi "Đọc lại" để so cùng một ảnh. Chế độ Nhanh không có tiếng Việt/Nhật: chọn ngôn ngữ đó ở chế độ Nhanh sẽ đọc bằng mặc định và có ghi chú.
 
 Riêng tư (luật 6): không xin quyền thư viện ảnh (bộ chọn ảnh của hệ thống chỉ trao ảnh đã chọn), ảnh chỉ nằm trong bộ nhớ, không lưu, không gửi đi. Chữ đọc được có thể có số tài khoản và tên
-người nhận; chữ chỉ vào bảng nhớ tạm khi bạn bấm Sao chép.
+người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`localOnly`, hết hạn sau 2 phút).
 
 ## Thiết kế dự kiến nếu làm (chưa cam kết)
 

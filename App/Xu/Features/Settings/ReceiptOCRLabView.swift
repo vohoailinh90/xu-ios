@@ -3,6 +3,7 @@ import ImageIO
 import PhotosUI
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 import Vision
 
 /// Màn hình thử cho spike OCR ảnh chuyển khoản (docs/11) — **chỉ có trong bản Debug** (`#if DEBUG`): không vào TestFlight/App Store,
@@ -10,11 +11,12 @@ import Vision
 ///
 /// Mục đích: chạy đúng bộ đọc `VNRecognizeTextRequest` sẽ phát hành trên iPhone thật với biên lai thật của chủ dự án, để biết (1) máy này có
 /// `vi-VT`/`ja-JP` không (iOS 17/18), (2) đọc mất bao lâu, (3) số tiền theo quy tắc "dòng chữ cao nhất có chữ số" (đã đo ở docs/11) có đúng không.
-/// Có thể nhập số đúng cho từng ảnh để thấy ngay tỉ lệ đúng; chấm theo ngân hàng vẫn làm ở `prototypes/cham-bien-lai.html`
-/// (nút "Sao chép chữ" để dán sang đó).
+/// Nhập số đúng và chọn ngân hàng cho từng ảnh để thấy ngay tỉ lệ đúng theo ngân hàng (ngưỡng ở docs/11); kết quả chỉ nằm trong bộ nhớ
+/// của màn hình này, mất khi chọn ảnh khác. Nút "Sao chép chữ" để chấm bằng `prototypes/cham-bien-lai.html` — chỉ dán được trên **chính máy này**.
 ///
 /// Riêng tư (luật 6): ảnh chỉ nằm trong bộ nhớ, không lưu, không gửi đi; không xin quyền thư viện ảnh (bộ chọn ảnh của hệ thống chỉ trao ảnh
-/// đã chọn). Chữ đọc được có thể chứa số tài khoản và tên người nhận: không lưu, chỉ chép vào bảng nhớ tạm khi bạn bấm.
+/// đã chọn). Chữ đọc được có thể chứa số tài khoản và tên người nhận: không lưu; chỉ chép vào bảng nhớ khi bạn bấm, với `localOnly` (không sang
+/// máy khác qua Universal Clipboard) và tự hết hạn sau 2 phút.
 struct ReceiptOCRLabView: View {
     @State private var picked: [PhotosPickerItem] = []
     @State private var runs: [OCRRun] = []
@@ -23,14 +25,15 @@ struct ReceiptOCRLabView: View {
     @State private var languageChoice: LanguageChoice = .automatic
     @State private var correction = true
     @State private var truths: [Int: String] = [:]
+    @State private var banks: [Int: String] = [:]
     @State private var copiedIndex: Int?
     private let environment = LabEnvironment.read()
 
     var body: some View {
         List {
             Section {
-                PhotosPicker(selection: $picked, maxSelectionCount: 20, matching: .images) {
-                    Label(running ? "Đang đọc…" : "Chọn ảnh biên lai (tối đa 20)", systemImage: "photo.on.rectangle")
+                PhotosPicker(selection: $picked, maxSelectionCount: 60, matching: .images) {
+                    Label(running ? "Đang đọc…" : "Chọn ảnh biên lai (tối đa 60)", systemImage: "photo.on.rectangle")
                 }
                 .disabled(running)
             } footer: {
@@ -50,6 +53,8 @@ struct ReceiptOCRLabView: View {
                     .disabled(picked.isEmpty || running)
             } header: {
                 Text("Cách đọc")
+            } footer: {
+                if let languageNotice { Text(languageNotice) }
             }
 
             Section {
@@ -75,10 +80,13 @@ struct ReceiptOCRLabView: View {
                     if checkedCount > 0 {
                         LabeledContent("Đúng số tiền") { Text("\(correctCount)/\(checkedCount) ảnh đã nhập số đúng").font(.callout) }
                     }
+                    ForEach(bankRows, id: \.bank) { row in
+                        LabeledContent(row.bank) { Text("\(row.correct)/\(row.total) · \(row.correct * 100 / row.total)%").font(.callout) }
+                    }
                 } header: {
                     Text("Tổng")
                 } footer: {
-                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu.")
+                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu. Ngưỡng ở docs/11: từ 95% trên 50 ảnh thật (5 ngân hàng) thì đáng làm, dưới 90% thì hoãn. Kết quả mất khi chọn ảnh khác: ghi lại trước.")
                 }
             }
 
@@ -88,6 +96,10 @@ struct ReceiptOCRLabView: View {
                         Text(error).foregroundStyle(.red)
                     } else {
                         LabeledContent("Số tiền đọc được") { Text(run.tallest ?? "(không có)").monospacedDigit() }
+                        Picker("Ngân hàng / ví", selection: bankBinding(run.index)) {
+                            Text("Chưa chọn").tag("")
+                            ForEach(Self.bankChoices, id: \.self) { Text($0).tag($0) }
+                        }
                         TextField("Số tiền đúng (chữ số)", text: truthBinding(run.index))
                             .keyboardType(.numbersAndPunctuation)
                         if let verdict = verdict(of: run) {
@@ -96,7 +108,10 @@ struct ReceiptOCRLabView: View {
                         }
                         Text(run.rowsText).font(.caption.monospaced()).textSelection(.enabled)
                         Button(copiedIndex == run.index ? "Đã sao chép" : "Sao chép chữ (theo hàng)") {
-                            UIPasteboard.general.string = run.rowsText
+                            // Tên người nhận và số tài khoản: không để sang máy khác qua Universal Clipboard, tự hết hạn sau 2 phút.
+                            UIPasteboard.general.setItems(
+                                [[UTType.plainText.identifier: run.rowsText]],
+                                options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)])
                             copiedIndex = run.index
                         }
                     }
@@ -109,6 +124,7 @@ struct ReceiptOCRLabView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: picked) {
             truths = [:]
+            banks = [:]
             copiedIndex = nil
             Task { await readAll() }
         }
@@ -116,8 +132,43 @@ struct ReceiptOCRLabView: View {
 
     // MARK: - Kết quả
 
+    private static let bankChoices = ["Vietcombank", "Techcombank", "MB Bank", "BIDV", "VietinBank", "ACB", "TPBank", "VPBank",
+                                      "Sacombank", "MoMo", "ZaloPay", "Khác"]
+
     private func truthBinding(_ index: Int) -> Binding<String> {
         Binding(get: { truths[index] ?? "" }, set: { truths[index] = $0 })
+    }
+
+    private func bankBinding(_ index: Int) -> Binding<String> {
+        Binding(get: { banks[index] ?? "" }, set: { banks[index] = $0 })
+    }
+
+    /// Đúng/tổng theo ngân hàng, chỉ tính ảnh đã nhập số đúng.
+    private var bankRows: [(bank: String, correct: Int, total: Int)] {
+        var table: [String: (correct: Int, total: Int)] = [:]
+        for run in runs {
+            guard let ok = verdict(of: run) else { continue }
+            let chosen = banks[run.index] ?? ""
+            let bank = chosen.isEmpty ? "Chưa chọn ngân hàng" : chosen
+            var entry = table[bank] ?? (correct: 0, total: 0)
+            entry.total += 1
+            if ok { entry.correct += 1 }
+            table[bank] = entry
+        }
+        return table.map { (bank: $0.key, correct: $0.value.correct, total: $0.value.total) }.sorted { $0.bank < $1.bank }
+    }
+
+    /// Danh sách ngôn ngữ theo **chế độ đang chọn**: chế độ nhanh không có vi-VT/ja-JP (docs/11), đặt mã không hỗ trợ có thể làm Vision báo lỗi.
+    private var supportedLanguages: [String] { accurate ? environment.accurate : environment.fast }
+
+    private var effectiveLanguageChoice: LanguageChoice {
+        languageChoice.isSupported(in: supportedLanguages) ? languageChoice : .automatic
+    }
+
+    private var languageNotice: String? {
+        languageChoice.isSupported(in: supportedLanguages)
+            ? nil
+            : "Chế độ \(accurate ? "chính xác" : "nhanh") của máy này không hỗ trợ \(languageChoice.title): sẽ đọc bằng ngôn ngữ mặc định."
     }
 
     /// nil nếu chưa nhập số đúng hoặc ảnh lỗi.
@@ -141,7 +192,7 @@ struct ReceiptOCRLabView: View {
         running = true
         defer { running = false }
         let options = ReadOptions(accurate: accurate, correction: correction,
-                                  languages: languageChoice.codes(supported: environment.accurate))
+                                  languages: effectiveLanguageChoice.codes(supported: supportedLanguages))
         var collected: [OCRRun] = []
         runs = []
         for (offset, item) in picked.enumerated() {
@@ -243,6 +294,14 @@ private enum LanguageChoice: String, CaseIterable, Identifiable {
         case .automatic: return "Mặc định của hệ thống"
         case .vietnamese: return "Việt + Anh (vi-VT, en-US)"
         case .japanese: return "Nhật + Anh (ja-JP, en-US)"
+        }
+    }
+
+    func isSupported(in supported: [String]) -> Bool {
+        switch self {
+        case .automatic: return true
+        case .vietnamese: return supported.contains { $0.lowercased().hasPrefix("vi") }
+        case .japanese: return supported.contains { $0.lowercased().hasPrefix("ja") }
         }
     }
 
