@@ -41,14 +41,18 @@ struct ReceiptOCRLabView: View {
             }
 
             Section {
+                // Khoá khi đang đọc: `readAll` đã chụp cấu hình lúc bắt đầu, đổi giữa chừng sẽ làm nhãn không khớp với cách đọc thật.
                 Picker("Chế độ", selection: $accurate) {
                     Text("Chính xác").tag(true)
                     Text("Nhanh (kém, chỉ để so)").tag(false)
                 }
+                .disabled(running)
                 Picker("Ngôn ngữ", selection: $languageChoice) {
                     ForEach(LanguageChoice.allCases) { Text($0.title).tag($0) }
                 }
+                .disabled(running)
                 Toggle("Sửa lỗi theo ngôn ngữ", isOn: $correction)
+                    .disabled(running)
                 Button("Đọc lại ảnh đã chọn với cài đặt này") { Task { await readAll() } }
                     .disabled(picked.isEmpty || running)
             } header: {
@@ -78,7 +82,7 @@ struct ReceiptOCRLabView: View {
                 Section {
                     LabeledContent("Đã đọc") { Text("\(runs.count) ảnh · trung bình \(averageMilliseconds) ms") }
                     if checkedCount > 0 {
-                        LabeledContent("Đúng số tiền") { Text("\(correctCount)/\(checkedCount) ảnh đã nhập số đúng").font(.callout) }
+                        LabeledContent("Đúng số tiền") { Text("\(correctCount)/\(checkedCount) ảnh đã chấm").font(.callout) }
                     }
                     ForEach(bankRows, id: \.bank) { row in
                         LabeledContent(row.bank) { Text("\(row.correct)/\(row.total) · \(row.correct * 100 / row.total)%").font(.callout) }
@@ -86,20 +90,21 @@ struct ReceiptOCRLabView: View {
                 } header: {
                     Text("Tổng")
                 } footer: {
-                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu. Ngưỡng ở docs/11: từ 95% trên 50 ảnh thật (5 ngân hàng) thì đáng làm, dưới 90% thì hoãn. Kết quả mất khi chọn ảnh khác: ghi lại trước.")
+                    Text("Số tiền đọc được = dòng chữ cao nhất có chữ số. Nhập số đúng bằng chữ số (ví dụ 1356780); 52k, 1tr2 chưa hiểu. Ảnh đã chấm = có nhập số đúng hoặc không đọc được (tính là sai). Ngưỡng ở docs/11: từ 95% trên 50 ảnh thật (5 ngân hàng) thì đáng làm, dưới 90% thì hoãn. Kết quả mất khi chọn ảnh khác: ghi lại trước.")
                 }
             }
 
             ForEach(runs) { run in
                 Section {
+                    Picker("Ngân hàng / ví", selection: bankBinding(run.index)) {
+                        Text("Chưa chọn").tag("")
+                        ForEach(Self.bankChoices, id: \.self) { Text($0).tag($0) }
+                    }
                     if let error = run.error {
                         Text(error).foregroundStyle(.red)
+                        Label("Sai (không đọc được)", systemImage: "xmark.circle.fill").foregroundStyle(.red)
                     } else {
                         LabeledContent("Số tiền đọc được") { Text(run.tallest ?? "(không có)").monospacedDigit() }
-                        Picker("Ngân hàng / ví", selection: bankBinding(run.index)) {
-                            Text("Chưa chọn").tag("")
-                            ForEach(Self.bankChoices, id: \.self) { Text($0).tag($0) }
-                        }
                         TextField("Số tiền đúng (chữ số)", text: truthBinding(run.index))
                             .keyboardType(.numbersAndPunctuation)
                         if let verdict = verdict(of: run) {
@@ -144,7 +149,7 @@ struct ReceiptOCRLabView: View {
         Binding(get: { banks[index] ?? "" }, set: { banks[index] = $0 })
     }
 
-    /// Đúng/tổng theo ngân hàng, chỉ tính ảnh đã nhập số đúng.
+    /// Đúng/tổng theo ngân hàng, tính ảnh đã chấm (có nhập số đúng, hoặc không đọc được — tính là sai).
     private var bankRows: [(bank: String, correct: Int, total: Int)] {
         var table: [String: (correct: Int, total: Int)] = [:]
         for run in runs {
@@ -172,10 +177,12 @@ struct ReceiptOCRLabView: View {
             : "Chế độ \(accurate ? "chính xác" : "nhanh") của máy này không hỗ trợ \(languageChoice.title): sẽ đọc bằng ngôn ngữ mặc định."
     }
 
-    /// nil nếu chưa nhập số đúng hoặc ảnh lỗi.
+    /// nil nếu chưa nhập số đúng. Ảnh không đọc được (Vision báo lỗi, không mở được ảnh) tính là **Sai**, không bỏ khỏi mẫu số: người dùng không có kết quả
+    /// nào từ ảnh đó, và bỏ đi sẽ làm tỉ lệ cao hơn thực tế (45 đúng, 2 sai, 3 lỗi là 45/50, không phải 45/47).
     private func verdict(of run: OCRRun) -> Bool? {
+        if run.error != nil { return false }
         let truth = (truths[run.index] ?? "").filter(\.isNumber)
-        guard run.error == nil, !truth.isEmpty else { return nil }
+        guard !truth.isEmpty else { return nil }
         return (run.tallest ?? "").filter(\.isNumber) == truth
     }
 
