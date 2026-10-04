@@ -114,7 +114,7 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 
 ## Kết luận tạm của spike (2026-10-04)
 
-Chủ dự án chấp nhận lấy **39 ảnh** (thay vì 50) làm số liệu, vì trang không lưu thêm được và dữ liệu cũ mất; chỉ có bảng ở trên.
+Chủ dự án chấp nhận lấy **39 ảnh** làm số liệu **tạm/sơ bộ** (chưa đủ 50), vì trang không lưu thêm được và dữ liệu cũ mất; chỉ có bảng ở trên. Đây **không thay tiêu chí** 50 ảnh bằng Vision, và không đóng spike.
 
 - **Trạng thái tiêu chí: chưa đạt, chưa kiểm.** Tiêu chí là số tiền ≥ 95% trên 50 ảnh thật/5 ngân hàng bằng bộ đọc của app (Vision). Mới có 39/39 = 100% là **tín hiệu sơ bộ tích cực** về quy tắc chọn số, chứ chưa phải kết quả của thí nghiệm quyết định: chưa đủ 50 ảnh (cận dưới ~91%); chữ lấy từ Văn bản trực tiếp/Phím tắt, **chưa phải Vision trong app**; nhóm "Khác" 14/39; ACB và MB Bank rất ít ảnh.
 - **Chưa biết**: Vision trên iPhone thật (iOS 17/18, ngôn ngữ, tốc độ); vì sao tên người nhận chỉ 43,6%; chữ `₫`.
