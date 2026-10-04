@@ -206,7 +206,8 @@ struct ReceiptOCRLabView: View {
     private var uniqueCount: Int { runs.filter { $0.duplicateOf == nil }.count }
     private var duplicateCount: Int { runs.count - uniqueCount }
     private var averageMilliseconds: Int {
-        let timed = runs.filter { $0.error == nil }
+        // Không tính ảnh trùng: nếu không, bản sao làm lệch số đo tốc độ (cùng cách tính với uniqueCount).
+        let timed = runs.filter { $0.error == nil && $0.duplicateOf == nil }
         guard !timed.isEmpty else { return 0 }
         return Int(timed.map(\.milliseconds).reduce(0, +) / Double(timed.count))
     }

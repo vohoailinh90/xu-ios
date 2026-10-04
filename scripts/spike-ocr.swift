@@ -231,14 +231,16 @@ if let vietnamese {
 configs.append(Config(name: "fast · sửa lỗi · mặc định", level: .fast, correction: true, languages: nil))
 
 // Thử một lần; nếu máy chủ ảo không có GPU/ANE thì dùng CPU.
-if let warmup = render(samples[0], dark: false, scale: 3, small: false) {
+guard let warmup = render(samples[0], dark: false, scale: 3, small: false) else {
+    print("LOI_DUNG_ANH: không dựng được ảnh thử đầu tiên")
+    exit(1)
+}
+do { _ = try recognize(warmup, configs[0]) } catch {
+    print("Lần thử đầu lỗi (\(error)); thử lại bằng CPU")
+    cpuOnly = true
     do { _ = try recognize(warmup, configs[0]) } catch {
-        print("Lần thử đầu lỗi (\(error)); thử lại bằng CPU")
-        cpuOnly = true
-        do { _ = try recognize(warmup, configs[0]) } catch {
-            print("VISION_KHONG_CHAY_DUOC: \(error)")
-            exit(1)
-        }
+        print("VISION_KHONG_CHAY_DUOC: \(error)")
+        exit(1)
     }
 }
 print("Chạy bằng CPU: \(cpuOnly)")
@@ -264,7 +266,11 @@ for variant in variants {
         var tally = Tally()
         for sample in samples {
             for dark in [false, true] {
-                guard let image = variant.make(sample, dark) else { continue }
+                // Không `continue`: bỏ mẫu im lặng làm tỉ lệ in trên mẫu số nhỏ hơn thật (7/7 thay vì thiếu 1/8). Dựng ảnh hỏng thì dừng, rõ ràng.
+                guard let image = variant.make(sample, dark) else {
+                    print("LOI_DUNG_ANH: \(variant.name) · \(sample.title) · \(dark ? "tối" : "sáng") — dừng, không in tỉ lệ trên mẫu số thiếu")
+                    exit(1)
+                }
                 let started = Date()
                 let lines: [Line]
                 var failed = false
