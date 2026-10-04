@@ -42,7 +42,7 @@ chạy `VNRecognizeTextRequest` với 5 cấu hình. Lần chạy: [run 37162110
 | Chữ nhỏ nhạt + thu nhỏ 50% + JPEG 50% | 8/8 | 8/8 | 7/8 | 9/10 (đúng khi bỏ dấu: 10/10) | 8/8 | 36/36 |
 
 - Ngày giờ và mã giao dịch đúng 100% ở mọi biến thể (chế độ accurate).
-- "Đúng nguyên văn" thấp hơn "đúng chữ số" chỉ vì mẫu ví `1.200.000 ₫`: ký hiệu `₫` không được đọc nguyên văn (chưa xem ảnh thô nên chưa biết nó thành gì). Với app chỉ cần chữ số, đây là chi tiết cần xử lý ở bước trích xuất, không phải lỗi số tiền.
+- "Đúng nguyên văn" thấp hơn "đúng chữ số" ở mọi biến thể (6/8 hoặc 7/8). Lần chạy đầu in từng ca sai và cả 4 ca trượt của nó đều là mẫu ví `1.200.000 ₫`; lần chạy 6 biến thể không in từng ca, chỉ có số đếm (khớp với việc hai ảnh của mẫu ví trượt). **Chưa biết nguyên nhân**: có thể là ký hiệu `₫`, khoảng trắng trước nó hay dấu phân cách hàng nghìn; chưa có log từng ca sai ở mức ký tự. Chữ số đều đúng, nên với app chỉ cần chữ số thì chưa phải lỗi số tiền, nhưng chưa nên kết luận cách xử lý ở bước trích xuất trước khi xem chữ thô.
 - Chế độ **fast** kém: ngày giờ 0/8, tên 2/10 (bỏ dấu 6–8/10), nội dung 2/8, ghép nhãn–giá trị 7–14/36, số tiền sai chữ số 2/8 ảnh. **Chỉ dùng accurate.**
 - Ngôn ngữ mặc định và `vi-VT` không khác biệt đáng kể trong lần chạy 6 biến thể này; bật hay tắt "sửa lỗi theo ngôn ngữ" chỉ khác một chỗ (dòng tên ở ảnh nén mạnh). Cấu hình `en-US` **không có** trong lần chạy này: chỉ lần chạy đầu (4 mẫu sạch, [run 37161821721](https://github.com/vohoailinh90/xu-ios/actions/runs/37161821721)) có và cho kết quả giống mặc định. Chưa biết `en-US` có khác trên ảnh nén hay chữ nhỏ.
 - Tốc độ trên máy chủ CI (máy ảo, **không đại diện cho iPhone**): accurate ~0,6–1,5 giây mỗi ảnh, fast ~35–80 ms. Chưa đo trên iPhone.
@@ -105,5 +105,5 @@ người nhận; chữ chỉ vào bảng nhớ khi bạn bấm Sao chép (`local
 - [ ] Có số đo trên ≥ 50 ảnh thật / 5 ngân hàng (màn hình thử + trang chấm), ghi bảng theo ngân hàng vào đây.
 - [ ] Kiểm `supportedRecognitionLanguages` có `vi-VT` và `ja-JP` trên **iPhone thật iOS 17 và 18** (mục "Máy này" của màn hình thử; kết quả ở trên là macOS 15 trên máy chủ CI).
 - [ ] Đo thời gian đọc một ảnh trên iPhone cũ nhất hỗ trợ (CI ~1 giây là máy ảo).
-- [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng) để biết ký hiệu bị đọc thành gì và có cần xử lý ở bước trích xuất.
+- [ ] Xem chữ thô của biên lai có `₫` (màn hình thử hiện chữ theo hàng), và/hoặc thêm log từng ca không khớp nguyên văn vào script, để biết nguyên nhân (ký hiệu, khoảng trắng hay dấu phân cách) trước khi quyết định xử lý ở bước trích xuất.
 - [ ] Quyết định 1–3 ở trên; cập nhật điểm và nhật ký của tính năng ở App-idea-lab (luật 8) sau khi có số liệu thật.
