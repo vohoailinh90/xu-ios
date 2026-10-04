@@ -123,7 +123,7 @@ public enum L10n: String, CaseIterable, Sendable {
     case applePayLimitNote, applePayLimitReached, applePayLimitTitle, applePayLimitBody
     // Khoản Apple Pay chờ ghi (bản Free hết lượt tự ghi)
     case pendingPaymentsTitle, pendingPaymentsCard, pendingPaymentsOpen, pendingPaymentsIntro
-    case pendingSave, pendingDismiss, pendingEmpty
+    case pendingDismiss, pendingEmpty
     // Khoá Face ID (chỉ che việc xem, không bao giờ che ô ghi)
     case faceIDToggle, faceIDFooter, faceIDUnavailable, faceIDUnlock, faceIDLockedHint, faceIDReason
     // Xu Pro
@@ -477,9 +477,9 @@ public enum L10n: String, CaseIterable, Sendable {
         case .applePayLimitNote:
             // {0} số lần tự ghi miễn phí mỗi tháng (ProPlan.freeApplePayLogsPerMonth)
             LocalizedText(
-                vi: "Bản miễn phí tự ghi tối đa {0} lần mỗi tháng. Hết lượt thì Xu không tự ghi nữa mà giữ khoản mới trong app để bạn ghi sau bằng một chạm; ghi tay luôn không giới hạn. Xu Pro tự ghi không giới hạn.",
-                en: "The free version auto-logs up to {0} payments a month. After that Xu stops auto-logging and keeps new payments in the app for you to add with a tap; adding by hand is always unlimited. Xu Pro auto-logs without a limit.",
-                ja: "無料版の自動記録は月{0}回までです。使い切ると自動記録はせず、新しい支払いはアプリ内に保管され、1回のタップで記録できます(手入力はいつでも無制限)。Xu Proなら自動記録は無制限です。")
+                vi: "Bản miễn phí tự ghi tối đa {0} lần mỗi tháng. Hết lượt thì Xu không tự ghi nữa mà giữ khoản mới trong app để bạn tự ghi sau; ghi tay luôn không giới hạn. Xu Pro tự ghi không giới hạn.",
+                en: "The free version auto-logs up to {0} payments a month. After that Xu stops auto-logging and keeps new payments in the app so you can enter them yourself later; entering by hand is always unlimited. Xu Pro auto-logs without a limit.",
+                ja: "無料版の自動記録は月{0}回までです。使い切ると自動記録はせず、新しい支払いはアプリ内に保管されるので、あとでご自身で記録できます(手入力はいつでも無制限)。Xu Proなら自動記録は無制限です。")
         case .applePayLimitReached:
             // {0} số tiền (kèm người bán nếu có) · {1} số lần tự ghi miễn phí mỗi tháng
             LocalizedText(
@@ -494,16 +494,14 @@ public enum L10n: String, CaseIterable, Sendable {
                           en: "Apple Pay payments not auto-logged: {0}",
                           ja: "自動記録されていないApple Payの支払い: {0}件")
         case .pendingPaymentsOpen:
-            LocalizedText(vi: "Xem và ghi", en: "Review", ja: "確認する")
+            LocalizedText(vi: "Xem danh sách", en: "Review", ja: "確認する")
         case .pendingPaymentsIntro:
             LocalizedText(
-                vi: "Tháng này bản miễn phí đã dùng hết lượt tự ghi Apple Pay, nên Xu giữ các khoản này ở đây, chỉ trên máy bạn. Ghi từng khoản bằng một chạm, hoặc bỏ nếu không cần. Xu Pro tự ghi không giới hạn.",
-                en: "This month's free Apple Pay auto-logs are used up, so Xu keeps these payments here, only on your phone. Add each one with a tap, or dismiss it. Xu Pro auto-logs without a limit.",
-                ja: "今月の無料のApple Pay自動記録は使い切ったため、これらの支払いはこの端末の中だけに保管しています。1回のタップで記録するか、不要なら削除してください。Xu Proなら自動記録は無制限です。")
-        case .pendingSave:
-            LocalizedText(vi: "Ghi", en: "Add", ja: "記録")
+                vi: "Tháng này bản miễn phí đã dùng hết lượt tự ghi Apple Pay, nên Xu giữ các khoản này ở đây, chỉ trên máy bạn. Bạn tự ghi từng khoản như thường ở ô ghi, rồi bỏ khỏi danh sách; hoặc bỏ luôn nếu không cần. Xu Pro tự ghi không giới hạn.",
+                en: "This month's free Apple Pay auto-logs are used up, so Xu keeps these payments here, only on your phone. Enter each one yourself as usual, then remove it from the list, or just remove it if you don't need it. Xu Pro auto-logs without a limit.",
+                ja: "今月の無料のApple Pay自動記録は使い切ったため、これらの支払いはこの端末の中だけに保管しています。いつもどおり入力欄からご自身で記録して、リストから削除してください。不要ならそのまま削除できます。Xu Proなら自動記録は無制限です。")
         case .pendingDismiss:
-            LocalizedText(vi: "Bỏ", en: "Dismiss", ja: "削除")
+            LocalizedText(vi: "Bỏ khỏi danh sách", en: "Remove from list", ja: "リストから削除")
         case .pendingEmpty:
             LocalizedText(vi: "Không còn khoản nào chờ ghi.", en: "Nothing is waiting.", ja: "待っている支払いはありません。")
         case .applePayLimitTitle:
