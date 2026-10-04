@@ -25,6 +25,8 @@ public enum ReceiptAmountReader {
         /// Vị trí đầu của khớp (kể cả dấu và khoảng trắng đứng trước số) trong chuỗi đã gấp, tính theo đơn vị UTF-16 như `idx` của trang chấm.
         public let offset: Int
         public let hasUnit: Bool
+        /// Có dấu `+` ngay trước số (biến động số dư: tiền vào). Không dùng để chọn số, chỉ để biết khoản là thu hay chi.
+        public let hasPlusSign: Bool
     }
 
     public struct Reading: Equatable, Sendable {
@@ -71,7 +73,7 @@ public enum ReceiptAmountReader {
             if sign == "-" || sign == "+" { score += 2 }
             if amountLabels.contains(where: { context.contains($0) }) { score += 4 }
             if notAmountLabels.contains(where: { context.contains($0) }) { score -= 6 }
-            found.append(Candidate(value: value, score: score, offset: start, hasUnit: hasUnit))
+            found.append(Candidate(value: value, score: score, offset: start, hasUnit: hasUnit, hasPlusSign: sign == "+"))
         }
         return found
     }

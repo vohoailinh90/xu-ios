@@ -108,7 +108,7 @@ Xếp theo tốc độ, từ nhanh nhất:
 | Thói quen | 2 | Không giới hạn + thử thách |
 | Tổng kết tuần, biểu đồ | Tuần hiện tại; biểu đồ tháng: tháng hiện tại | Toàn bộ lịch sử: các tuần cũ (màn "Theo tuần") và biểu đồ các tháng trước — đã làm |
 | Apple Pay automation (`LogPaymentIntent`) | 5 lần mỗi tháng (quyết định 2026-10-04; chưa làm trong code) | ✅ không giới hạn |
-| OCR chuyển khoản | 5 ảnh mỗi tháng | ✅ không giới hạn (chưa làm) |
+| OCR chuyển khoản | 5 ảnh mỗi tháng | ✅ không giới hạn (chưa làm cho người dùng; có bản Debug nhập nhiều ảnh, `docs/11`) |
 | Face ID (khoá phần xem; tắt sẵn) | — | ✅ — đã làm |
 | Danh mục tùy chỉnh, icon app, giao diện | — | ✅ (chưa làm) |
 

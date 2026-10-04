@@ -118,10 +118,15 @@ struct SettingsView: View {
                     } label: {
                         Label("Thử đọc biên lai", systemImage: "doc.text.viewfinder")
                     }
+                    NavigationLink {
+                        ReceiptImportView()
+                    } label: {
+                        Label("Nhập nhiều biên lai", systemImage: "photo.stack")
+                    }
                 } header: {
                     Text("Chỉ bản Debug")
                 } footer: {
-                    Text("Spike OCR ảnh chuyển khoản (docs/11). Không có trong bản TestFlight/App Store.")
+                    Text("Spike OCR ảnh chuyển khoản và nhập nhiều biên lai một lượt (docs/11). Không có trong bản TestFlight/App Store.")
                 }
                 #endif
             }

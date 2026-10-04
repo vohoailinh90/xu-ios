@@ -9,6 +9,9 @@ public enum ProPlan {
     public static let freeWidgetChipLimit = 2
     /// Widget vừa có chỗ cho 4 nút; Pro dùng hết chỗ.
     public static let widgetChipCapacity = 4
+    /// Đọc ảnh chuyển khoản (OCR) ở bản Free: số ảnh mỗi tháng dương lịch (chủ dự án chốt 2026-10-04, `docs/02`). Xu Pro không giới hạn.
+    /// Ghi tay, ghi nhanh và xuất dữ liệu không bao giờ bị đếm.
+    public static let freeReceiptReadsPerMonth = 5
 
     /// Thêm được thói quen mới không. Thói quen đã có từ trước thì giữ nguyên, không bao giờ bị tắt.
     public static func canAddHabit(activeHabits: Int, isPro: Bool) -> Bool {
