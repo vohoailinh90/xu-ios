@@ -20,8 +20,13 @@
    hoặc mã bạn đã đổi, rồi chọn tệp trong tuỳ chọn chạy của scheme); chưa ai thử trên Xu.
    Thông báo của Xu là thông báo cục bộ nên không cần Push; iCloud thuộc v1.1, chưa làm; `project.yml` không khai báo Siri.
    **Chưa ai thử ký Xu bằng tài khoản miễn phí** (có thể vướng giới hạn 10 App ID mỗi 7 ngày hoặc lỗi khác): nếu Xcode báo lỗi thì ghi lại nguyên văn.
-4. **Apple Developer Program** (trả phí): 99 USD mỗi năm, hoặc tiền địa phương nếu có (theo trang chương trình của Apple; **cần kiểm tra giá hiện tại**
-   ở Việt Nam/Nhật). Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro qua Sandbox/TestFlight). Dù sao cũng cần khi nộp App Store (`docs/10`).
+4. **Apple Developer Program** (trả phí): **99 USD mỗi năm**, tính bằng tiền địa phương nếu có; giá có thể khác theo khu vực và chỉ hiện bằng tiền địa phương lúc đăng ký
+   (Apple không ghi sẵn số tiền đồng hay yên). Các trang Apple đã đọc (2026-10-06) chỉ nói theo **năm**, không có gói theo tháng; chia đều chỉ là cách tính cho dễ hình dung
+   (99 / 12 ≈ 8,25 USD mỗi tháng), vẫn phải trả cả năm một lần. Đăng ký bằng app Apple Developer thì là thuê bao năm **tự gia hạn cho tới khi huỷ**; đăng ký trên web thì chọn
+   cách thanh toán Apple đưa ra. Đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn, nếu không việc đăng ký bị chậm và Apple đòi bản sao giấy tờ tuỳ thân có ảnh;
+   nếu khu vực của bạn không có sản phẩm Apple Developer ở Apple Store Online thì Apple đưa biểu mẫu thẻ tín dụng thanh toán được bằng USD (nguồn bên dưới).
+   Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro qua Sandbox/TestFlight). Dù sao cũng cần khi nộp App Store (`docs/10`).
+   Giá và điều khoản: **cần kiểm tra lại lúc đăng ký**.
 
 ## Chọn đường
 
@@ -30,6 +35,11 @@
 | Mac + iPhone | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
 | iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Cần thêm workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
 | Chỉ iPhone, không Mac, không trả phí | **C.** Không chạy được Xu | Chỉ còn thử Vision bằng ảnh dựng sẵn trên CI (spike, `docs/11`). Không đưa biên lai thật lên GitHub (có tên, số tài khoản) |
+
+**Tình hình hiện tại (chủ dự án, 2026-10-06): có Mac, chưa đăng ký tài khoản trả phí.** Đề xuất: bắt đầu bằng **đường A với tài khoản Apple miễn phí** (thêm Apple Account trong
+Xcode, mục Accounts của phần cài đặt Xcode; tên mục cần kiểm tra theo bản Xcode). Chưa cần trả phí để thử Apple Pay automation và màn đọc biên lai. Đăng ký trả phí khi cần
+TestFlight cho 20–50 người thử (`docs/06`, M4), thử mua Xu Pro qua Sandbox, hoặc khi chuẩn bị nộp App Store. Chưa ai thử ký Xu bằng tài khoản miễn phí: nếu Xcode báo lỗi ký thì
+ghi lại nguyên văn rồi mới quyết định trả phí.
 
 ## Đường A — có Mac
 
@@ -66,10 +76,10 @@
 
 Biên lai và khoản thật có tên người, số tiền: không chụp màn hình gửi lên GitHub hay chat.
 
-## Nguồn (Apple, đọc 2026-10-04)
+## Nguồn (Apple, đọc 2026-10-04 và 2026-10-06)
 
 - [Supported capabilities (iOS)](https://developer.apple.com/help/account/reference/supported-capabilities-ios): bảng capability theo loại thành viên (đọc thẳng từ HTML của trang): App groups ✓ cả ba cột; In-App Purchase, Push notifications, iCloud, Siri không có ở cột miễn phí.
 - [StoreKit Testing in Xcode](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode): thử mua cục bộ bằng tệp `.storekit`, không cần kết nối máy chủ App Store, dùng được khi chưa thiết lập app trong App Store Connect; nhắc bật Chế độ nhà phát triển trên iOS 16 trở lên.
 - [So sánh thành viên miễn phí và trả phí](https://developer.apple.com/support/compare-memberships/): chạy trên máy của mình từ Xcode, giới hạn tài khoản miễn phí, TestFlight/App Store Connect/Xcode Cloud chỉ cho tài khoản trả phí.
 - [TestFlight](https://developer.apple.com/testflight/): số người thử nội bộ/bên ngoài, số thiết bị, App Review cho bản đầu của người thử bên ngoài.
-- [Apple Developer Program](https://developer.apple.com/programs/): phí thành viên (qua kết quả tìm kiếm; cần mở trang để kiểm tra giá hiện tại).
+- [Apple Developer Program](https://developer.apple.com/programs/), [Enroll](https://developer.apple.com/programs/enroll/) và [Program enrollment](https://developer.apple.com/help/account/membership/program-enrollment/) (đọc thẳng HTML 2026-10-06): phí 99 USD mỗi năm (Enterprise 299 USD), tính bằng tiền địa phương nếu có và hiện lúc đăng ký; đăng ký bằng app Apple Developer là thuê bao năm tự gia hạn; đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn.
