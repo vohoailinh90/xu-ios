@@ -79,13 +79,21 @@ Các bước phía Apple làm được trên web hoặc trên iPhone, không c�
    **không** phải khoá cá nhân vì Apple ghi khoá cá nhân không dùng được các endpoint Provisioning. Vai trò của khoá phải đủ để tạo chứng chỉ và hồ sơ cấp phép (Admin là rộng nhất; vai trò tối thiểu cần dùng:
    **cần kiểm tra**). Tệp `.p8` chỉ tải được **một lần** và Apple không giữ bản sao: tải xong cất kỹ, rồi lưu `.p8`, Key ID, Issuer ID vào GitHub Secrets. **Không dán khoá vào chat và không commit vào repo.**
    Ký tự động bằng khoá API trong CI (tạo chứng chỉ và hồ sơ cấp phép không cần Xcode trên máy bạn) là cách mình định dùng nhưng **chưa kiểm**: cần kiểm tra khi chạy thật.
-6. Mình viết workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect. Trang Upload builds của Apple liệt kê các công cụ tải lên:
+6. **Chuẩn bị trong repo (mình làm, chưa làm):** (a) **biểu tượng app**: repo hiện không có asset catalog hay `AppIcon`; trang Preparing your app for distribution của Apple liệt kê app icon là thông tin cần có
+   trước khi tải build lên TestFlight hoặc App Store (dùng tệp Icon Composer hoặc asset catalog). Mình tạo biểu tượng tạm và nối vào target; biểu tượng thật do bạn quyết; (b) **chuỗi build duy nhất** cho mỗi lần tải
+   lên: `CURRENT_PROJECT_VERSION` đang là "1", còn Apple dùng chuỗi build để nhận diện duy nhất từng build (trang Upload builds); (c) **khai báo mã hoá xuất khẩu** trong Info.plist (khoá
+   `ITSAppUsesNonExemptEncryption`; tên khoá cần kiểm tra): Apple nói đặt NO nếu app không dùng mã hoá hoặc chỉ dùng loại được miễn; Xu không tự cài mã hoá riêng, nhưng thuộc diện miễn hay không là câu hỏi
+   tuân thủ xuất khẩu, **cần kiểm tra văn bản mới nhất**, mình không tự kết luận.
+7. Mình viết workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect. Trang Upload builds của Apple liệt kê các công cụ tải lên:
    Xcode, Swift Playground, altool, Transporter (có bản dòng lệnh, xác thực bằng JWT), API và Xcode Cloud; nên tải lên từ CI không cần Xcode trên máy bạn. **Chưa có trong repo.** Mình sửa dần
    bằng cách đọc log Actions sau khi bạn thêm secrets và bấm chạy.
-7. TestFlight: thêm chính bạn làm người thử nội bộ (tối đa 100 người dùng App Store Connect có quyền truy cập, vai trò Account Holder, Admin, App Manager, Developer hoặc Marketing),
-   cài app TestFlight trên iPhone rồi cài Xu; người thử nội bộ tải và thử mọi build trong 90 ngày. Theo trang TestFlight của Apple, App Review chỉ được nhắc khi **mời người thử bên ngoài**
-   (tối đa 10.000): build đầu của app khi đó được gửi cho App Review, các build sau có thể không cần duyệt đầy đủ. Trang không nói người thử nội bộ phải qua bước này (cần kiểm tra khi làm).
-8. Bản này là Release: **không có** các màn Debug. Muốn đo Vision bằng ảnh thật trên TestFlight thì cần thêm một cờ build riêng (chưa làm).
+8. TestFlight (App Store Connect › app › tab TestFlight), theo trang Add internal testers của Apple: tạo một nhóm **Internal Testing** (nút + cạnh Internal Testing); ô "Enable automatic distribution" bật thì
+   Xcode tự giao build cho cả nhóm, không bật thì phải thêm từng build vào nhóm bằng tay. Mời chính bạn vào nhóm: người thử nội bộ phải là người dùng App Store Connect có quyền (Account Holder, Admin,
+   App Manager, Developer hoặc Marketing), tối đa 100 người. Khi đã có build sẵn để thử, bạn nhận email mời và mở bằng app TestFlight trên iPhone; chỉ các build đã được giao cho nhóm mới cài được, và người thử
+   nội bộ tải và thử các build đó trong 90 ngày. Trang Apple nói "tự giao" cho trường hợp Xcode tải lên; build tải lên từ CI có được tự giao không thì **cần kiểm tra**, nên chuẩn bị sẵn thao tác thêm build bằng tay.
+   Theo trang TestFlight, App Review chỉ được nhắc khi **mời người thử bên ngoài** (tối đa 10.000): build đầu của app khi đó được gửi cho App Review, các build sau có thể không cần duyệt đầy đủ. Trang không
+   nói người thử nội bộ phải qua bước này (cần kiểm tra khi làm).
+9. Bản này là Release: **không có** các màn Debug. Muốn đo Vision bằng ảnh thật trên TestFlight thì cần thêm một cờ build riêng (chưa làm).
 
 ## Đường D — ký lại bằng công cụ bên thứ ba (chưa kiểm, không khuyến nghị)
 
@@ -123,3 +131,4 @@ Biên lai và khoản thật có tên người, số tiền: không chụp màn 
 - [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac (cá nhân: cùng một thiết bị, xác minh danh tính bằng ảnh giấy tờ có ảnh; tên pháp lý hiện là người bán trên App Store), thuê bao năm tự gia hạn; chú thích: đăng ký có thể không được hỗ trợ ở một số khu vực.
 - [Register an App ID](https://developer.apple.com/help/account/identifiers/register-an-app-id/), [Register an app group](https://developer.apple.com/help/account/identifiers/register-an-app-group/) và [Enable app capabilities](https://developer.apple.com/help/account/identifiers/enable-app-capabilities/) (đọc thẳng HTML 2026-10-10): đăng ký explicit App ID khớp bundle ID trong Xcode; đăng ký App Group bằng mô tả và định danh; bật capability App Groups cho App ID rồi gán nhóm bằng Configure.
 - [App Store Connect API](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api/) và [Creating API Keys](https://developer.apple.com/documentation/AppStoreConnectAPI/creating-api-keys-for-app-store-connect-api) (đọc thẳng HTML/JSON 2026-10-10): Account Holder xin quyền API (Request Access, xét duyệt từng trường hợp); team key do Account Holder hoặc Admin tạo; khoá cá nhân không dùng được Provisioning endpoints; tệp khoá riêng chỉ tải một lần.
+- [Preparing your app for distribution](https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution) và [Complying with Encryption Export Regulations](https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations) (đọc thẳng JSON 2026-10-10): app icon là thông tin cần có khi chuẩn bị phân phối (Icon Composer hoặc asset catalog); khai báo mã hoá xuất khẩu bằng khoá trong Info.plist, đặt NO nếu không dùng mã hoá hoặc chỉ dùng loại được miễn.
