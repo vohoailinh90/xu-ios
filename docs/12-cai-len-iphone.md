@@ -1,7 +1,7 @@
 # 12 — Cài Xu lên iPhone thật để thử
 
 > Viết 2026-10-04 để trả lời câu hỏi của chủ dự án: "làm sao cài app trên iPhone thật để chạy thử". **Chưa ai chạy thử các bước này trên repo này.**
-> Thông tin về Apple lấy từ các trang Apple ghi ở cuối (đọc 2026-10-04). Điều khoản, giá và giới hạn của Apple đổi thường xuyên nên
+> Thông tin về Apple lấy từ các trang Apple ghi ở cuối (đọc 2026-10-04, 06 và 10). Điều khoản, giá và giới hạn của Apple đổi thường xuyên nên
 > **cần kiểm tra văn bản mới nhất** trước khi trả tiền hay làm theo. Không phải tư vấn pháp lý.
 
 ## Bốn điều cần biết trước
@@ -32,16 +32,18 @@
 
 | Bạn có | Đường | Ghi chú |
 |---|---|---|
-| Mac + iPhone | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
-| iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Cần thêm workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
-| Chỉ iPhone, không Mac, không trả phí | **C.** Không chạy được Xu | Chỉ còn thử Vision bằng ảnh dựng sẵn trên CI (spike, `docs/11`). Không đưa biên lai thật lên GitHub (có tên, số tài khoản) |
+| iPhone + Mac (của bạn hoặc mượn vài giờ) | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
+| iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Không cần Mac nào của bạn; cần tài khoản trả phí và một workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
+| iPhone, không Mac, không trả phí | **C.** Chưa có cách đã kiểm để cài Xu | Chỉ thử từng phần (mục "Thử từng phần khi chưa cài được app"). Đường D (công cụ bên thứ ba) chưa kiểm, không khuyến nghị |
 
-**Tình hình hiện tại (chủ dự án, 2026-10-06): có Mac, chưa đăng ký tài khoản trả phí.** Đề xuất: bắt đầu bằng **đường A với tài khoản Apple miễn phí** (thêm Apple Account trong
-Xcode, mục Accounts của phần cài đặt Xcode; tên mục cần kiểm tra theo bản Xcode). Chưa cần trả phí để thử Apple Pay automation và màn đọc biên lai. Đăng ký trả phí khi cần
-TestFlight cho 20–50 người thử (`docs/06`, M4), thử mua Xu Pro qua Sandbox, hoặc khi chuẩn bị nộp App Store. Chưa ai thử ký Xu bằng tài khoản miễn phí: nếu Xcode báo lỗi ký thì
-ghi lại nguyên văn rồi mới quyết định trả phí.
+**Tình hình hiện tại (chủ dự án): 2026-10-06 nói có Mac; 2026-10-10 nói không có Mac. Chưa đăng ký tài khoản trả phí.** Theo tin mới nhất là không có Mac, nên đường A chỉ dùng được khi
+mượn được một máy Mac vài giờ (tài khoản miễn phí, hồ sơ hết hạn sau 7 ngày nên mỗi tuần phải cài lại). Không mượn được thì đường đã rõ là **B (99 USD mỗi năm)**; khoản này
+dù sao cũng cần khi làm TestFlight cho 20–50 người thử (`docs/06`, M4) và khi nộp App Store. Apple chỉ cho build iOS trên macOS: máy Mac đó có thể là máy mượn hoặc máy của GitHub (CI).
 
-## Đường A — có Mac
+## Đường A — có Mac (của bạn hoặc mượn vài giờ)
+
+Mượn Mac: một buổi vài giờ đủ để cài Xcode, chạy và thử; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
+việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight, việc mà CI của GitHub đã làm được.
 
 1. Cài Xcode (App Store) và `brew install xcodegen`; clone repo.
 2. Đổi định danh thành của bạn (đã ghi trong `project.yml`): `bundleIdPrefix`, `PRODUCT_BUNDLE_IDENTIFIER` của app và widget, App Group
@@ -55,15 +57,34 @@ ghi lại nguyên văn rồi mới quyết định trả phí.
 
 ## Đường B — không có Mac, có tài khoản trả phí
 
-1. Đăng ký Apple Developer Program (Apple có thể cần xác minh danh tính; cần kiểm tra thời gian và giấy tờ).
-2. Đổi định danh như bước 2 của đường A (sửa file trong repo, không cần Mac).
-3. Trong App Store Connect: tạo app với bundle ID đó; tạo khoá API cho CI (lưu tệp `.p8`, Key ID, Issuer ID vào GitHub Secrets).
-4. Thêm workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect bằng khoá API.
-   **Chưa có trong repo.** Tôi chưa viết vì không thể thử khi chưa có tài khoản và khoá API; viết khi bạn chọn đường này.
-5. TestFlight: thêm chính bạn làm người thử nội bộ (tối đa 100 thành viên trong đội có vai trò Account Holder, Admin, App Manager, Developer hoặc Marketing,
-   theo trang TestFlight), rồi cài app TestFlight trên iPhone và cài Xu. Người thử bên ngoài (tối đa 10.000) cần build đầu được App Review duyệt cho TestFlight.
-   Trang TestFlight không nói rõ người thử nội bộ có phải qua App Review không: cần kiểm tra.
+Các bước phía Apple làm được trên web hoặc trên iPhone, không cần Mac.
+
+1. **Đăng ký Apple Developer Program** (99 USD mỗi năm, mục 4 ở trên). Apple cho đăng ký bằng app Apple Developer trên iPhone, iPad hoặc Mac ở "một số khu vực" (danh sách nằm ở chú thích
+   của trang Apple, mình chưa đọc được; nếu khu vực của bạn không có thì đăng ký trên web). Sau khi nộp, Apple Developer Support xác minh thông tin rồi gửi email các bước tiếp theo;
+   thời gian chờ và giấy tờ: **cần kiểm tra**.
+2. **Chọn định danh của bạn** (tiền tố bundle ID, tên App Group) rồi nhắn mình: mình sửa trong repo (không cần Mac). Định danh phải khác mọi app khác; không cần có tên miền.
+3. Trong App Store Connect (web): tạo app với bundle ID đó; tạo khoá API cho CI (tệp `.p8`, Key ID, Issuer ID) và lưu vào GitHub Secrets. **Không dán khoá vào chat và không commit vào repo.**
+   Ký tự động bằng khoá API trong CI (tạo chứng chỉ và hồ sơ cấp phép không cần Xcode trên máy bạn) là cách mình định dùng nhưng **chưa kiểm**: cần kiểm tra khi chạy thật.
+4. Mình viết workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect. Trang Upload builds của Apple liệt kê các công cụ tải lên:
+   Xcode, Swift Playground, altool, Transporter (có bản dòng lệnh, xác thực bằng JWT), API và Xcode Cloud; nên tải lên từ CI không cần Xcode trên máy bạn. **Chưa có trong repo.** Mình sửa dần
+   bằng cách đọc log Actions sau khi bạn thêm secrets và bấm chạy.
+5. TestFlight: thêm chính bạn làm người thử nội bộ (tối đa 100 người dùng App Store Connect có quyền truy cập, vai trò Account Holder, Admin, App Manager, Developer hoặc Marketing),
+   cài app TestFlight trên iPhone rồi cài Xu; người thử nội bộ tải và thử mọi build trong 90 ngày. Theo trang TestFlight của Apple, App Review chỉ được nhắc khi **mời người thử bên ngoài**
+   (tối đa 10.000): build đầu của app khi đó được gửi cho App Review, các build sau có thể không cần duyệt đầy đủ. Trang không nói người thử nội bộ phải qua bước này (cần kiểm tra khi làm).
 6. Bản này là Release: **không có** các màn Debug. Muốn đo Vision bằng ảnh thật trên TestFlight thì cần thêm một cờ build riêng (chưa làm).
+
+## Đường D — ký lại bằng công cụ bên thứ ba (chưa kiểm, không khuyến nghị)
+
+Có công cụ bên thứ ba (kiểu AltStore, Sideloadly) ký lại một tệp IPA bằng Apple ID miễn phí từ máy Windows. Mình **chưa kiểm** và không khuyến nghị làm đầu tiên: (1) phải đưa Apple ID vào phần
+mềm bên thứ ba; (2) CI sẽ phải tạo IPA chưa ký, mà `SharedStore.container` gọi `fatalError` nếu không tạo được kho dữ liệu trong App Group, nên nếu việc ký lại làm mất entitlement App Group
+thì app sập khi mở; (3) hồ sơ miễn phí vẫn hết hạn sau 7 ngày. Chỉ cân nhắc khi không có Mac và không muốn trả phí, và nên dùng một Apple ID riêng cho việc này.
+
+## Thử từng phần khi chưa cài được app
+
+- **Đọc chữ biên lai:** `prototypes/cham-bien-lai.html` cùng Văn bản trực tiếp (Live Text) hoặc Phím tắt đọc chữ từ ảnh trên chính iPhone, cách đã cho ra mốc sơ bộ 39/39 số tiền ở `docs/11` (ở đó chưa ghi dùng cách nào trong hai cách). Đây là số đo **gần đúng**,
+  không phải Vision trong app (`docs/11` nói rõ); làm tiếp tới ≥ 50 ảnh/5 ngân hàng/ví.
+- **Vision trên CI:** spike `scripts/spike-ocr.swift` chạy trên máy Mac của GitHub với ảnh dựng sẵn (`.github/workflows/spike-ocr.yml`, `docs/11`). Không đưa biên lai thật lên GitHub.
+- Apple Pay chạy nền và danh sách khoản chờ **không** thử được nếu chưa có app trên máy.
 
 ## Việc cần thử trên máy thật (khi đã cài được)
 
@@ -71,15 +92,18 @@ ghi lại nguyên văn rồi mới quyết định trả phí.
    hết 5 lượt trong tháng: Home phải hiện thẻ "Khoản Apple Pay chưa được tự ghi", danh sách có khoản đó. Ghi lại lời nhắn của tác vụ và thông báo
    (nếu đã cho phép) có hiện khi chạy nền không (`docs/02`, `docs/06`).
 2. **Tác vụ nền thêm khoản lúc danh sách đang mở.** Mở danh sách khoản chờ, rồi quẹt thêm một khoản: danh sách phải cập nhật, không mất khoản nào.
-3. **Vision với ≥ 50 ảnh thật, 5 ngân hàng/ví** (chỉ bản Debug, đường A): theo `docs/11`; ghi kết quả vào đó.
+3. **Vision với ≥ 50 ảnh thật, 5 ngân hàng/ví** (chỉ bản Debug: đường A; đường B cần cờ build riêng): theo `docs/11`; ghi kết quả vào đó.
 4. **Nhập nhiều biên lai** (bản Debug): chọn nhiều ảnh, hạn mức 5 ảnh/tháng, ảnh trùng, thẻ "không chắc".
 
 Biên lai và khoản thật có tên người, số tiền: không chụp màn hình gửi lên GitHub hay chat.
 
-## Nguồn (Apple, đọc 2026-10-04 và 2026-10-06)
+## Nguồn (Apple, đọc 2026-10-04, 06 và 10)
 
 - [Supported capabilities (iOS)](https://developer.apple.com/help/account/reference/supported-capabilities-ios): bảng capability theo loại thành viên (đọc thẳng từ HTML của trang): App groups ✓ cả ba cột; In-App Purchase, Push notifications, iCloud, Siri không có ở cột miễn phí.
 - [StoreKit Testing in Xcode](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode): thử mua cục bộ bằng tệp `.storekit`, không cần kết nối máy chủ App Store, dùng được khi chưa thiết lập app trong App Store Connect; nhắc bật Chế độ nhà phát triển trên iOS 16 trở lên.
 - [So sánh thành viên miễn phí và trả phí](https://developer.apple.com/support/compare-memberships/): chạy trên máy của mình từ Xcode, giới hạn tài khoản miễn phí, TestFlight/App Store Connect/Xcode Cloud chỉ cho tài khoản trả phí.
 - [TestFlight](https://developer.apple.com/testflight/): số người thử nội bộ/bên ngoài, số thiết bị, App Review cho bản đầu của người thử bên ngoài.
 - [Apple Developer Program](https://developer.apple.com/programs/), [Enroll](https://developer.apple.com/programs/enroll/) và [Program enrollment](https://developer.apple.com/help/account/membership/program-enrollment/) (đọc thẳng HTML 2026-10-06): phí 99 USD mỗi năm (Enterprise 299 USD), tính bằng tiền địa phương nếu có và hiện lúc đăng ký; đăng ký bằng app Apple Developer là thuê bao năm tự gia hạn; đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn.
+- [TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview) và [Add internal testers](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers) (đọc thẳng HTML 2026-10-10): người thử nội bộ tối đa 100 người dùng App Store Connect, tải và thử mọi build trong 90 ngày; App Review cho build đầu khi mời người thử bên ngoài.
+- [Upload builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds) (đọc thẳng HTML 2026-10-10): các công cụ tải build lên (Xcode, Swift Playground, altool, Transporter, API, Xcode Cloud).
+- [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac ở một số khu vực, thuê bao năm tự gia hạn.
