@@ -7,7 +7,7 @@
 ## Bốn điều cần biết trước
 
 1. **Build app iOS cần macOS + Xcode**, không có đường nào khác. Xu đã build được trên máy Mac của GitHub Actions (`macos-15`, `.github/workflows/ci.yml`),
-   nhưng CI hiện chỉ chạy `swift test` và dựng cho trình mô phỏng; **không** tạo bản cài lên iPhone.
+   nhưng CI hiện chạy `swift test` và dựng Debug cho trình mô phỏng và cho SDK iPhone (không ký, `CODE_SIGNING_ALLOWED=NO`); **không** ký, archive hay tạo bản cài lên iPhone.
 2. Tài khoản Apple **miễn phí** chạy được app lên iPhone của chính mình từ Xcode. Theo trang so sánh của Apple: hồ sơ cấp phép hết hạn sau 7 ngày (phải cài lại),
    tối đa 3 thiết bị, 3 app mỗi thiết bị, 10 App ID; không có TestFlight, App Store Connect, Xcode Cloud.
 3. **Xu cần App Group** (`group.com.vohoailinh90.xu`: app, widget và App Intents dùng chung kho dữ liệu; đây là entitlement duy nhất `project.yml` khai báo).
@@ -49,7 +49,7 @@ Quay lại cân nhắc đường B khi cần đưa Xu cho 20–50 người thử
 ## Đường A — có Mac (của bạn, mượn hoặc thuê)
 
 Mượn hoặc thuê Mac vật lý (kế hoạch thuê theo giai đoạn: `docs/13`): nên dành thời gian rộng rãi, vì cài Xcode, thiết lập ký (signing) và xử lý App Group phụ thuộc máy và đường truyền, và chưa ai thử trên repo này nên mình không ước lượng số giờ; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
-việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight (cần tài khoản trả phí). Việc đó CI của GitHub **có thể** làm sau khi thêm và kiểm workflow ký/archive/tải lên; hiện CI chỉ build Debug cho trình mô phỏng, không ký (`.github/workflows/ci.yml`), nên **chưa** làm được.
+việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight (cần tài khoản trả phí). Việc đó CI của GitHub **có thể** làm sau khi thêm và kiểm workflow ký/archive/tải lên; hiện CI chỉ build Debug (cho trình mô phỏng và cho SDK iPhone), không ký, không archive, không tải lên (`.github/workflows/ci.yml`), nên **chưa** làm được.
 
 1. Cài Xcode (App Store) và `brew install xcodegen`; clone repo.
 2. Định danh **đã đặt sẵn** trong repo (2026-10-10): bundle ID app `com.vohoailinh90.xu`, widget `com.vohoailinh90.xu.widgets`, App Group `group.com.vohoailinh90.xu`, mã mua Xu Pro
