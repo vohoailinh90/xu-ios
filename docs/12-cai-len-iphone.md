@@ -26,24 +26,25 @@
    cách thanh toán Apple đưa ra. Đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn, nếu không việc đăng ký bị chậm và Apple đòi bản sao giấy tờ tuỳ thân có ảnh;
    nếu khu vực của bạn không có sản phẩm Apple Developer ở Apple Store Online thì Apple đưa biểu mẫu thẻ tín dụng thanh toán được bằng USD (nguồn bên dưới).
    Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro qua Sandbox/TestFlight). Dù sao cũng cần khi nộp App Store (`docs/10`).
+   Thuế: khi áp dụng, Apple tính thuế theo mức của khu vực của bạn lên khoản mua (trang Program enrollment), nên số tiền thanh toán có thể cao hơn giá niêm yết.
    Giá và điều khoản: **cần kiểm tra lại lúc đăng ký**.
 
 ## Chọn đường
 
 | Bạn có | Đường | Ghi chú |
 |---|---|---|
-| iPhone + Mac (của bạn hoặc mượn vài giờ) | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
+| iPhone + Mac (của bạn hoặc mượn được) | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
 | iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Không cần Mac nào của bạn; cần tài khoản trả phí và một workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
 | iPhone, không Mac, không trả phí | **C.** Chưa có cách đã kiểm để cài Xu | Chỉ thử từng phần (mục "Thử từng phần khi chưa cài được app"). Đường D (công cụ bên thứ ba) chưa kiểm, không khuyến nghị |
 
 **Tình hình hiện tại (chủ dự án): 2026-10-06 nói có Mac; 2026-10-10 nói không có Mac. Chưa đăng ký tài khoản trả phí.** Theo tin mới nhất là không có Mac, nên đường A chỉ dùng được khi
-mượn được một máy Mac vài giờ (tài khoản miễn phí, hồ sơ hết hạn sau 7 ngày nên mỗi tuần phải cài lại). Không mượn được thì đường đã rõ là **B (99 USD mỗi năm)**; khoản này
+mượn được một máy Mac (tài khoản miễn phí, hồ sơ hết hạn sau 7 ngày nên mỗi tuần phải cài lại, tức mỗi lần lại cần Mac). Không mượn được thì đường đã rõ là **B (99 USD mỗi năm)**; khoản này
 dù sao cũng cần khi làm TestFlight cho 20–50 người thử (`docs/06`, M4) và khi nộp App Store. Apple chỉ cho build iOS trên macOS: máy Mac đó có thể là máy mượn hoặc máy của GitHub (CI).
 
-## Đường A — có Mac (của bạn hoặc mượn vài giờ)
+## Đường A — có Mac (của bạn hoặc mượn được)
 
-Mượn Mac: một buổi vài giờ đủ để cài Xcode, chạy và thử; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
-việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight, việc mà CI của GitHub đã làm được.
+Mượn Mac: nên dành thời gian rộng rãi, vì cài Xcode, thiết lập ký (signing) và xử lý App Group phụ thuộc máy và đường truyền, và chưa ai thử trên repo này nên mình không ước lượng số giờ; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
+việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight (cần tài khoản trả phí). Việc đó CI của GitHub **có thể** làm sau khi thêm và kiểm workflow ký/archive/tải lên; hiện CI chỉ build Debug cho trình mô phỏng, không ký (`.github/workflows/ci.yml`), nên **chưa** làm được.
 
 1. Cài Xcode (App Store) và `brew install xcodegen`; clone repo.
 2. Đổi định danh thành của bạn (đã ghi trong `project.yml`): `bundleIdPrefix`, `PRODUCT_BUNDLE_IDENTIFIER` của app và widget, App Group
@@ -59,9 +60,12 @@ việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng m
 
 Các bước phía Apple làm được trên web hoặc trên iPhone, không cần Mac.
 
-1. **Đăng ký Apple Developer Program** (99 USD mỗi năm, mục 4 ở trên). Apple cho đăng ký bằng app Apple Developer trên iPhone, iPad hoặc Mac ở "một số khu vực" (danh sách nằm ở chú thích
-   của trang Apple, mình chưa đọc được; nếu khu vực của bạn không có thì đăng ký trên web). Sau khi nộp, Apple Developer Support xác minh thông tin rồi gửi email các bước tiếp theo;
-   thời gian chờ và giấy tờ: **cần kiểm tra**.
+1. **Đăng ký Apple Developer Program** (99 USD mỗi năm, mục 4 ở trên). Điều kiện (trang Program enrollment): Apple Account bật xác thực hai yếu tố và đủ tuổi thành niên theo khu vực của bạn.
+   **Cá nhân** (hoặc chủ doanh nghiệp một người): tên pháp lý của bạn sẽ hiện là người bán trên App Store, không nhập biệt danh hay tên công ty. Có hai cách đăng ký: bằng **app Apple Developer**
+   trên iPhone, iPad hoặc Mac (dùng cùng một thiết bị suốt quá trình; xác minh danh tính bằng ảnh giấy tờ tuỳ thân có ảnh, Apple nhận hộ chiếu ở hầu hết khu vực), hoặc trên web. Sau khi thanh toán
+   bạn nhận email xác nhận; quá 24 giờ chưa có thì liên hệ Apple kèm Enrollment ID (theo trang Program enrollment). **Tổ chức** (công ty) thì cần pháp nhân và số D-U-N-S, có thêm bước xác minh khác;
+   không áp dụng nếu bạn đăng ký cá nhân. **Khu vực:** Apple ghi app Apple Developer có ở các khu vực App Store hỗ trợ nhưng việc đăng ký có thể không được hỗ trợ ở một số khu vực (ví dụ do lệnh
+   trừng phạt hay hạn chế khác); trang không có danh sách, và không bảo đảm đăng ký trên web giải quyết được. Khu vực của bạn đăng ký được hay không: **cần kiểm tra** khi thử.
 2. **Chọn định danh của bạn** (tiền tố bundle ID, tên App Group) rồi nhắn mình: mình sửa trong repo (không cần Mac). Định danh phải khác mọi app khác; không cần có tên miền.
 3. Trong App Store Connect (web): tạo app với bundle ID đó; tạo khoá API cho CI (tệp `.p8`, Key ID, Issuer ID) và lưu vào GitHub Secrets. **Không dán khoá vào chat và không commit vào repo.**
    Ký tự động bằng khoá API trong CI (tạo chứng chỉ và hồ sơ cấp phép không cần Xcode trên máy bạn) là cách mình định dùng nhưng **chưa kiểm**: cần kiểm tra khi chạy thật.
@@ -106,4 +110,4 @@ Biên lai và khoản thật có tên người, số tiền: không chụp màn 
 - [Apple Developer Program](https://developer.apple.com/programs/), [Enroll](https://developer.apple.com/programs/enroll/) và [Program enrollment](https://developer.apple.com/help/account/membership/program-enrollment/) (đọc thẳng HTML 2026-10-06): phí 99 USD mỗi năm (Enterprise 299 USD), tính bằng tiền địa phương nếu có và hiện lúc đăng ký; đăng ký bằng app Apple Developer là thuê bao năm tự gia hạn; đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn.
 - [TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview) và [Add internal testers](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers) (đọc thẳng HTML 2026-10-10): người thử nội bộ tối đa 100 người dùng App Store Connect, tải và thử mọi build trong 90 ngày; App Review cho build đầu khi mời người thử bên ngoài.
 - [Upload builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds) (đọc thẳng HTML 2026-10-10): các công cụ tải build lên (Xcode, Swift Playground, altool, Transporter, API, Xcode Cloud).
-- [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac ở một số khu vực, thuê bao năm tự gia hạn.
+- [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac (cá nhân: cùng một thiết bị, xác minh danh tính bằng ảnh giấy tờ có ảnh; tên pháp lý hiện là người bán trên App Store), thuê bao năm tự gia hạn; chú thích: đăng ký có thể không được hỗ trợ ở một số khu vực.
