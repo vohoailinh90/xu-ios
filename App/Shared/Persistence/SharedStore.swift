@@ -6,8 +6,8 @@ import WidgetKit
 #endif
 
 enum SharedStore {
-    /// Đổi thành App Group của bạn (phải khớp với project.yml).
-    static let appGroupID = "group.com.example.xu"
+    /// App Group của Xu (phải khớp với project.yml, cả hai chỗ).
+    static let appGroupID = "group.com.vohoailinh90.xu"
 
     static let schema = Schema([
         TransactionRecord.self,

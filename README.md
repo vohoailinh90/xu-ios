@@ -59,7 +59,7 @@ xcodegen generate
 open Xu.xcodeproj
 ```
 
-Trước khi chạy trên máy thật: đổi `com.example` trong `project.yml` thành bundle ID của bạn, và đổi App Group `group.com.example.xu` ở cả `project.yml` lẫn `App/Shared/Persistence/SharedStore.swift`.
+Trước khi chạy trên máy thật: định danh đã đặt sẵn theo chủ dự án (bundle ID `com.vohoailinh90.xu`, App Group `group.com.vohoailinh90.xu`, mã mua `com.vohoailinh90.xu.pro`). Tài khoản Apple miễn phí thì để `DEVELOPMENT_TEAM` trống và chọn Team trong Xcode; tài khoản trả phí thì điền Team ID vào `project.yml` (chi tiết: `docs/12`). Muốn dùng tên khác thì đổi cho khớp ở `project.yml`, `appGroupID` trong `App/Shared/Persistence/SharedStore.swift` và `productID` trong `App/Shared/Settings/ProEntitlement.swift`.
 
 ## Tạo issue trên GitHub
 
@@ -91,6 +91,7 @@ Mở thẳng trong trình duyệt, không cần Xcode: [prototypes/](prototypes/
 | `docs/10-app-store.md` | Nội dung App Store vi/en/ja: tên, phụ đề, từ khoá, mô tả, chữ trên ảnh chụp |
 | `docs/11-spike-ocr-chuyen-khoan.md` | Spike đọc ảnh chuyển khoản bằng Vision: kết quả đã có, điều chưa biết, quyết định chờ |
 | `docs/12-cai-len-iphone.md` | Cách cài Xu lên iPhone thật để thử (có/không Mac, tài khoản Apple miễn phí/trả phí) và việc cần thử trên máy thật |
+| `docs/13-ke-hoach-thue-mac.md` | Kế hoạch thuê một máy Mac vật lý để thử Xu trên iPhone bằng tài khoản Apple miễn phí: chuẩn bị, từng giai đoạn, dọn máy, ghi kết quả |
 
 ## Đã có sẵn trong khung
 
