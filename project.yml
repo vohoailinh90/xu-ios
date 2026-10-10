@@ -1,9 +1,10 @@
 # Sinh Xcode project: `brew install xcodegen && xcodegen generate`
-# Nhớ đổi com.example và group.com.example.xu thành của bạn
-# (App Group cũng phải đổi trong App/Shared/Persistence/SharedStore.swift).
+# Định danh đã đặt theo chủ dự án (2026-10-10, docs/12): bundle ID com.vohoailinh90.xu, App Group group.com.vohoailinh90.xu.
+# Muốn đổi thì đổi cho khớp ở cả: bundleIdPrefix, các PRODUCT_BUNDLE_IDENTIFIER, CFBundleURLName, App Group (2 chỗ) trong tệp này,
+# `appGroupID` ở App/Shared/Persistence/SharedStore.swift và `productID` ở App/Shared/Settings/ProEntitlement.swift.
 name: Xu
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.vohoailinh90
   developmentLanguage: vi
   deploymentTarget:
     iOS: "17.0"
@@ -12,7 +13,7 @@ settings:
     SWIFT_VERSION: "5.0"   # chế độ ngôn ngữ Swift 5
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    DEVELOPMENT_TEAM: ""   # điền Team ID của bạn
+    DEVELOPMENT_TEAM: ""   # tài khoản miễn phí: để trống, chọn Team trong Xcode (docs/12); tài khoản trả phí: điền Team ID
     CODE_SIGN_STYLE: Automatic
 packages:
   XuCore:
@@ -42,15 +43,15 @@ targets:
         NSFaceIDUsageDescription: Xu dùng Face ID để mở khoá phần xem chi tiêu. Ô ghi chi tiêu không bao giờ bị khoá.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         CFBundleURLTypes:
-          - CFBundleURLName: com.example.xu
+          - CFBundleURLName: com.vohoailinh90.xu
             CFBundleURLSchemes: [xu]
     entitlements:
       path: App/Xu/Xu.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.example.xu]
+        com.apple.security.application-groups: [group.com.vohoailinh90.xu]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.xu
+        PRODUCT_BUNDLE_IDENTIFIER: com.vohoailinh90.xu
   XuWidgets:
     type: app-extension
     platform: iOS
@@ -72,10 +73,10 @@ targets:
     entitlements:
       path: App/XuWidgets/XuWidgets.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.example.xu]
+        com.apple.security.application-groups: [group.com.vohoailinh90.xu]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.xu.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.vohoailinh90.xu.widgets
 schemes:
   Xu:
     build:

@@ -7,7 +7,7 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 
 ## M0 — Nền móng (tuần 1)
 - [ ] #setup Tạo repo, chạy `xcodegen`, build app rỗng lên máy thật
-- [ ] #setup Cấu hình App Group, bundle ID, signing cho app + widget
+- [ ] #setup Cấu hình App Group, bundle ID, signing cho app + widget — định danh đã đặt (2026-10-10, `com.vohoailinh90.xu`); ký trên máy thật chưa thử (`docs/12`, `docs/13`)
 - [x] #setup Bật CI GitHub Actions chạy `swift test` cho XuCore
 - [ ] #research Đọc 100 review 1–3 sao của Money Lover, MISA, Spendee; ghi lại 20 câu người dùng hay phàn nàn
 - [ ] #research Thu thập 200 câu nhập thật (nhờ bạn bè gõ thử) → biến thành test case cho parser
@@ -40,8 +40,8 @@ Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian 
 ## M4 — Hoàn thiện & TestFlight (tuần 6)
 - [x] #app Onboarding 3 màn
 - [x] #app Paywall + StoreKit 2 (Xu Pro, mua một lần), khôi phục giao dịch; giới hạn Free trong `docs/02`: 2 thói quen
-  (thói quen cũ không bị tắt), 2 nút widget. Cần làm trước TestFlight: tạo sản phẩm non-consumable `com.example.xu.pro`
-  (đổi theo bundle ID) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
+  (thói quen cũ không bị tắt), 2 nút widget. Cần làm trước TestFlight: tạo sản phẩm non-consumable `com.vohoailinh90.xu.pro`
+  (đi theo bundle ID `com.vohoailinh90.xu`) trong App Store Connect, chọn giá theo `docs/07` — cần kiểm tra.
   Giới hạn Free của Apple Pay automation: **đã quyết** 2026-10-04 (Pro, Free 5 lần mỗi tháng, `docs/02`) và **đã làm trong code** (`LogPaymentIntent`, `MonthlyQuota`); chưa thử trên máy thật.
   Lời mời Pro một lần sau 7 ngày liền (`docs/07`): thẻ trên Home vào ngày sau chuỗi 7 ngày, ở lại hết ngày đó, chạm mới mở paywall.
 - [x] #app Chính sách quyền riêng tư, App Privacy trên App Store Connect (`docs/09`): màn Cài đặt › Quyền riêng tư (offline,

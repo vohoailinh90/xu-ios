@@ -10,14 +10,14 @@
    nhưng CI hiện chỉ chạy `swift test` và dựng cho trình mô phỏng; **không** tạo bản cài lên iPhone.
 2. Tài khoản Apple **miễn phí** chạy được app lên iPhone của chính mình từ Xcode. Theo trang so sánh của Apple: hồ sơ cấp phép hết hạn sau 7 ngày (phải cài lại),
    tối đa 3 thiết bị, 3 app mỗi thiết bị, 10 App ID; không có TestFlight, App Store Connect, Xcode Cloud.
-3. **Xu cần App Group** (`group.com.example.xu`: app, widget và App Intents dùng chung kho dữ liệu; đây là entitlement duy nhất `project.yml` khai báo).
+3. **Xu cần App Group** (`group.com.vohoailinh90.xu`: app, widget và App Intents dùng chung kho dữ liệu; đây là entitlement duy nhất `project.yml` khai báo).
    Bảng [Supported capabilities (iOS)](https://developer.apple.com/help/account/reference/supported-capabilities-ios) của Apple có ba cột: ADP (trả phí),
    ADEP (Enterprise, trả phí) và **Apple Developer** (tài khoản Apple đã đồng ý Thoả thuận nhà phát triển, miễn phí, không phân phối được app).
    Hàng *App groups* có dấu ✓ ở **cả ba cột**, nên theo Apple, **App Group không buộc phải trả phí**. Cũng theo bảng đó, cột miễn phí **không có**
    In-App Purchase, Push notifications, iCloud và Siri. Với Xu: **mua** Xu Pro qua Sandbox/TestFlight cần tài khoản trả phí (In-App Purchase không có ở cột miễn phí, và sản phẩm phải tạo trong App Store Connect).
    Thử **cục bộ** bằng tệp cấu hình StoreKit (`.storekit`) của Xcode thì khác: Apple mô tả đây là môi trường thử không cần kết nối máy chủ App Store, dùng được khi
-   chưa thiết lập app trong App Store Connect, và trang đó không nói phải trả phí. Repo **chưa có** tệp này (cần thêm một sản phẩm không tiêu hao với mã `com.example.xu.pro`,
-   hoặc mã bạn đã đổi, rồi chọn tệp trong tuỳ chọn chạy của scheme); chưa ai thử trên Xu.
+   chưa thiết lập app trong App Store Connect, và trang đó không nói phải trả phí. Repo **chưa có** tệp này (cần thêm một sản phẩm không tiêu hao với mã `com.vohoailinh90.xu.pro`,
+   rồi chọn tệp trong tuỳ chọn chạy của scheme); chưa ai thử trên Xu.
    Thông báo của Xu là thông báo cục bộ nên không cần Push; iCloud thuộc v1.1, chưa làm; `project.yml` không khai báo Siri.
    **Chưa ai thử ký Xu bằng tài khoản miễn phí** (có thể vướng giới hạn 10 App ID mỗi 7 ngày hoặc lỗi khác): nếu Xcode báo lỗi thì ghi lại nguyên văn.
 4. **Apple Developer Program** (trả phí): **99 USD mỗi năm**, tính bằng tiền địa phương nếu có; giá có thể khác theo khu vực và chỉ hiện bằng tiền địa phương lúc đăng ký
@@ -28,37 +28,45 @@
    Có TestFlight, App Store Connect, Xcode Cloud và In-App Purchase (để thử mua Xu Pro qua Sandbox/TestFlight). Dù sao cũng cần khi nộp App Store (`docs/10`).
    Thuế: khi áp dụng, Apple tính thuế theo mức của khu vực của bạn lên khoản mua (trang Program enrollment), nên số tiền thanh toán có thể cao hơn giá niêm yết.
    Giá và điều khoản: **cần kiểm tra lại lúc đăng ký**.
+   Mức thấp hơn 99 USD mỗi năm: trang Enroll của Apple chỉ nêu 99 USD mỗi năm, không thấy gói theo tháng hay mức vài USD (đọc 2026-10-10). Miễn phí (fee waiver) chỉ dành cho pháp nhân là tổ chức phi lợi nhuận,
+   cơ sở giáo dục được công nhận hoặc cơ quan chính phủ; **không** áp dụng cho cá nhân hay chủ doanh nghiệp một người, và không áp dụng nếu đã ký Thoả thuận ứng dụng trả phí (bán app trả phí hoặc
+   In-App Purchase) hay bán hàng hoá/dịch vụ số qua app (trang Fee waivers). Xu bán Xu Pro qua In-App Purchase nên **không** đáp ứng. Dịch vụ bên thứ ba chào giá thấp hơn thì không phải giá của Apple;
+   mình chưa kiểm và không khuyến nghị (cùng rủi ro như Đường D: đưa Apple ID hoặc app cho bên thứ ba).
 
 ## Chọn đường
 
 | Bạn có | Đường | Ghi chú |
 |---|---|---|
-| iPhone + Mac (của bạn hoặc mượn được) | **A.** Cắm cáp, chạy từ Xcode | Nhanh nhất. Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
-| iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | Không cần Mac nào của bạn; cần tài khoản trả phí và một workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
+| iPhone + Mac (của bạn, mượn hoặc thuê vật lý) | **A.** Cắm cáp, chạy từ Xcode | **Đang chọn (2026-10-10), kế hoạch thuê Mac: `docs/13`.** Bản Debug có màn thử đọc biên lai (`docs/11`). Tài khoản miễn phí đủ để thử Apple Pay và đọc biên lai (chưa ai thử); thử mua Xu Pro cục bộ bằng tệp `.storekit` (chưa có trong repo), còn Sandbox/TestFlight cần trả phí |
+| iPhone, không Mac, chịu trả phí | **B.** CI build → TestFlight | **Tạm hoãn** (chủ dự án thấy 99 USD mỗi năm quá cao). Không cần Mac nào của bạn; cần tài khoản trả phí và một workflow (chưa có). Bản TestFlight là Release nên **không có** màn Debug |
 | iPhone, không Mac, không trả phí | **C.** Chưa có cách đã kiểm để cài Xu | Chỉ thử từng phần (mục "Thử từng phần khi chưa cài được app"). Đường D (công cụ bên thứ ba) chưa kiểm, không khuyến nghị |
 
-**Tình hình hiện tại (chủ dự án): 2026-10-06 nói có Mac; 2026-10-10 nói không có Mac. Chưa đăng ký tài khoản trả phí.** Theo tin mới nhất là không có Mac, nên đường A chỉ dùng được khi
-mượn được một máy Mac (tài khoản miễn phí, hồ sơ hết hạn sau 7 ngày nên mỗi tuần phải cài lại, tức mỗi lần lại cần Mac). Không mượn được thì đường đã rõ là **B (99 USD mỗi năm)**; khoản này
-dù sao cũng cần khi làm TestFlight cho 20–50 người thử (`docs/06`, M4) và khi nộp App Store. Apple chỉ cho build iOS trên macOS: máy Mac đó có thể là máy mượn hoặc máy của GitHub (CI).
+**Tình hình hiện tại (chủ dự án):** 2026-10-06 nói có Mac; 2026-10-10 nói không có Mac, rồi **chọn thuê một máy Mac vật lý** (cắm iPhone của mình) và đồng ý định danh `com.vohoailinh90.xu` (đã đặt trong repo).
+Chưa đăng ký tài khoản trả phí: chủ dự án thấy 99 USD mỗi năm quá cao và đề xuất chỉ chi khoảng 5 USD mỗi năm. Theo các trang Apple đã đọc không có mức đó (mục 4 ở trên), nên **đang đi đường A bằng tài khoản Apple
+miễn phí trên Mac thuê** (kế hoạch: `docs/13`); đường B tạm hoãn. Đổi lại đường A: hồ sơ hết hạn sau 7 ngày (mỗi lần cài lại là một lần cần Mac), không có TestFlight, không thử mua qua Sandbox, không nộp App Store.
+Quay lại cân nhắc đường B khi cần đưa Xu cho 20–50 người thử (`docs/06`, M4) hoặc nộp App Store (`docs/10`): lúc đó 99 USD mỗi năm là khoản bắt buộc (cần kiểm tra lại giá).
 
-## Đường A — có Mac (của bạn hoặc mượn được)
+## Đường A — có Mac (của bạn, mượn hoặc thuê)
 
-Mượn Mac: nên dành thời gian rộng rãi, vì cài Xcode, thiết lập ký (signing) và xử lý App Group phụ thuộc máy và đường truyền, và chưa ai thử trên repo này nên mình không ước lượng số giờ; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
+Mượn hoặc thuê Mac vật lý (kế hoạch thuê theo giai đoạn: `docs/13`): nên dành thời gian rộng rãi, vì cài Xcode, thiết lập ký (signing) và xử lý App Group phụ thuộc máy và đường truyền, và chưa ai thử trên repo này nên mình không ước lượng số giờ; tài khoản miễn phí thì hồ sơ hết hạn sau 7 ngày nên phải làm lại mỗi tuần. Thuê Mac từ xa (dịch vụ đám mây) **không** thay được
 việc cắm iPhone của bạn vì Xcode cần iPhone nối cáp hoặc cùng mạng với Mac (mình chưa kiểm cách nào khác); thuê chỉ giúp build và đưa lên TestFlight (cần tài khoản trả phí). Việc đó CI của GitHub **có thể** làm sau khi thêm và kiểm workflow ký/archive/tải lên; hiện CI chỉ build Debug cho trình mô phỏng, không ký (`.github/workflows/ci.yml`), nên **chưa** làm được.
 
 1. Cài Xcode (App Store) và `brew install xcodegen`; clone repo.
-2. Đổi định danh thành của bạn (đã ghi trong `project.yml`): `bundleIdPrefix`, `PRODUCT_BUNDLE_IDENTIFIER` của app và widget, App Group
-   (2 chỗ trong `project.yml` **và** `appGroupID` ở `App/Shared/Persistence/SharedStore.swift`, phải khớp nhau), `DEVELOPMENT_TEAM` (Team ID của bạn).
-   Mã sản phẩm mua `com.example.xu.pro` (`ProEntitlement.productID`) chỉ cần đổi khi thử mua Xu Pro.
-3. `xcodegen generate`, mở `Xu.xcodeproj`, chọn scheme **Xu**.
+2. Định danh **đã đặt sẵn** trong repo (2026-10-10): bundle ID app `com.vohoailinh90.xu`, widget `com.vohoailinh90.xu.widgets`, App Group `group.com.vohoailinh90.xu`, mã mua Xu Pro
+   `com.vohoailinh90.xu.pro` (`ProEntitlement.productID`, chỉ cần khi thử mua). Muốn tên khác thì đổi cho khớp ở `project.yml` (`bundleIdPrefix`, `PRODUCT_BUNDLE_IDENTIFIER`, `CFBundleURLName`, App Group ở
+   2 chỗ), `appGroupID` ở `App/Shared/Persistence/SharedStore.swift` và `productID`. Cố định tên trước khi thuê máy để không phải đổi giữa chừng: tài khoản miễn phí giới hạn 10 App ID mỗi 7 ngày
+   (mình chưa kiểm Xcode tính thế nào).
+3. `xcodegen generate`, mở `Xu.xcodeproj`, chọn scheme **Xu**. Tài khoản miễn phí: `DEVELOPMENT_TEAM` trong `project.yml` để trống, nên vào Signing & Capabilities của **cả hai target** (Xu và XuWidgets) và chọn
+   Team cá nhân của Apple ID (Personal Team; tên mục theo bản Xcode). Tài khoản trả phí: điền Team ID vào `project.yml`. Chạy lại `xcodegen generate` thì project được sinh lại từ `project.yml`, lựa chọn Team trong Xcode
+   mất và phải chọn lại.
 4. Cắm iPhone, chọn "Tin cậy máy tính này". Bật **Chế độ nhà phát triển** trên iPhone (Cài đặt › Quyền riêng tư & Bảo mật; mục này chỉ hiện sau khi Xcode
    nhận máy; Apple nói cần bật trên iOS 16 trở lên, còn tên mục **cần kiểm tra** theo bản iOS của bạn). Chọn iPhone làm thiết bị chạy, bấm Run.
 5. Nếu iPhone báo nhà phát triển không tin cậy: Cài đặt › Cài đặt chung › VPN & Quản lý thiết bị, tin cậy hồ sơ của bạn (cần kiểm tra tên mục theo iOS).
 6. Run mặc định là **Debug**: có Cài đặt › **Thử đọc biên lai** và **Nhập nhiều biên lai** (cách dùng ở `docs/11`).
 
-## Đường B — không có Mac, có tài khoản trả phí
+## Đường B — không có Mac, có tài khoản trả phí (tạm hoãn)
 
-Các bước phía Apple làm được trên web hoặc trên iPhone, không cần Mac.
+Tạm hoãn từ 2026-10-10 vì chi phí (mục "Tình hình hiện tại"); các bước giữ lại để dùng khi cần TestFlight hoặc App Store. Các bước phía Apple làm được trên web hoặc trên iPhone, không cần Mac.
 
 1. **Đăng ký Apple Developer Program** (99 USD mỗi năm, mục 4 ở trên). Điều kiện (trang Program enrollment): Apple Account bật xác thực hai yếu tố và đủ tuổi thành niên theo khu vực của bạn.
    **Cá nhân** (hoặc chủ doanh nghiệp một người): tên pháp lý của bạn sẽ hiện là người bán trên App Store, không nhập biệt danh hay tên công ty. Có hai cách đăng ký: bằng **app Apple Developer**
@@ -66,11 +74,11 @@ Các bước phía Apple làm được trên web hoặc trên iPhone, không c�
    bạn nhận email xác nhận; quá 24 giờ chưa có thì liên hệ Apple kèm Enrollment ID (theo trang Program enrollment). **Tổ chức** (công ty) thì cần pháp nhân và số D-U-N-S, có thêm bước xác minh khác;
    không áp dụng nếu bạn đăng ký cá nhân. **Khu vực:** Apple ghi app Apple Developer có ở các khu vực App Store hỗ trợ nhưng việc đăng ký có thể không được hỗ trợ ở một số khu vực (ví dụ do lệnh
    trừng phạt hay hạn chế khác); trang không có danh sách, và không bảo đảm đăng ký trên web giải quyết được. Khu vực của bạn đăng ký được hay không: **cần kiểm tra** khi thử.
-2. **Chọn định danh của bạn** (tiền tố bundle ID, tên App Group) và gửi mình **Team ID** của tài khoản (10 ký tự, xem trong phần Membership details của tài khoản developer; vị trí trong giao diện
-   cần kiểm tra; Team ID không phải bí mật). Mình sửa trong repo (không cần Mac): đổi định danh và đặt Team ID vào `DEVELOPMENT_TEAM` của `project.yml`, hiện đang để trống; thiếu Team ID thì ký tự động
-   trong CI không biết ký cho đội nào. Định danh phải khác mọi app khác; không cần có tên miền.
+2. **Định danh đã đặt sẵn** (`com.vohoailinh90.xu`..., mục Đường A bước 2; phải khác mọi app khác, không cần có tên miền). Bạn gửi mình **Team ID** của tài khoản (10 ký tự, xem trong phần Membership details của
+   tài khoản developer; vị trí trong giao diện cần kiểm tra; Team ID không phải bí mật). Mình đặt Team ID vào `DEVELOPMENT_TEAM` của `project.yml` (không cần Mac), hiện đang để trống; thiếu Team ID thì ký tự động
+   trong CI không biết ký cho đội nào. Bundle ID gắn với app record ở bước 4: đổi được hay không sau khi tạo app record **cần kiểm tra** trước khi tạo.
 3. Trong **Certificates, Identifiers & Profiles** (web, cần tài khoản trả phí), đăng ký trước các định danh của Xu (khớp `project.yml`): (a) hai **explicit App ID**, một cho app
-   (`<tiền-tố>.xu`) và một cho widget (`<tiền-tố>.xu.widgets`); (b) một **App Group** (`group.<tiền-tố>.xu`); (c) bật capability App Groups cho cả hai App ID rồi gán App Group đó (nút Configure).
+   (`com.vohoailinh90.xu`) và một cho widget (`com.vohoailinh90.xu.widgets`); (b) một **App Group** (`group.com.vohoailinh90.xu`); (c) bật capability App Groups cho cả hai App ID rồi gán App Group đó (nút Configure).
    Theo các trang Apple (Register an App ID, Register an app group, Enable app capabilities): App ID loại explicit dùng cho đúng một app và phải khớp bundle ID trong Xcode; In-App Purchase
    mặc định bật cho explicit App ID. Ký tự động trong CI **có thể** tự đăng ký các thứ này, nhưng mình **chưa kiểm**, nên đăng ký tay trước cho chắc.
 4. Trong App Store Connect (web): tạo app record, chọn bundle ID của app đã đăng ký ở bước 3 (app record phải gắn với một explicit App ID; cần kiểm tra khi làm).
@@ -126,6 +134,7 @@ Biên lai và khoản thật có tên người, số tiền: không chụp màn 
 - [So sánh thành viên miễn phí và trả phí](https://developer.apple.com/support/compare-memberships/): chạy trên máy của mình từ Xcode, giới hạn tài khoản miễn phí, TestFlight/App Store Connect/Xcode Cloud chỉ cho tài khoản trả phí.
 - [TestFlight](https://developer.apple.com/testflight/): số người thử nội bộ/bên ngoài, số thiết bị, App Review cho bản đầu của người thử bên ngoài.
 - [Apple Developer Program](https://developer.apple.com/programs/), [Enroll](https://developer.apple.com/programs/enroll/) và [Program enrollment](https://developer.apple.com/help/account/membership/program-enrollment/) (đọc thẳng HTML 2026-10-06): phí 99 USD mỗi năm (Enterprise 299 USD), tính bằng tiền địa phương nếu có và hiện lúc đăng ký; đăng ký bằng app Apple Developer là thuê bao năm tự gia hạn; đăng ký cá nhân bằng thẻ tín dụng phải dùng thẻ của chính bạn.
+- [Fee waivers](https://developer.apple.com/help/account/membership/fee-waivers/) (đọc thẳng HTML 2026-10-10): miễn phí 99 USD chỉ cho pháp nhân phi lợi nhuận, cơ sở giáo dục được công nhận hoặc cơ quan chính phủ; không phải cá nhân, chủ doanh nghiệp một người; chưa ký Thoả thuận ứng dụng trả phí và không bán hàng hoá/dịch vụ số qua app. Trang [Enroll](https://developer.apple.com/programs/enroll/) cùng ngày chỉ nêu 99 USD mỗi năm.
 - [TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview) và [Add internal testers](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers) (đọc thẳng HTML 2026-10-10): người thử nội bộ tối đa 100 người dùng App Store Connect, tải và thử mọi build trong 90 ngày; App Review cho build đầu khi mời người thử bên ngoài.
 - [Upload builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds) (đọc thẳng HTML 2026-10-10): các công cụ tải build lên (Xcode, Swift Playground, altool, Transporter, API, Xcode Cloud).
 - [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac (cá nhân: cùng một thiết bị, xác minh danh tính bằng ảnh giấy tờ có ảnh; tên pháp lý hiện là người bán trên App Store), thuê bao năm tự gia hạn; chú thích: đăng ký có thể không được hỗ trợ ở một số khu vực.
