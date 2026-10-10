@@ -66,21 +66,26 @@ Các bước phía Apple làm được trên web hoặc trên iPhone, không c�
    bạn nhận email xác nhận; quá 24 giờ chưa có thì liên hệ Apple kèm Enrollment ID (theo trang Program enrollment). **Tổ chức** (công ty) thì cần pháp nhân và số D-U-N-S, có thêm bước xác minh khác;
    không áp dụng nếu bạn đăng ký cá nhân. **Khu vực:** Apple ghi app Apple Developer có ở các khu vực App Store hỗ trợ nhưng việc đăng ký có thể không được hỗ trợ ở một số khu vực (ví dụ do lệnh
    trừng phạt hay hạn chế khác); trang không có danh sách, và không bảo đảm đăng ký trên web giải quyết được. Khu vực của bạn đăng ký được hay không: **cần kiểm tra** khi thử.
-2. **Chọn định danh của bạn** (tiền tố bundle ID, tên App Group) rồi nhắn mình: mình sửa trong repo (không cần Mac). Định danh phải khác mọi app khác; không cần có tên miền.
+2. **Chọn định danh của bạn** (tiền tố bundle ID, tên App Group) và gửi mình **Team ID** của tài khoản (10 ký tự, xem trong phần Membership details của tài khoản developer; vị trí trong giao diện
+   cần kiểm tra; Team ID không phải bí mật). Mình sửa trong repo (không cần Mac): đổi định danh và đặt Team ID vào `DEVELOPMENT_TEAM` của `project.yml`, hiện đang để trống; thiếu Team ID thì ký tự động
+   trong CI không biết ký cho đội nào. Định danh phải khác mọi app khác; không cần có tên miền.
 3. Trong **Certificates, Identifiers & Profiles** (web, cần tài khoản trả phí), đăng ký trước các định danh của Xu (khớp `project.yml`): (a) hai **explicit App ID**, một cho app
    (`<tiền-tố>.xu`) và một cho widget (`<tiền-tố>.xu.widgets`); (b) một **App Group** (`group.<tiền-tố>.xu`); (c) bật capability App Groups cho cả hai App ID rồi gán App Group đó (nút Configure).
    Theo các trang Apple (Register an App ID, Register an app group, Enable app capabilities): App ID loại explicit dùng cho đúng một app và phải khớp bundle ID trong Xcode; In-App Purchase
    mặc định bật cho explicit App ID. Ký tự động trong CI **có thể** tự đăng ký các thứ này, nhưng mình **chưa kiểm**, nên đăng ký tay trước cho chắc.
-4. Trong App Store Connect (web): tạo app record, chọn bundle ID của app đã đăng ký ở bước 3 (app record phải gắn với một explicit App ID; cần kiểm tra khi làm); tạo khoá API cho CI
-   (tệp `.p8`, Key ID, Issuer ID) và lưu vào GitHub Secrets. **Không dán khoá vào chat và không commit vào repo.**
+4. Trong App Store Connect (web): tạo app record, chọn bundle ID của app đã đăng ký ở bước 3 (app record phải gắn với một explicit App ID; cần kiểm tra khi làm).
+5. **Xin quyền dùng App Store Connect API rồi tạo khoá API cho CI.** Theo trang Apple (App Store Connect API, Creating API Keys): chỉ **Account Holder** xin được quyền: Users and Access › Integrations ›
+   Request Access, đồng ý điều khoản, Submit; Apple xét duyệt từng trường hợp (thời gian chờ: **cần kiểm tra**). Có quyền rồi, Account Holder hoặc Admin tạo **team API key** (tab Team Keys, Generate API Key),
+   **không** phải khoá cá nhân vì Apple ghi khoá cá nhân không dùng được các endpoint Provisioning. Vai trò của khoá phải đủ để tạo chứng chỉ và hồ sơ cấp phép (Admin là rộng nhất; vai trò tối thiểu cần dùng:
+   **cần kiểm tra**). Tệp `.p8` chỉ tải được **một lần** và Apple không giữ bản sao: tải xong cất kỹ, rồi lưu `.p8`, Key ID, Issuer ID vào GitHub Secrets. **Không dán khoá vào chat và không commit vào repo.**
    Ký tự động bằng khoá API trong CI (tạo chứng chỉ và hồ sơ cấp phép không cần Xcode trên máy bạn) là cách mình định dùng nhưng **chưa kiểm**: cần kiểm tra khi chạy thật.
-5. Mình viết workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect. Trang Upload builds của Apple liệt kê các công cụ tải lên:
+6. Mình viết workflow chạy tay (`workflow_dispatch`) trên máy Mac của GitHub: `xcodegen generate` → archive → tải lên App Store Connect. Trang Upload builds của Apple liệt kê các công cụ tải lên:
    Xcode, Swift Playground, altool, Transporter (có bản dòng lệnh, xác thực bằng JWT), API và Xcode Cloud; nên tải lên từ CI không cần Xcode trên máy bạn. **Chưa có trong repo.** Mình sửa dần
    bằng cách đọc log Actions sau khi bạn thêm secrets và bấm chạy.
-6. TestFlight: thêm chính bạn làm người thử nội bộ (tối đa 100 người dùng App Store Connect có quyền truy cập, vai trò Account Holder, Admin, App Manager, Developer hoặc Marketing),
+7. TestFlight: thêm chính bạn làm người thử nội bộ (tối đa 100 người dùng App Store Connect có quyền truy cập, vai trò Account Holder, Admin, App Manager, Developer hoặc Marketing),
    cài app TestFlight trên iPhone rồi cài Xu; người thử nội bộ tải và thử mọi build trong 90 ngày. Theo trang TestFlight của Apple, App Review chỉ được nhắc khi **mời người thử bên ngoài**
    (tối đa 10.000): build đầu của app khi đó được gửi cho App Review, các build sau có thể không cần duyệt đầy đủ. Trang không nói người thử nội bộ phải qua bước này (cần kiểm tra khi làm).
-7. Bản này là Release: **không có** các màn Debug. Muốn đo Vision bằng ảnh thật trên TestFlight thì cần thêm một cờ build riêng (chưa làm).
+8. Bản này là Release: **không có** các màn Debug. Muốn đo Vision bằng ảnh thật trên TestFlight thì cần thêm một cờ build riêng (chưa làm).
 
 ## Đường D — ký lại bằng công cụ bên thứ ba (chưa kiểm, không khuyến nghị)
 
@@ -117,3 +122,4 @@ Biên lai và khoản thật có tên người, số tiền: không chụp màn 
 - [Upload builds](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds) (đọc thẳng HTML 2026-10-10): các công cụ tải build lên (Xcode, Swift Playground, altool, Transporter, API, Xcode Cloud).
 - [Enrolling in the app](https://developer.apple.com/help/account/membership/enrolling-in-the-app) (đọc thẳng HTML 2026-10-10): đăng ký Apple Developer Program bằng app Apple Developer trên iPhone, iPad hoặc Mac (cá nhân: cùng một thiết bị, xác minh danh tính bằng ảnh giấy tờ có ảnh; tên pháp lý hiện là người bán trên App Store), thuê bao năm tự gia hạn; chú thích: đăng ký có thể không được hỗ trợ ở một số khu vực.
 - [Register an App ID](https://developer.apple.com/help/account/identifiers/register-an-app-id/), [Register an app group](https://developer.apple.com/help/account/identifiers/register-an-app-group/) và [Enable app capabilities](https://developer.apple.com/help/account/identifiers/enable-app-capabilities/) (đọc thẳng HTML 2026-10-10): đăng ký explicit App ID khớp bundle ID trong Xcode; đăng ký App Group bằng mô tả và định danh; bật capability App Groups cho App ID rồi gán nhóm bằng Configure.
+- [App Store Connect API](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api/) và [Creating API Keys](https://developer.apple.com/documentation/AppStoreConnectAPI/creating-api-keys-for-app-store-connect-api) (đọc thẳng HTML/JSON 2026-10-10): Account Holder xin quyền API (Request Access, xét duyệt từng trường hợp); team key do Account Holder hoặc Admin tạo; khoá cá nhân không dùng được Provisioning endpoints; tệp khoá riêng chỉ tải một lần.
