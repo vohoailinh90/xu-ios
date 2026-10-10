@@ -2,7 +2,7 @@
 
 Mục tiêu: **TestFlight sau 6 tuần** (một người, làm bán thời gian ~15–20 giờ/tuần). `scripts/create-issues.sh` tạo sẵn các issue dưới đây trên GitHub.
 
-> `[x]` = đã có code, test XuCore xanh và app build được trên CI (iOS Simulator). **Chưa chạy thử trên máy thật** —
+> `[x]` = đã có code, test XuCore xanh và app build được trên CI (iOS Simulator và SDK iPhone, không ký). **Chưa chạy thử trên máy thật** —
 > mục nào cũng cần thử tay trước TestFlight. Cập nhật 2026-10-04.
 
 ## M0 — Nền móng (tuần 1)

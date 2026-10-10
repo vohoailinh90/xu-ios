@@ -138,4 +138,4 @@ Chỉ build tiếp khi đạt ngưỡng trong kế hoạch đó.
 2026-10-01: chủ dự án quyết định làm sớm thị trường Nhật và chọn ngôn ngữ giao diện (`docs/08`), dù đang trong tuần validate.
 
 Code được viết ngoài macOS. CI (GitHub Actions, macOS) chạy `swift test` cho `XuCore` và build app + widget cho iOS Simulator
-(không ký) mỗi lần push lên `main` hoặc nhánh `claude/**`. **Chưa chạy thử trên máy thật** — lần chạy đầu có thể cần sửa vài chỗ.
+và cho SDK iPhone (cả hai không ký) mỗi lần push lên `main` hoặc nhánh `claude/**`. **Chưa chạy thử trên máy thật** — lần chạy đầu có thể cần sửa vài chỗ.

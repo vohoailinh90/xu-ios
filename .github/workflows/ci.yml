@@ -56,3 +56,29 @@ jobs:
       - name: Kiểm tra câu lệnh Siri đủ bản dịch tiếng Anh và tiếng Nhật
         # Đối chiếu câu gốc trong XuShortcuts, khoá trong AppShortcuts.xcstrings và bản build (en/ja.lproj).
         run: python3 scripts/check-app-shortcuts.py --bundle build/Build/Products/Debug-iphonesimulator/Xu.app
+
+  app-build-device:
+    name: App build (iPhone thật, không ký)
+    # Cùng điều kiện với các job trên. Dựng với SDK thiết bị để lỗi biên dịch riêng cho iPhone lộ ra trước khi thuê Mac (docs/13).
+    # Không ký nên không chứng minh được ký (App Group, hồ sơ cấp phép) hay chạy được trên máy thật.
+    if: >-
+      github.event_name == 'push'
+      || github.event.pull_request.head.repo.full_name != github.repository
+      || !startsWith(github.head_ref, 'claude/')
+    runs-on: macos-15
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build app + widget cho iPhone (không ký, chỉ để biết code biên dịch được với SDK thiết bị)
+        run: |
+          xcodebuild build -quiet \
+            -project Xu.xcodeproj -scheme Xu \
+            -destination 'generic/platform=iOS' \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO

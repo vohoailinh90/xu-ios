@@ -16,7 +16,7 @@ app vẫn mở được cho tới khi hồ sơ hết hạn (suy ra từ giới h
 ## Trước khi thuê (làm ở nhà, không cần Mac)
 
 1. **Hỏi nơi cho thuê** (mình không biết câu trả lời, mỗi mục **cần kiểm tra**): (a) macOS và Xcode đang cài là bản nào, hoặc có được tự cài Xcode không (quyền quản trị, Internet, dung lượng trống).
-   Xu cần Xcode đủ mới để build (CI của Xu chạy trên máy `macos-15` của GitHub, `.github/workflows/ci.yml`; bản Xcode tối thiểu: chưa kiểm) và Xcode phải hỗ trợ bản iOS đang chạy trên iPhone của bạn;
+   Xu cần Xcode 16 trở lên (`README.md`, mục Bắt đầu; CI chạy trên máy `macos-15` của GitHub, `.github/workflows/ci.yml`); macOS tối thiểu cho Xcode đó, và việc Xcode có hỗ trợ bản iOS đang chạy trên iPhone của bạn: cần kiểm tra;
    (b) có được đăng nhập Apple ID của bạn trong Xcode và cắm iPhone của bạn không; (c) khi trả máy, nơi cho thuê có xoá sạch tài khoản và dữ liệu không (để biết phải tự dọn những gì);
    (d) thời gian thuê tối thiểu, tiền cọc, giờ nhận và trả.
 2. **iPhone và cáp.** iOS 17 trở lên (`deploymentTarget` trong `project.yml`); Control Center control cần iOS 18 (`docs/06`). Mang đúng loại **cáp** nối iPhone với cổng của Mac (USB‑C hay Lightning).
@@ -45,7 +45,8 @@ Mục tiêu: Xu chạy trên iPhone, ghi được một khoản, widget thêm đ
 **Nếu có lỗi:** chép **nguyên văn** thông báo (không chụp dữ liệu thật). Những chỗ có thể vướng, đều **chưa ai thử**:
 - Giới hạn tài khoản miễn phí (10 App ID mỗi 7 ngày, 3 app mỗi thiết bị, `docs/12`). Định danh đã đặt sẵn: **đừng đổi bundle ID khi đang thử**.
 - App Group: bảng của Apple ghi tài khoản miễn phí dùng được, nhưng chưa ai thử với Xu. Mất entitlement này thì app sập khi mở (`SharedStore.container` gọi `fatalError`, xem `docs/12` Đường D): ghi lại nguyên văn.
-- Xcode không hỗ trợ bản iOS của iPhone, hoặc quá cũ để build Xu: ghi phiên bản Xcode và iOS (đây là lý do phải hỏi trước, mục 1).
+- Xcode không hỗ trợ bản iOS của iPhone, hoặc quá cũ để build Xu: ghi phiên bản Xcode và iOS (đây là lý do phải hỏi trước, mục 1). CI đã dựng app + widget cho SDK thiết bị (không ký, job "App build (iPhone thật, không ký)"),
+  nên lỗi biên dịch trên máy thuê nhiều khả năng đến từ khác biệt phiên bản Xcode (chưa kiểm); lỗi ký và lỗi lúc chạy thì CI không thấy được.
 
 Chưa qua được thì ghi lại rồi quyết định: thuê thêm ngày, đổi máy thuê, hay đi đường B (99 USD mỗi năm, `docs/12`). Chi phí cụ thể lúc đó do bạn cân nhắc.
 
